@@ -10,18 +10,7 @@ module regfile#(
     input logic [5:0] AD1,
     output logic [DATA_WIDTH-1: 0] RD1,
     output logic [DATA_WIDTH-1: 0] RD2,
-    output logic [DATA_WIDTH-1: 0] A0 ///see remark below
-    /*
-    ??????????
-    ////////////
-    
-    should this be an output? should I define it as a constant and then use it to access the array?
-    
-    //////////
-    ??????????
-    
-    
-     */
+    output logic [DATA_WIDTH-1: 0] A0 
     );
 
     logic [DATA_WIDTH-1: 0] regfile_array [REG_FILE_WIDTH-1: 0];
@@ -33,6 +22,7 @@ module regfile#(
     always_comb begin
         RD1= mem[AD1];
         RD2= mem[AD2];
+        A0 = mem[10];
     end
 
 endmodule
