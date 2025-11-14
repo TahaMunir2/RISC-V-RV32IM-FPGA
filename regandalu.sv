@@ -3,9 +3,9 @@ module regandalu#(
     )(
     input logic clk,
     input logic WE3,
-    input logic [5:0] AD3,
-    input logic [5:0] AD2,
-    input logic [5:0] AD1,
+    input logic [4:0] AD3,
+    input logic [4:0] AD2,
+    input logic [4:0] AD1,
     input logic                  ALUctrl,
     input logic                  ALUsrc,
     input logic [DATA_WIDTH-1: 0] ImmOp,
@@ -24,17 +24,18 @@ module regandalu#(
         .AD3(AD3),
         .AD2(AD2),
         .AD1(AD1),
+        .WE3(WE3),
         .RD1(ALUop1),
         .RD2(regOp2),
         .A0(A0)
-    )
+    );
 
     mux mux(
         .in0(regOp2),
         .in1(ImmOp),
         .sel(ALUsrc),
         .out(ALUop2)
-    )
+    );
 
     alu alu(
         .ALUop1(ALUop1),
@@ -42,9 +43,10 @@ module regandalu#(
         .ALUctrl(ALUctrl),
         .ALUout(output_ALU),
         .EQ(EQ)
-    )
+    );
 
 
 endmodule
+
 
 
