@@ -9,7 +9,8 @@ module regandalu#(
     input logic                  ALUctrl,
     input logic                  ALUsrc,
     input logic [DATA_WIDTH-1: 0] ImmOp,
-    output logic                   EQ
+    output logic                   EQ,
+    output logic [DATA_WIDTH-1: 0] A0
     );
     
     logic [DATA_WIDTH-1: 0] output_ALU;
@@ -24,7 +25,8 @@ module regandalu#(
         .AD2(AD2),
         .AD1(AD1),
         .RD1(ALUop1),
-        .RD2(regOp2)
+        .RD2(regOp2),
+        .A0(A0)
     )
 
     mux mux(
