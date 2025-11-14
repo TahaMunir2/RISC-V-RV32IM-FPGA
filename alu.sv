@@ -10,8 +10,13 @@ module alu#(
 
     always_comb
     begin
+        //default to avoid latches
+        ALUout = 0;
+        EQ = 1'b0;
+
+        //the two instructions implemented
         if(!ALUctrl)
-            assign ALUout=ALUop1 + ALUop2;
+            ALUout=ALUop1 + ALUop2;
         else begin
             if (ALUop1-ALUop2 == 0) EQ=0;
             else                    EQ=1;
