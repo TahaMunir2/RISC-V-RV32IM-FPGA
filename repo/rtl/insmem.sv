@@ -1,12 +1,10 @@
 module insmem #(
-    parameter ADDRESS_WIDTH = 16,
-              DATA_WIDTH = 32
+    parameter DATA_WIDTH = 32
 )(
-    input logic [ADDRESS_WIDTH-1 : 0] addr,
+    input logic [DATA_WIDTH-1 : 0] addr,
     output logic [DATA_WIDTH-1 : 0] instr
 );
-
-logic [DATA_WIDTH-1 : 0] rom_array [2**ADDRESS_WIDTH-1:0];
+logic [DATA_WIDTH-1 : 0] rom_array [255:0];
 
 ///instr mem reads from a file called "counterrom.mem"
 initial begin
@@ -16,7 +14,7 @@ end;
 
 ///asynchronous instruction read
 always_comb begin
-    instr = rom_array [addr];
+    instr = rom_array [addr/4];
 end;
 
 endmodule

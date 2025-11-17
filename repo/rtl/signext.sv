@@ -10,7 +10,7 @@ module signext #(
 ///sign extension depending on value of ImmSrc
 always_comb begin
     if (ImmSrc == 2'b0) begin  
-        immext = {{20{intr[31]}}, instr[31:20]};
+        immext = {{20{instr[31]}}, instr[31:20]};
     end
     else if (ImmSrc == 2'b1) begin 
         immext = {{20{instr[31]}}, instr[31:25], instr[11:7]};
