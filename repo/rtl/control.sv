@@ -8,7 +8,7 @@ module control #(
     output logic [2:0] ALUCtrl,
     output logic ALUSrc,
     output logic [1:0] ImmSrc,
-    output logic PCsrc
+    output logic PCSrc
 );
 
 wire [6:0] op;
