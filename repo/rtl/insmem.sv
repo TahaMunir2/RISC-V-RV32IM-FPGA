@@ -1,7 +1,7 @@
 module insmem #(
-    parameter DATA_WIDTH = 32
+    parameter DATA_WIDTH = 8
 )(
-    input logic [DATA_WIDTH-1 : 0] addr,
+    input logic [31 : 0] addr,
     output logic [DATA_WIDTH-1 : 0] instr
 );
 logic [DATA_WIDTH-1 : 0] rom_array [255:0];
@@ -14,7 +14,7 @@ end;
 
 ///asynchronous instruction read
 always_comb begin
-    instr = rom_array [addr/4];
+    instr = {rom_array[addr + 3], rom_array[addr + 2], rom_array[addr + 1], rom_array[addr]};
 end;
 
 endmodule
