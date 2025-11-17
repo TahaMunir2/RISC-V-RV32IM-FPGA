@@ -5,8 +5,6 @@ module top #(
     input   logic rst,
     output  logic [DATA_WIDTH-1:0] a0    
 );
-    
-endmodule
 
     logic instr,
     logic EQ,
@@ -59,3 +57,6 @@ endmodule
         .ALUctrl(ALUCtrl),
         .WE3(RegWrite)
     );
+
+    
+endmodule
