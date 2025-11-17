@@ -1,15 +1,16 @@
 module pc_block #(
-    parameter WIDTH = 32
+    parameter WIDTH = 32,
+    parameter ADDRESS_WIDTH = 16
 )
 (
     input logic clk,
     input logic [WIDTH-1:0] Imm_op, 
     input logic rst,
     input logic pc_src,
-    output logic [WIDTH-1:0] pc
+    output logic [ADDRESS_WIDTH-1:0] pc
 );
 
-logic [WIDTH-1:0] branch_pc, inc_pc, internal_pc;
+logic [ADDRESS_WIDTH-1:0] branch_pc, inc_pc, internal_pc;
 assign branch_pc = internal_pc+Imm_op;
 assign inc_pc = internal_pc+4;
 
