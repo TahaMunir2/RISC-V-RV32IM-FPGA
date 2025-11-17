@@ -11,9 +11,9 @@ module control #(
     output logic PCSrc
 );
 
-wire [6:0] op;
-wire [2:0] funct3;
-wire [6:0] funct7;
+logic [6:0] op;
+logic [2:0] funct3;
+logic [6:0] funct7;
 assign op = instr[6:0];
 assign funct3 = instr[14:12];
 assign funct7 = instr [31:25];
