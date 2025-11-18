@@ -5,17 +5,16 @@
 
 unsigned int ticks = 0;
 
-class CpuTestbench : public Testbench
+class RegandAluTestbench : public Testbench
 {
 protected:
     void initializeInputs() override
     {
         top->clk = 1;
-        top->rst = 0;
     }
 };
 
-TEST_F(CpuTestbench, BaseProgramTest)
+TEST_F(RegandAluTestbench, BaseProgramTest)
 {
     bool success = false;
     system("./compile.sh asm/program.S");
@@ -32,7 +31,8 @@ TEST_F(CpuTestbench, BaseProgramTest)
     }
     if (!success)
     {
-        FAIL() << "Counter did not reach 254" << top->a0;
+        std::cout << top->a0 << std::endl;
+        FAIL() << "Counter did not reach 254";
     }
 }
 
