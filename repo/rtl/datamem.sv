@@ -6,7 +6,7 @@ module datamem #(
     output logic [DATA_WIDTH-1:0]    dout
 );
 
-logic [7:0] ram_array [2**ADDRESS_WIDTH-1:0];
+logic [7:0] ram_array [255:0];
 
 initial begin
     $display("Loading ram.");
@@ -15,10 +15,10 @@ end
 
 // SYNCHRONOUS OR ASYNCHRONOUS? This is the Asynchronous way (so the whole instruction executes only in 1 clock cycle)
 always_comb begin
-    dout[7:0] = rom_array[A];
-    dout[8:15]= rom_array[A+1];
-    dout[16:23] = rom_array[A+2];
-    dout[24:31]= rom_array[A+3];
+    dout[7:0] = ram_array[A+3];
+    dout[15:8]= ram_array[A+2];
+    dout[23:16] = ram_array[A+1];
+    dout[31:24]= ram_array[A];
 end
 //byte addressing (and not word addressing)
 
