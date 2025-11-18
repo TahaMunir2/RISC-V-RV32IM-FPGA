@@ -18,8 +18,8 @@ module alu#(
         if(ALUctrl == 0)
             ALUout=ALUop1 + ALUop2;
         else begin
-            if (ALUop1-ALUop2 == 0) EQ=0;
-            else                    EQ=1;
+            if (ALUop1-ALUop2 == 0) EQ=1;
+            else                    EQ=0;
         end
     end
 
