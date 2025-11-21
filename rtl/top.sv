@@ -69,7 +69,8 @@ module top #(
         .ALUsrc(ALUSrc),
         .ALUctrl(ALUCtrl),
         .MemWrite(MemWrite),
-        .ResultSrc(ResultSrc), //additional input (select line of the additional multiplexer) -> coming from the control block
+        .ResultSrc(ResultSrc), 
+        
         .WE3(RegWrite),
         .ByteWrite(ByteWrite),
         .pc_save(pc_save),

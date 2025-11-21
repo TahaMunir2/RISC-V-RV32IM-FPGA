@@ -12,7 +12,7 @@ module regandalu#(
     input logic [2:0]             ALUctrl,
     input logic                   ALUsrc,
     input logic [DATA_WIDTH-1: 0] ImmOp,
-    input logic [1:0] ResultSrc, //additional input (select line of the additional multiplexer)
+    input logic [1:0] ResultSrc, 
     output logic                   EQ,
     output logic [DATA_WIDTH-1: 0] A0,
     output logic [DATA_WIDTH-1:0] ALU_OUT
@@ -41,7 +41,7 @@ module regandalu#(
 
     regfile regfile(
         .clk(clk),
-        .WD3(write_to_reg), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
+        .WD3(write_to_reg), 
         .AD3(AD3),
         .AD2(AD2),
         .AD1(AD1),
@@ -79,7 +79,7 @@ module regandalu#(
         .ByteWrite(ByteWrite)
     );
 
-//2) multiplexer to select where to write in the regfile from
+
 
 
 endmodule

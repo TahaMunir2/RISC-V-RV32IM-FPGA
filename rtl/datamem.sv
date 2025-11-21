@@ -1,7 +1,7 @@
 module datamem #(
     parameter ADDRESS_WIDTH = 32,
               DATA_WIDTH = 32
-)(//removed the clock from the input because we are designing the datamem output to be asynchronous (when implementing store we might have to add the clock back in order to make the input to the data memory synchronous)
+)(
     input  logic                     MemWrite,
     input  logic [ADDRESS_WIDTH-1:0] WD,
     input  logic                     ByteWrite,
@@ -14,7 +14,7 @@ logic [7:0] ram_array [2**17-1:0];
 
 initial begin
     $display("Loading ram.");
-    $readmemh("sineram.mem", ram_array, 32'h10000);
+    $readmemh("reference/gaussian.mem", ram_array, 32'h10000);
 end
 
 always_comb begin
@@ -37,6 +37,5 @@ always_ff @(posedge clk) begin
         end
     end
 end
-//byte addressing (and not word addressing)
 
 endmodule

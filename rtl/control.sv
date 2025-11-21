@@ -22,140 +22,95 @@ assign funct3 = instr[14:12];
 assign funct7 = instr [31:25];
 
 always_comb begin
-    RegWrite  = 0;
-    ALUCtrl   = 3'b000;
-    ALUSrc    = 0;
-    ImmSrc    = 3'b000;
-    PCSrc     = 2'b00;
-    ResultSrc = 0;
-    MemWrite  = 0;
-    ByteWrite = 0;
+    RegWrite  = 0; // 1 for writing 
+    ALUCtrl   = 3'b000; // determines operation of alu
+    ALUSrc    = 0; // imm (1) or rd2 (0) for alu
+    ImmSrc    = 3'b000; // determines type of sign extension
+    PCSrc     = 2'b00; // determines next pc
+    ResultSrc = 2'b00; // alu result(0) or RD[alu_result] (1)
+    MemWrite  = 0; // write enable for data mem
+    ByteWrite = 0; // determines if we are doing byte or word logic
     
-    if (op == 7'b0010011) begin
-        ///logic for addi instruction
+    // i type instructions
+    if (op == 7'b0010011) begin  // ADDI
         if (funct3 == 3'b0) begin
-            RegWrite = 1;
-            ALUCtrl = 3'b000;
-            ALUSrc = 1;
-            ImmSrc = 3'b00;
-            PCSrc = 0;
-            ResultSrc = 1'b0; //we want to write the output of the ALU to the regfile
-            MemWrite = 0; // don't care
-            ByteWrite = 0; // don't care
-         
+            RegWrite = 1; // enable write to write the result into
+            ALUCtrl = 3'b000; // addition
+            ALUSrc = 1; // we need imm for addi
         end
     end
 
-    else if (op == 7'b1100011) begin
-        ///logic for bne instruction
+    else if (op == 7'b1100011) begin  // BNE
         if (funct3 == 3'b001) begin
-            RegWrite = 0;
-            ALUCtrl = 3'b001;
-            ALUSrc = 0;
-            ImmSrc = 3'b010;
-            MemWrite = 0; // don't care
-            ByteWrite = 0;
-           
-            if (EQ) begin
-                PCSrc = 0;
+            ALUCtrl = 3'b001; // subtraction
+            ImmSrc = 3'b010; // type of signext for bne
+            if (EQ == 0) begin
+                PCSrc = 1; // pc + imm
             end
-            else begin
-                PCSrc = 1;
-            end
-            ResultSrc = 0; //Don't care can take any value (because we are not writing to the regfile)
         end
     end
 
     else if (op == 7'b0110011) begin
         if (funct3 == 3'b000)  begin
-            if (funct7 == 7'b0000000) begin // add instruction
+            if (funct7 == 7'b0000000) begin // ADD
                 RegWrite = 1; // we are writing into rd
                 ALUCtrl = 3'b000; // we are adding
                 ALUSrc = 0; // use ALU_op2
-                ImmSrc = 3'b00; // not used
-                PCSrc = 0; // normal PC
-                ResultSrc = 0; // write to register
-                MemWrite = 0; // don't care
-                ByteWrite = 0; // don't care
-           
             end
         end
     end
 
     else if (op== 7'b0000011) begin
-        //logic for the load word instruction
-        if (funct3 == 3'b010) begin
+        if (funct3 == 3'b010) begin // LW
             RegWrite=1;
-            ALUCtrl =3'b0; 
-            ALUSrc = 1'b1; 
-            ImmSrc = 3'b0; //must be 00 because it is an immediate type instruction
-            PCSrc = 0; //normal PC incrementation
-            MemWrite = 0;
+            ALUSrc = 1'b1; // we need the imm to write 
+            ImmSrc = 3'b000; //must be 00 because it is an immediate type instruction
             ResultSrc = 1; //we are writing the output of the data mem to the regfile
-            ByteWrite = 0; // don't care
-           
         end
-        else if (funct3 == 3'b100) begin // lbu
+    else if (funct3 == 3'b100) begin // LBU
             RegWrite=1;
-            ALUCtrl =3'b0; 
             ALUSrc = 1'b1; 
-            ImmSrc = 3'b0; //must be 00 because it is an immediate type instruction
-            PCSrc = 0; //normal PC incrementation
+            ImmSrc = 3'b000; //must be 000 because it is an immediate type instruction
             ResultSrc = 1; //we are writing the output of the data mem to the regfile
-            MemWrite = 0;
-            ByteWrite = 1;
-         
+            ByteWrite = 1; // bytwwise logic
         end
-    end
-
-    else if (op == 7'b0100011) begin // SB
-        RegWrite = 0;
-        ALUCtrl  = 3'b000; 
-        ALUSrc   = 1;
-        ImmSrc   = 3'b01;  
-        PCSrc    = 0;
-        ResultSrc = 0;     
-        MemWrite = 1;     
-        ByteWrite = 1;     
-    end
-    
-
-    else if (op == 7'b1101111) begin // JAL / J
-        RegWrite = 1; // as we are saving the old value
-        ALUCtrl = 3'b0; // doesn't matter, ALU not used
-        ALUSrc = 0; // // doesn't matter
-        ImmSrc = 3'b11; // 11 for j type instruction
-        PCSrc = 1; // for adding an offset to PC
-        ResultSrc = 2'b10; // don't care
-        MemWrite = 0; // don't care
-        ByteWrite = 0; // don't care
-      
     end
 
     else if (op == 7'b1100111) begin // JALR    
         RegWrite = 1; // as we are saving the old value
         ALUCtrl = 3'b0; // we need to add r1 and imm
         ALUSrc = 1; // to add imm
-        ImmSrc = 3'b000; // 11 for j type instruction
+        ImmSrc = 3'b000; // 000 for jalr  instruction
         PCSrc = 2'b10; // for adding an offset to PC and register
-        ResultSrc = 2'b10; // don't care
-        MemWrite = 0; // don't care
-        ByteWrite = 0; // don't care
-      
+        ResultSrc = 2'b10; // for jump instruction
     end
 
-    else if (op == 7'b0110111) begin // LUI / LI
+    // S type instructions
+    else if (op == 7'b0100011) begin // SB
+        ALUCtrl  = 3'b000; // adding rs1 and imm
+        ALUSrc   = 1; // we need imm
+        ImmSrc   = 3'b001;  // for store
+        MemWrite = 1; // need to write into memory
+        ByteWrite = 1; // byte wise logic
+    end
+
+    // J type instructions
+    else if (op == 7'b1101111) begin // JAL 
+        RegWrite = 1; // as we are saving the old value
+        ALUCtrl = 3'b0; // doesn't matter, ALU not used
+        ALUSrc = 0; // // doesn't matter
+        ImmSrc = 3'b011; // 11 for j type instruction
+        PCSrc = 1; // for adding an offset to PC
+        ResultSrc = 2'b10; // for jump instruction
+    end
+
+    // U type instructions
+    else if (op == 7'b0110111) begin // LUI 
         RegWrite = 1; // to write into R[Rd]
         ALUCtrl = 3'b100; // just makes ALUout rd
         ALUSrc = 1; // we need to use the imm
         ImmSrc = 3'b100; // 4 for U type instructions
-        PCSrc = 0; // normal PC
-        ResultSrc = 0; // don't care
-        MemWrite = 0; // don't care
-        ByteWrite = 0; // don't care
-    
     end
-
 end
 
 endmodule
