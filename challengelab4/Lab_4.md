@@ -14,8 +14,8 @@ In this lab, we were able to create the basic components of the CPU, and combine
 ![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/microarchitecture.jpg)
 
 # Design Implementation
-There were a few problems we ran into in this task:
-* Consistent naming system across the team.
+There were a few problems that we ran into in this task:
+* Inconsistent input and output logic names across the team.
 * Integrating all of the modules into a singular top level module.
 * Other minor bug fixes and errors.
 
