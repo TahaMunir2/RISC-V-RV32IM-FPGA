@@ -6,7 +6,7 @@
 # Constants
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 TEST_FOLDER=$(realpath "$SCRIPT_DIR/tests")
-RTL_FOLDER=$(realpath "$SCRIPT_DIR/../rtl")
+RTL_FOLDER="/home/kkt24/Documents/iac/Team5/rtl"
 GREEN=$(tput setaf 2)
 RED=$(tput setaf 1)
 RESET=$(tput sgr0)
@@ -14,6 +14,8 @@ RESET=$(tput sgr0)
 # Variables
 passes=0
 fails=0
+
+~/Documents/iac/lab0-devtools/tools/attach_usb.sh
 
 # Handle terminal arguments
 if [[ $# -eq 0 ]]; then
@@ -27,7 +29,7 @@ fi
 cd $SCRIPT_DIR
 
 # Wipe previous test output
-rm -rf test_out/*
+rm -rf tests/test_out/*
 
 # Iterate through files
 for file in "${files[@]}"; do
@@ -39,7 +41,7 @@ for file in "${files[@]}"; do
     fi
 
     # Translate Verilog -> C++ including testbench
-    verilator   -Wall --trace \
+    verilator -Wall --trace \
                 -cc ${RTL_FOLDER}/${name}.sv \
                 --exe ${file} \
                 -y ${RTL_FOLDER} \

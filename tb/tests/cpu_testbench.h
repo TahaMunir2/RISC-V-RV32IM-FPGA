@@ -23,7 +23,7 @@ public:
     {
         name_ = name;
         // Assemble the program
-        std::ignore = system(("./assemble.sh asm/" + name_ + ".s").c_str());
+        std::ignore = system(("../assemble.sh asm/" + name_ + ".s").c_str());
         // Create default empty file for data memory
         std::ignore = system("touch data.hex");
     }
@@ -43,7 +43,6 @@ public:
         // Initialise inputs
         top_->clk = 1;
         top_->rst = 1;
-        top_->trigger = 0;
         runSimulation(10);  // Process reset
         top_->rst = 0;
     }
