@@ -14,7 +14,7 @@ logic [7:0] ram_array [2**17-1:0];
 
 initial begin
     $display("Loading ram.");
-    $readmemh("reference/gaussian.mem", ram_array, 32'h10000);
+    $readmemh("reference/gaussian.mem", ram_array, 0x10000);
 end
 
 always_comb begin
