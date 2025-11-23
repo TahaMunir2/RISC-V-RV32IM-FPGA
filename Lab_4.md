@@ -21,7 +21,7 @@ There were a few problems that we ran into in this task:
 * Learning how to testbench.
 * Making the ROM too big (2^32) and the code not compiling.
 
-Thankfully, though, this lab proved not to be too difficult, allowing us to prepare our skills in these areas before taking on harder tasks.
+Thankfully though, this lab proved not to be too difficult, allowing us to prepare our skills in these areas before taking on harder tasks.
 
 # Challenge
 As a challenge, we decided to implement a RAM of size 2^17 alongside our existing ROM and the load word instruction in our design. This was done using the datamem.sv. This required adding output to the control module, which selected the output of a MUX after the ALU. We added a testcase in verify.cpp to test out that the RAM worked, along with a test bench for the datamem module.
