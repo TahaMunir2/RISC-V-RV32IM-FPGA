@@ -1,0 +1,35 @@
+
+a.out.reloc:     file format elf32-littleriscv
+architecture: riscv:rv32, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0xbfc00000
+
+
+Disassembly of section .text:
+
+bfc00000 <main>:
+bfc00000:	00000313          	li	t1,0
+bfc00004:	00100393          	li	t2,1
+bfc00008:	00000513          	li	a0,0
+bfc0000c:	00400e6f          	jal	t3,bfc00010 <iloop>
+
+bfc00010 <iloop>:
+bfc00010:	00000513          	li	a0,0
+bfc00014:	fe031ee3          	bnez	t1,bfc00010 <iloop>
+bfc00018:	00150513          	addi	a0,a0,1
+bfc0001c:	fe031ae3          	bnez	t1,bfc00010 <iloop>
+bfc00020:	00250513          	addi	a0,a0,2
+bfc00024:	fe0316e3          	bnez	t1,bfc00010 <iloop>
+bfc00028:	00450513          	addi	a0,a0,4
+bfc0002c:	fe0312e3          	bnez	t1,bfc00010 <iloop>
+bfc00030:	00850513          	addi	a0,a0,8
+bfc00034:	fc031ee3          	bnez	t1,bfc00010 <iloop>
+bfc00038:	01050513          	addi	a0,a0,16
+bfc0003c:	fc031ae3          	bnez	t1,bfc00010 <iloop>
+bfc00040:	02050513          	addi	a0,a0,32
+bfc00044:	fc0316e3          	bnez	t1,bfc00010 <iloop>
+bfc00048:	04050513          	addi	a0,a0,64
+bfc0004c:	fc0312e3          	bnez	t1,bfc00010 <iloop>
+bfc00050:	08050513          	addi	a0,a0,128
+bfc00054:	fa031ee3          	bnez	t1,bfc00010 <iloop>
+bfc00058:	ffce0e67          	jalr	t3,-4(t3)

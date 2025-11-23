@@ -24,5 +24,5 @@ iloop:
     bne t1, zero, iloop
     addi    a0, a0, 128
     bne t1, zero, iloop
-    jalr t3, t3, 0
+    jalr t3, t3, -4
     

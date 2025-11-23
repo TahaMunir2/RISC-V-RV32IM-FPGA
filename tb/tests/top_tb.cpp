@@ -10,7 +10,7 @@
 TEST_F(CpuTestbench, F1StartLights)
 {
     // Assemble asm/f1start.s -> program.hex
-    setupTest("a0test");
+    setupTest("f1");
 
     // Create Vdut, set up tracing, reset, etc.
     initSimulation();
@@ -26,7 +26,7 @@ TEST_F(CpuTestbench, F1StartLights)
         runSimulation(1);
 
         // Drive the bargraph with the lower 8 bits of the F1 output signal
-        vbdPlot(top_->F1_SIGNAL, 0, 255);
+        vbdBar(top_->F1_SIGNAL & 0xFF);
         //            ^^^^^^^^
         //   this expands to e.g. top_->io_leds & 0xFF after you fix the #define
     }
