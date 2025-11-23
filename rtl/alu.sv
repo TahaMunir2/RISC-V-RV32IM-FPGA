@@ -13,8 +13,7 @@ module alu#(
         //default to avoid latches
         ALUout = 0;
         EQ = 1'b0;
-        
-        //the two instructions implemented
+    
         if (ALUop1 - ALUop2 == 0) EQ = 1'b1;
         else EQ = 1'b0;
 
