@@ -4,7 +4,7 @@ module insmem #(
     input logic [DATA_WIDTH-1 : 0] addr,
     output logic [DATA_WIDTH-1 : 0] instr
 );
-logic [7 : 0] rom_array [255:0];
+    logic [7 : 0] rom_array [2**17:0];
 
 initial begin
     $display("Loading rom.", );
