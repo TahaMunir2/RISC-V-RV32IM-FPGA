@@ -46,7 +46,7 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 15363);
 }
 
-TEST_F(CpuTestbench, TestPdf)
+TEST_F(CpuTestbench, Testbeq)
 {
     setupTest("6_beq");
     setData("reference/gaussian.mem");
@@ -55,7 +55,7 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 2);
 }
 
-TEST_F(CpuTestbench, TestPdf)
+TEST_F(CpuTestbench, TestSBandLW)
 {
     setupTest("7_sb_lw");
     setData("reference/gaussian.mem");
@@ -64,7 +64,7 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 4080);
 }
 
-TEST_F(CpuTestbench, TestPdf)
+TEST_F(CpuTestbench, TestBranchInequalities)
 {
     setupTest("8_inequality_branching");
     setData("reference/gaussian.mem");
@@ -73,7 +73,7 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 2);
 }
 
-TEST_F(CpuTestbench, TestPdf)
+TEST_F(CpuTestbench, TestAUIPC)
 {
     setupTest("9_auipc");
     setData("reference/gaussian.mem");
@@ -82,7 +82,7 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 4097);
 }
 
-TEST_F(CpuTestbench, TestPdf)
+TEST_F(CpuTestbench, TestShift)
 {
     setupTest("10_unsigned_immediate_shift");
     setData("reference/gaussian.mem");
