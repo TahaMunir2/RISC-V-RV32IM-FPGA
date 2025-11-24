@@ -46,12 +46,57 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 15363);
 }
 
+TEST_F(CpuTestbench, TestPdf)
+{
+    setupTest("6_beq");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 2);
+}
+
+TEST_F(CpuTestbench, TestPdf)
+{
+    setupTest("7_sb_lw");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 4080);
+}
+
+TEST_F(CpuTestbench, TestPdf)
+{
+    setupTest("8_inequality_branching");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 2);
+}
+
+TEST_F(CpuTestbench, TestPdf)
+{
+    setupTest("9_auipc");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 4097);
+}
+
+TEST_F(CpuTestbench, TestPdf)
+{
+    setupTest("10_unsigned_immediate_shift");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 2);
+}
+
 TEST_F(CpuTestbench, TestPdf2)
 {
     setupTest("a0test");
     setData("reference/gaussian.mem");
     initSimulation();
-    runSimulation(CYCLES * 100);
+    runSimulation(CYCLES);
     EXPECT_EQ(top_->a0, 155);
 }
 
