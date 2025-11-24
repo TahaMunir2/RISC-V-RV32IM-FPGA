@@ -6,12 +6,12 @@ module regandalu#(
     input logic MemWrite,
     input logic [1:0] SizeWrite, //changed from ByteWrite to SizeWrite
     input logic [1:0]LoadSize, //additional output signal
-    input logic LoadUnsigned //additional output signal
+    input logic LoadUnsigned, //additional output signal
     input logic [DATA_WIDTH-1:0] pc_save,
     input logic [4:0] AD3,
     input logic [4:0] AD2,
     input logic [4:0] AD1,
-    input logic [3:0]             ALUctrl, //changed to 4 bits
+    input logic [3:0]             ALUCtrl, //changed to 4 bits
     input logic                   ALUsrc,
     input logic [DATA_WIDTH-1: 0] ImmOp,
     input logic [1:0] ResultSrc, //additional input (select line of the additional multiplexer)
@@ -27,6 +27,7 @@ module regandalu#(
     logic [DATA_WIDTH-1: 0] ALUop1;
     logic [DATA_WIDTH-1: 0] ALUop2;
     logic [DATA_WIDTH-1: 0] regOp2;
+    logic [DATA_WIDTH-1: 0] regOp;  
 
 //additional logic to implement to additional multiplexer block
     logic [DATA_WIDTH-1: 0] output_DataMem;
@@ -51,8 +52,8 @@ module regandalu#(
         .AD2(AD2),
         .AD1(AD1),
         .WE3(WE3),
-        .RS1(regOp),
-        .RS2(regOp2),
+        .RD1(regOp),
+        .RD2(regOp2),
         .A0(A0)
     );
 
@@ -74,7 +75,7 @@ module regandalu#(
     alu alu(
         .ALUop1(ALUop1),
         .ALUop2(ALUop2),
-        .ALUctrl(ALUctrl),
+        .ALUCtrl(ALUCtrl),
         .ALUout(output_ALU),
         .EQ(EQ),
         .LT(LT),
@@ -89,7 +90,9 @@ module regandalu#(
         .dout(output_DataMem),
         .MemWrite(MemWrite),
         .WD(regOp2),
-        .SizeWrite(SizeWrite)
+        .SizeWrite(SizeWrite),
+        .LoadSize(LoadSize), //additional output signal
+        .LoadUnsigned(LoadUnsigned) //additional output signal        
     );
 
 
