@@ -1,7 +1,9 @@
 module d-e_pipeline #(
     DATA_WIDTH = 32
 ) (
-    input clk,
+    input logic clk,
+    input logic flush,
+    input logic enable,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_d,
     input logic [DATA_WIDTH-1:0] RD1_d,
@@ -42,26 +44,35 @@ module d-e_pipeline #(
 );
 
     always @(posedge clk) begin
-        // data
-        pc_save_e <= pc_save_d;
-        RD1_e <= RD1_d;
-        RD2_e <= RD2_d;
-        pc_e <= pc_d;
-        Rd_e <= Rd_d;
-        ImmExt_e <= ImmExt_d;
+        if (flush) begin
+            RegWrite_e <= 0; // to not edit the registers
+            MemWrite_e <= 0; // to not edit the memory
+            Jump_e <= 0; // to not change pc
+            Branch_e <= 0; // to not change pc
+        end
 
-        // control
-        RegWrite_e <= RegWrite_d;
-        ResultSrc_e <= ResultSrc_d;
-        MemWrite_e <= MemWrite_d;
-        Jump_e <= Jump_d;
-        Branch_e <= Branch_d;
-        ALUCtrl_e <= ALUCtrl_d;
-        ALUSrc_e <= ALUSrc_d;
-        SizeWrite_e <= SizeWrite_d;
-        LoadSize_e <= LoadSize_d;
-        LoadUnsigned_e <= LoadUnsigned_d;
-        ALUSrc2_e <= ALUSrc2_d;
+        else if(enable) begin
+            // data
+            pc_save_e <= pc_save_d;
+            RD1_e <= RD1_d;
+            RD2_e <= RD2_d;
+            pc_e <= pc_d;
+            Rd_e <= Rd_d;
+            ImmExt_e <= ImmExt_d;
+
+            // control
+            RegWrite_e <= RegWrite_d;
+            ResultSrc_e <= ResultSrc_d;
+            MemWrite_e <= MemWrite_d;
+            Jump_e <= Jump_d;
+            Branch_e <= Branch_d;
+            ALUCtrl_e <= ALUCtrl_d;
+            ALUSrc_e <= ALUSrc_d;
+            SizeWrite_e <= SizeWrite_d;
+            LoadSize_e <= LoadSize_d;
+            LoadUnsigned_e <= LoadUnsigned_d;
+            ALUSrc2_e <= ALUSrc2_d;
+        end
     end
 
 endmodule

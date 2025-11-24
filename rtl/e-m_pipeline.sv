@@ -1,7 +1,7 @@
 module e-m_pipeline #(
     DATA_WIDTH = 32
 ) (
-    input clk,
+    input logic clk,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_e,
     input logic [DATA_WIDTH-1:0] Rd_e,
