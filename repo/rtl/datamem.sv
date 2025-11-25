@@ -6,7 +6,7 @@ module datamem #(
     output logic [DATA_WIDTH-1:0]    dout
 );
 
-logic [7:0] ram_array [255:0];
+    logic [7:0] ram_array [2**17-1:0];
 
 initial begin
     $display("Loading ram.");

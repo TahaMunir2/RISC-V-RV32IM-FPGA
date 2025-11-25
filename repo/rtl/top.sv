@@ -16,6 +16,9 @@ module top #(
     logic PCSrc;
     logic [DATA_WIDTH-1:0] ImmOp;
     logic [DATA_WIDTH-1:0] PC;
+//extra logic: select line to the multiplexer selecting if we are writing from the datamem or from the ALU output
+    logic reg_entry;
+
 
     control control (
         .EQ(EQ),
@@ -24,7 +27,8 @@ module top #(
         .ALUCtrl(ALUCtrl),
         .ALUSrc(ALUSrc),
         .ImmSrc(ImmSrc),
-        .PCSrc(PCSrc)
+        .PCSrc(PCSrc),
+        .reg_entry(reg_entry)
     );
 
     signext sign_extension (
@@ -56,6 +60,7 @@ module top #(
         .ImmOp(ImmOp),
         .ALUsrc(ALUSrc),
         .ALUctrl(ALUCtrl),
+        .reg_entry(reg_entry), //additional input (select line of the additional multiplexer) -> coming from the control block
         .WE3(RegWrite)
     );
 
