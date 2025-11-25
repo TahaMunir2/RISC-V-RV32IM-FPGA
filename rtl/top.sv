@@ -12,7 +12,7 @@ module top #(
     logic LT;
     logic LTU;
     logic RegWrite;
-    logic [2:0] ALUCtrl;
+    logic [3:0] ALUCtrl;
     logic ALUSrc;
     logic ALUsrc2;
     logic [2:0] ImmSrc;
