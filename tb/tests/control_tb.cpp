@@ -14,7 +14,7 @@ protected:
         top->LTU = 0;
     }
     //member function of the class defined : to set instruction and evaluate
-    //uint32_t : unisgned integer of 32 bits (to match RISCV32 instructions)
+    //uint32_t : unisgned integer of 32 bits (to match RISCV32 instructions) : It is important to understand that the int type does not have a fixed size and is signed, thus the testing is not consistent if we use int 
     void loadInstr(uint32_t instr) {
         top->instr = instr;
         top->eval();
