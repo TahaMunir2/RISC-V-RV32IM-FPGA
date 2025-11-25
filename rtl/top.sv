@@ -21,7 +21,6 @@ module top #(
     logic [DATA_WIDTH-1:0] PC;
     logic MemWrite;
     logic [DATA_WIDTH-1:0] pc_save;
-    logic ByteWrite;
     logic [DATA_WIDTH-1:0] ALU_OUT;
     logic [1:0] ResultSrc;
     logic [1:0] SizeWrite;
