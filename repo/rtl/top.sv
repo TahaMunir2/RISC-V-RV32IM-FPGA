@@ -6,8 +6,24 @@ module top #(
     output  logic [DATA_WIDTH-1:0] a0    
 );
     
+//fetch stage logic
+    logic [DATA_WIDTH-1:0] instr_f;
+    logic [DATA_WIDTH-1:0] pc_f;
+    logic [DATA_WIDTH-1:0] pc_save_f;
 
-    logic [DATA_WIDTH-1:0] instr;
+//decode stage logic
+    logic [DATA_WIDTH-1:0] instr_d;
+    logic [DATA_WIDTH-1:0] pc_d;
+    logic [DATA_WIDTH-1:0] pc_save_d;
+
+//exec stage logic
+
+
+//mem stage logic
+
+
+//writeback stage logic
+
     logic EQ;
     logic RegWrite;
     logic [2:0] ALUCtrl;
@@ -15,9 +31,24 @@ module top #(
     logic [1:0] ImmSrc;
     logic PCSrc;
     logic [DATA_WIDTH-1:0] ImmOp;
-    logic [DATA_WIDTH-1:0] PC;
+
 //extra logic: select line to the multiplexer selecting if we are writing from the datamem or from the ALU output
     logic reg_entry;
+
+//fetch stage
+
+
+//decode stage
+
+
+//exec stage
+
+
+//mem stage
+
+
+//writeback stage
+
 
 
     control control (
