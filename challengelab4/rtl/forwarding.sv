@@ -24,18 +24,18 @@ always_comb begin
 
     //Operand1 forwarding
     if (regWriteM && rdM != 0 && rdM == rs1) begin
-        selectline1 = 2'b01;  //from MEM stage
+        selectline1 = 2'b10;  //from MEM stage
     end 
     else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs1) begin
-        selectline1 = 2'b10;  //from WB stage
+        selectline1 = 2'b01;  //from WB stage
     end
 
     // Operand 2 forwarding
     if (regWriteM && rdM !=0 && rdM == rs2) begin
-        selectline2 = 2'b01;
+        selectline2 = 2'b10;
     end 
     else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs2) begin
-        selectline2 = 2'b10;
+        selectline2 = 2'b01;
     end
 
 end
