@@ -2,7 +2,7 @@
 
 # This script runs the testbench
 # Usage: ./doit.sh <file1.cpp> <file2.cpp>
-
+~/Documents/iac/lab0-devtools/tools/attach_usb.sh
 # Constants
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 TEST_FOLDER=$(realpath "$SCRIPT_DIR/tests")

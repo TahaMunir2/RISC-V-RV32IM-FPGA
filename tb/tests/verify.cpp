@@ -46,6 +46,15 @@ TEST_F(CpuTestbench, TestPdf)
     EXPECT_EQ(top_->a0, 15363);
 }
 
+TEST_F(CpuTestbench, TestPdf2)
+{
+    setupTest("a0test");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(CYCLES * 100);
+    EXPECT_EQ(top_->a0, 155);
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
