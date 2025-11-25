@@ -4,6 +4,8 @@ module hazard_unit#(
 (
     input logic [reg_addressing_width-1:0] rs1D, 
     input logic [reg_addressing_width-1:0] rs2D,
+    input logic [reg_addressing_width-1:0] rs1E, 
+    input logic [reg_addressing_width-1:0] rs2E,
     input logic [reg_addressing_width-1:0] rdM,
     input logic [reg_addressing_width-1:0] rdE, 
     input logic [reg_addressing_width-1:0] rdWB,
@@ -31,18 +33,18 @@ always_comb begin
     selectline2 = 2'b00;
 
     //Operand1 forwarding
-    if (regWriteM && rdM != 0 && rdM == rs1) begin
+    if (regWriteM && rdM != 0 && rdM == rs1E) begin
         selectline1 = 2'b10;  //from MEM stage
     end 
-    else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs1) begin
+    else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs1E) begin
         selectline1 = 2'b01;  //from WB stage
     end
 
     // Operand 2 forwarding
-    if (regWriteM && rdM !=0 && rdM == rs2) begin
+    if (regWriteM && rdM !=0 && rdM == rs2E) begin
         selectline2 = 2'b10;
     end 
-    else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs2) begin
+    else if (WriteBack_Regfile && rdWB !=0 && rdWB == rs2E) begin
         selectline2 = 2'b01;
     end
 
