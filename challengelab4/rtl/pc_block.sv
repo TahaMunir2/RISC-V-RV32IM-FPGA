@@ -20,7 +20,7 @@ assign pc_save = inc_pc;
 
 
 always_ff @(posedge clk)
-    if (!en) internal_pc <=pc;
+    if (!enable) internal_pc <=pc;
     else if (rst) internal_pc <={WIDTH{1'b0}};
     else begin
         case (pc_src)
