@@ -11,7 +11,7 @@ module e-m_pipeline #(
     output logic [DATA_WIDTH-1:0] pc_save_m,
     output logic [DATA_WIDTH-1:0] Rd_m,
     output logic [DATA_WIDTH-1:0] ALU_Result_m,
-    output logic [DATA_WIDTH-1:0] RD2_m,
+    output logic [DATA_WIDTH-1:0] Write_Data_m,
     
 
     // control logic
