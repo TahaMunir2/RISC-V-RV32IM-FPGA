@@ -48,11 +48,11 @@ module top #(
      logic [DATA_WIDTH-1:0] pc_d;
      logic [DATA_WIDTH-1:0] Rd_d;
      logic [DATA_WIDTH-1:0] ImmExt_d;
-     logic [DATA_WIDTH-1:0] pc_save_e;
+     logic [DATA_WIDTH-1:0] PCPlus4dE;
      logic [DATA_WIDTH-1:0] RD1_e;
      logic [DATA_WIDTH-1:0] RD2_e;
      logic [DATA_WIDTH-1:0] pc_e;
-     logic [DATA_WIDTH-1:0] Rd_e;
+     logic [DATA_WIDTH-1:0] RdE;
      logic [DATA_WIDTH-1:0] ImmExt_e;
 
     // control logic
@@ -67,16 +67,16 @@ module top #(
      logic [1:0]LoadSize_d; 
      logic LoadUnsigned_d;
      logic ALUSrc2_d;
-     logic RegWrite_e;
-     logic [1:0] ResultSrc_e;
-     logic MemWrite_e;
+     logic RegWriteE;
+     logic [1:0] ResultSrcE;
+     logic MemWriteE;
      logic Jump_e;
      logic Branch_e;
      logic [3:0] ALUCtrl_e;
      logic ALUSrc_e;
-     logic [1:0] SizeWrite_e;
-     logic [1:0]LoadSize_e; 
-     logic LoadUnsigned_e;
+     logic [1:0] SizeWriteE;
+     logic [1:0]LoadSizeE; 
+     logic LoadUnsignedE;
      logic ALUSrc2_e;
 
 
@@ -105,7 +105,7 @@ module f-d_pipeline #(
         .rdE(rdE), 
         .rdWB(rdWB),
         .regWriteM(regWriteM),
-        .resultSrCE(ResultSrc_e),
+        .resultSrCE(ResultSrcE),
         .resultSrCM(ResultSrcM),
         .WriteBack_Regfile(RegWriteW),    
         .selectline1(ForwardAE),
@@ -149,11 +149,11 @@ module f-d_pipeline #(
       .pc_d(PCD),
       .Rd_d(instr_d[11:7]),
       .ImmExt_d(ImmExt_d),
-      .pc_save_e(pc_save_e),
+      .pc_save_e(PCPlus4dE),
       .RD1_e(RD1_e),
       .RD2_e(RD2_e),
       .pc_e(pc_e),
-      .Rd_e(Rd_e),
+      .Rd_e(RdE),
       .ImmExt_e(ImmExt_e),
 
     // control logic
@@ -168,16 +168,16 @@ module f-d_pipeline #(
      .LoadSize_d(LoadSize_d), 
      .LoadUnsigned_d(LoadUnsigned_d),
      .ALUSrc2_d(ALUSrc2_d),
-     .RegWrite_e(RegWrite_e),
-     .ResultSrc_e(ResultSrc_e),
-     .MemWrite_e(MemWrite_e),
+     .RegWrite_e(RegWriteE),
+     .ResultSrc_e(ResultSrcE),
+     .MemWrite_e(MemWriteE),
      .Jump_e(Jump_e),
      .Branch_e(Branch_e),
      .ALUCtrl_e(ALUCtrl_e),
      .ALUSrc_e(ALUSrc_e),
-     .SizeWrite_e(SizeWrite_e),
-     .LoadSize_e(LoadSize_e), 
-     .LoadUnsigned_e(LoadUnsigned_e),
+     .SizeWrite_e(SizeWriteE),
+     .LoadSize_e(LoadSizeE), 
+     .LoadUnsigned_e(LoadUnsignedE),
      .ALUSrc2_e(ALUSrc2_e)
     );
     
@@ -303,7 +303,7 @@ em_pipeline em_pipeline(
     .LoadUnsigned_m(LoadUnsignedm)
 
     //inputs to the register processed in the execute stage
-    .pc_save_e(PCPlus4E),
+    .pc_save_e(PCPlus4dE),
     .Rd_e(RdE),
     .ALU_Result_e(output_ALU),
     .Write_Data_e(SrcBE),
