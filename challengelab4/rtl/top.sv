@@ -95,15 +95,35 @@ module f-d_pipeline #(
 );
 */
 
-    
+    hazard_unit hazard_unit (
+        .rs1D(RD1_d), 
+        .rs2D(RD2_d),
+        .rs1E(RD1_e), 
+        .rs2E(RD2_e),
+        .rdM(rdM),
+        .rdE(rdE), 
+        .rdWB(rdWB),
+        .regWriteM(regWriteM),
+        .resultSrCE(ResultSrc_e),
+        .resultSrCM(ResultSrcM),
+        .WriteBack_Regfile(RegWriteW),    
+        .selectline1(ForwardAE),
+        .selectline2(ForwardBE),
+        .flush_d_exec(flush_d_exec),
+        .flush_f_d(flush_f_d),
+        .F_Write(F_Write),
+        .PCWrite(PCWrite)
 
-    f-d_pipeline fd_pipeline(
+    );
+
+    fd_pipeline fd_pipeline(
         .clk(clk),
-        .flush(),/////////SEE WHAT TO PUT HERE
-        enable(F_Write),/////////SEE WHAT TO PUT HERE
+        .rst(rst),
+        .flush(flush_f_d),/////////SEE WHAT TO PUT HERE
+        .enable(F_Write),/////////SEE WHAT TO PUT HERE
         .instr_f(instr),
         .pc_f(PC),
-        .pc_save_f(pc + 4),
+        .pc_save_f(PC_save),
         .instr_d(instr_d),
         .pc_d(PCD),
         .pc_save_d(PCD_save)
@@ -116,10 +136,11 @@ module f-d_pipeline #(
     );
 
 
-    d-e_pipeline de_pipeline(
+    de_pipeline de_pipeline(
          .clk(clk),
+    .rst(rst),
      .flush(flush_d_exec),
-     enable,
+     .enable(1),
     // data logic
       .pc_save_d (PCD_save),
       .RD1_d (instr_d[19:15]),
@@ -157,10 +178,8 @@ module f-d_pipeline #(
      .LoadSize_e(LoadSize_e), 
      .LoadUnsigned_e(LoadUnsigned_e),
      .ALUSrc2_e(ALUSrc2_e)
-
-
-
-    )
+    );
+    
     control control (
         .EQ(EQ),
         .instr(instr_d),
@@ -189,7 +208,8 @@ module f-d_pipeline #(
         .enable(enable);
         .Imm_op(ImmOp),
         .pc_src(PCSrc),
-        .pc(PC)
+        .pc(PC),
+        .pc_save(PC_save)
     );
 
 
