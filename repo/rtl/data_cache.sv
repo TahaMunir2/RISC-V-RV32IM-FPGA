@@ -7,12 +7,14 @@ module data_cache #(
     input logic clk,
     input logic wr_en,
     input logic rd_en,
+    input logic d,
+    input logic u,
     input logic [ADDRESS_WIDTH-1 : 0] addr,
-    input logic [DATA_WIDTH-1 : 0] write_data,
+    input logic [(DATA_WIDTH * BLOCK_SIZE)-1 : 0] write_data,
+    input logic [(DATA_WIDTH * BLOCK_SIZE)-1 : 0] wmask,
     input logic way,
 
-    output logic [DATA_WIDTH-1 : 0] out,
-    output logic hit
+    output logic [DATA_WIDTH-1 : 0] out
 );
 
 typedef struct packed {
@@ -33,7 +35,7 @@ typedef struct packed {
 } block_store;
 
 typedef struct packed {
-    logic u;
+    logic used;
     block_store block1;
     block_store block0;
 } set_store;
@@ -57,54 +59,60 @@ end
 
 always @(posedge clk) begin
 
-    if (wr_en == 1'b1) begin
+    if (rd_en == 1'b1) begin
 
         if (way == 1'b0) begin
 
             if (block_offset == 2'b0) begin
-                cache[set].block0.word0 <= write_data
+                out <= cache[set].block0.word0;
             end
 
             else if (block_offset == 2'b1) begin
-                cache[set].block0.word1 <= write_data
+                out <= cache[set].block0.word1;
             end
 
             else if (block_offset == 2'b10) begin
-                cache[set].block0.word2 <= write_data
+                out <= cache[set].block0.word2;
             end
 
             else if (block_offset == 2'b11) begin
-                cache[set].block0.word3 <= write_data
+                out <= cache[set].block0.word3;
             end
         end
 
         else if (way == 1'b1) begin
 
             if (block_offset == 2'b0) begin
-                cache[set].block1.word0 <= write_data
+                out <= cache[set].block1.word0;
             end
 
             else if (block_offset == 2'b1) begin
-                cache[set].block1.word1 <= write_data
+                out <= cache[set].block1.word1;
             end
 
             else if (block_offset == 2'b10) begin
-                cache[set].block1.word2 <= write_data
+                out <= cache[set].block1.word2;
             end
 
             else if (block_offset == 2'b11) begin
-                cache[set].block1.word3 <= write_data
+                out <= cache[set].block1.word3;
             end
         end
     end
 
-    if (rd_en == 1'b1) begin
+    if (wr_en == 1'b1) begin
         if (way == 1'b0) begin
-
+            cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block0.valid <= 1'b1;
+            cache[set].block0.dirty <= d;
+            cache[set].block0.used <= u;
         end
 
         else if (way == 1'b1) begin
-
+            cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block1.valid <= 1'b1;
+            cache[set].block1.dirty <= d;
+            cache[set].block1.used <= u;
         end
     end
 end
