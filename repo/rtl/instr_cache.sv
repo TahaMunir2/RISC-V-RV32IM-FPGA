@@ -33,7 +33,7 @@ typedef struct packed {
 typedef struct packed {
     logic valid;
     logic dirty;
-    logic [21:0] tag;
+    logic [20:0] tag;
     word_store word3;
     word_store word2;
     word_store word1;
@@ -48,20 +48,18 @@ typedef struct packed {
 
 set_store cache [128];
 
+initial begin
 //initialising bits in the cache
-for (int i = 0; i < 128; i++) begin
-    cache[i].block0.valid = 1'b0;
-    cache[i].block1.valid = 1'b0;
+    for (int i = 0; i < 128; i++) begin
+        cache[i].block0.valid = 1'b0;
+        cache[i].block1.valid = 1'b0;
+    end
 end
 
 assign tag_bits = addr[ADDR_WIDTH-1:11];
 assign set = addr[10:4];
 assign block_offset = addr[3:2];
 assign byte_offset = addr[1:0];
-
-always_comb begin
-
-end
 
 always @(posedge clk) begin
 
@@ -138,14 +136,14 @@ always @(posedge clk) begin
 //write logic
     if (wr_en == 1'b1) begin
         if (way == 1'b0) begin
-            cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~mask);
             cache[set].block0.tag <= tag_bits;
             cache[set].block0.valid <= 1'b1;
             cache[set].block0.dirty <= d;
         end
 
         else if (way == 1'b1) begin
-            cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~mask);
             cache[set].block1.tag <= tag_bits;
             cache[set].block1.valid <= 1'b1;
             cache[set].block1.dirty <= d;
