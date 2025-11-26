@@ -64,7 +64,7 @@ assign wStall = (resultSrCE == 2'b01) &&
 
 always_comb begin
 
-    // Default: no stall, no flush
+    // Default: no stall, and no flush
     PCWrite     = 1;
     F_Write = 1;
     flush_d_exec = 0;
