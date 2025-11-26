@@ -3,6 +3,7 @@ module pc_block #(
 )
 (
     input logic clk,
+    input logic enable,
     input logic [WIDTH-1:0] Imm_op, 
     input logic [WIDTH-1:0] ALU,
     input logic rst,
@@ -19,7 +20,8 @@ assign pc_save = inc_pc;
 
 
 always_ff @(posedge clk)
-    if (rst) internal_pc <={WIDTH{1'b0}};
+    if (!enable) internal_pc <=pc;
+    else if (rst) internal_pc <={WIDTH{1'b0}};
     else begin
         case (pc_src)
             2'b00: internal_pc <= inc_pc;    // PC + 4
