@@ -129,12 +129,12 @@ end
     end
 
 always_ff @(posedge clk) begin
-    write_back_en <= 0;
+    write_back_en <= 0; // default to prevent latching
 //read logic
     if (rd_en == 1'b1) begin
         
-        cache[set].used = way; // set the last used to whichever one you are reading from
-        
+        cache[set].used <= way; // set the last used to whichever one you are reading from
+        // we don't update valid or dirty since we are only reading
         if (way == 1'b0) begin
 
             if (block_offset == 2'b0) begin
@@ -178,9 +178,7 @@ always_ff @(posedge clk) begin
     
 //write logic
 if (wr_en) begin
-        // Update LRU on write
-        cache[set].used <= way;
-
+        cache[set].used <= way; // update used
         if (way == 1'b0) begin
             if (cache[set].block0.dirty == 1) begin
                 write_back <= cache[set].block0[127:0];
