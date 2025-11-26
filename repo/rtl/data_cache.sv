@@ -7,6 +7,8 @@ module data_cache #(
     input logic clk,
     input logic wr_en,
     input logic rd_en,
+    input logic u_en,
+    input logic d_en,
     input logic d,
     input logic u,
     input logic [ADDRESS_WIDTH-1 : 0] addr,
@@ -14,7 +16,11 @@ module data_cache #(
     input logic [(DATA_WIDTH * BLOCK_SIZE)-1 : 0] wmask,
     input logic way,
 
-    output logic [DATA_WIDTH-1 : 0] out
+    output logic [21:0] tags_ways [2],
+    output logic [DATA_WIDTH-1 : 0] data_out,
+    output logic dirty_out,
+    output logic used_out,
+    output logic valid_out
 );
 
 typedef struct packed {
@@ -48,9 +54,9 @@ for (int i = 0; i < 128; i++) begin
     cache[i].block1.valid = 1'b0;
 end
 
-assign tag = addr[ADDR_WIDTH-1:11];
+assign tag_bits = addr[ADDR_WIDTH-1:11];
 assign set = addr[10:4];
-assign block_offset = addr[3:2]
+assign block_offset = addr[3:2];
 assign byte_offset = addr[1:0];
 
 always_comb begin
@@ -59,61 +65,108 @@ end
 
 always @(posedge clk) begin
 
+//update tag_ways synchronously
+    tags_ways[0] <= cache[set].block0.tag;
+    tags_ways[1] <= cache[set].block1.tag;
+
+//read logic
     if (rd_en == 1'b1) begin
 
         if (way == 1'b0) begin
 
             if (block_offset == 2'b0) begin
-                out <= cache[set].block0.word0;
+                data_out <= cache[set].block0.word0;
+                dirty_out <= cache[set].block0.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block0.valid;
             end
 
             else if (block_offset == 2'b1) begin
-                out <= cache[set].block0.word1;
+                data_out <= cache[set].block0.word1;
+                dirty_out <= cache[set].block0.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block0.valid;
             end
 
             else if (block_offset == 2'b10) begin
-                out <= cache[set].block0.word2;
+                data_out <= cache[set].block0.word2;
+                dirty_out <= cache[set].block0.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block0.valid;
             end
 
             else if (block_offset == 2'b11) begin
-                out <= cache[set].block0.word3;
+                data_out <= cache[set].block0.word3;
+                dirty_out <= cache[set].block0.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block0.valid;
             end
         end
 
         else if (way == 1'b1) begin
 
             if (block_offset == 2'b0) begin
-                out <= cache[set].block1.word0;
+                data_out <= cache[set].block1.word0;
+                dirty_out <= cache[set].block1.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block1.valid;
             end
 
             else if (block_offset == 2'b1) begin
-                out <= cache[set].block1.word1;
+                data_out <= cache[set].block1.word1;
+                dirty_out <= cache[set].block1.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block1.valid;
             end
 
             else if (block_offset == 2'b10) begin
-                out <= cache[set].block1.word2;
+                data_out <= cache[set].block1.word2;
+                dirty_out <= cache[set].block1.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block1.valid;
             end
 
             else if (block_offset == 2'b11) begin
-                out <= cache[set].block1.word3;
+                data_out <= cache[set].block1.word3;
+                dirty_out <= cache[set].block1.dirty;
+                used_out <= cache[set].used;
+                valid_out <= cache[set].block1.valid;
             end
         end
     end
-
+    
+//write logic
     if (wr_en == 1'b1) begin
         if (way == 1'b0) begin
             cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block0.tag <= tag_bits;
             cache[set].block0.valid <= 1'b1;
             cache[set].block0.dirty <= d;
-            cache[set].block0.used <= u;
         end
 
         else if (way == 1'b1) begin
             cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask);
+            cache[set].block1.tag <= tag_bits;
             cache[set].block1.valid <= 1'b1;
             cache[set].block1.dirty <= d;
-            cache[set].block1.used <= u;
         end
     end
+
+//u bit write logic
+    if (u_en == 1'b1) begin
+        cache[set].used <= u;
+    end
+
+//d bit write logic
+    if (d_en == 1'b1) begin
+        if (way == 1'b0) begin
+            cache[set].block0.dirty <= d;
+        end
+
+        if (way == 1'b1) begin
+            cache[set].block1.dirty <= d;
+        end
+    end
+
 end
 endmodule
