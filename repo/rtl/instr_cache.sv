@@ -136,14 +136,14 @@ always @(posedge clk) begin
 //write logic
     if (wr_en == 1'b1) begin
         if (way == 1'b0) begin
-            cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~mask);
+            cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block0[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~wmask);
             cache[set].block0.tag <= tag_bits;
             cache[set].block0.valid <= 1'b1;
             cache[set].block0.dirty <= d;
         end
 
         else if (way == 1'b1) begin
-            cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~mask);
+            cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] <= (write_data & wmask) | (cache[set].block1[(DATA_WIDTH * BLOCK_SIZE)-1 : 0] & ~wmask);
             cache[set].block1.tag <= tag_bits;
             cache[set].block1.valid <= 1'b1;
             cache[set].block1.dirty <= d;
