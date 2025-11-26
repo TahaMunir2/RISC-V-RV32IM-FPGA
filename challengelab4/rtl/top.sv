@@ -16,6 +16,7 @@ module top #(
     logic PCSrc;
     logic [DATA_WIDTH-1:0] ImmOp;
     logic [DATA_WIDTH-1:0] PC;
+    logic [DATA_WIDTH-1:0] PC_save;
     logic reg_entry;
     logic [DATA_WIDTH-1:0] instr_d;
 
