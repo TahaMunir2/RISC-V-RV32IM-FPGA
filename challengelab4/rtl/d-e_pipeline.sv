@@ -4,6 +4,7 @@ module d-e_pipeline #(
     input logic clk,
     input logic flush,
     input logic enable,
+    input logic rst,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_d,
     input logic [DATA_WIDTH-1:0] RD1_d,
@@ -44,7 +45,31 @@ module d-e_pipeline #(
 );
 
     always @(posedge clk) begin
-        if (flush) begin
+        
+        if (rst) begin 
+             // data
+            pc_save_e <= 0;
+            RD1_e <= 0;
+            RD2_e <= 0;
+            pc_e <= 0;
+            Rd_e <= 0;
+            ImmExt_e <= 0;
+
+            // control
+            RegWrite_e <= 0;
+            ResultSrc_e <= 0;
+            MemWrite_e <= 0;
+            Jump_e <= 0;
+            Branch_e <= 0;
+            ALUCtrl_e <= 0;
+            ALUSrc_e <= 0;
+            SizeWrite_e <= 0;
+            LoadSize_e <= 0;
+            LoadUnsigned_e <= 0;
+            ALUSrc2_e <= 0;
+        end
+        
+        else if (flush) begin
             RegWrite_e <= 0; // to not edit the registers
             MemWrite_e <= 0; // to not edit the memory
             Jump_e <= 0; // to not change pc
