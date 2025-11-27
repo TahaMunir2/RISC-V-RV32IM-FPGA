@@ -8,6 +8,8 @@ module data_cache #(
     input logic fetch, // ******* we need to use this as a cache enable
     input  logic [ADDRESS_WIDTH-1:0] addr,
     input  logic [DATA_WIDTH*BLOCK_SIZE-1:0] line_from_mem,
+    input  logic [1:0] SizeWrite_m,
+    input  logic MemWrite_m,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
@@ -45,7 +47,7 @@ typedef struct packed {
     logic [6:0] set;
     logic [1:0] block_offset;
     logic [1:0] byte_offset;
-    logic cpu_write; // ********* need to implement for store insturctions
+    logic cpu_write; //for store insturctions
     logic [DATA_WIDTH*BLOCK_SIZE-1:0] wmask;
 
     set_store cache [128];
@@ -54,12 +56,12 @@ typedef struct packed {
     assign set = addr[10:4];
     assign block_offset = addr[3:2];
     assign byte_offset = addr[1:0];
-    assign cpu_write = 0; // default value
+    assign cpu_write; // default value
 
     initial begin // initialise CACHE
         for (int i = 0; i < 128; i++) begin
             cache[i].block0.valid = 1'b0;
-            cache[i].block1.valid = 1'b0;
+            cache[i].block1.valid = 1'b0; // ****** what about dirty and used bits?
         end
     end
 
@@ -81,11 +83,12 @@ typedef struct packed {
         wr_en= 1'b0;
         rd_en = 1'b0;
         write_data = '0;
+        cpu_write = 0;
 
         // way determination
         if (miss) begin
-            wmask = '1;
             stall = 1'b1;
+            wmask = '1;
 
             if (!valid0 && !valid1)     way = 1'b0; //both bits are invalid, we choose the default 
             else if (!valid0)           way = 1'b0; //way0 is invalid
@@ -95,8 +98,14 @@ typedef struct packed {
 
         else begin
             way = hit1; // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
+            if (MemWrite_m) begin // sb logic, determine size
+            cpu_write = 1'b1;
+            wr_en = 1'b1;
+            
+                // implement logic
+            
+            end
         end
-  
     // wr and rd en logic
         if (fetch) begin //no access this cycle: do nothing (no fetching from ROM)
             rd_en= 1'b1;
