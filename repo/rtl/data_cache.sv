@@ -56,7 +56,6 @@ typedef struct packed {
     assign set = addr[10:4];
     assign block_offset = addr[3:2];
     assign byte_offset = addr[1:0];
-    assign cpu_write; // default value
 
     initial begin // initialise CACHE
         for (int i = 0; i < 128; i++) begin
@@ -68,7 +67,8 @@ typedef struct packed {
         logic hit0, hit1;
         logic valid0, valid1;
         logic miss;
-        logic top_bit, bottom_bit;
+        logic [6:0] top_bit;
+        logic [6:0] bottom_bit;
 
     always_comb begin
          // hit detection
@@ -102,23 +102,23 @@ typedef struct packed {
             if (MemWrite_m) begin // sb logic, determine size
                 cpu_write = 1'b1;
                 wr_en = 1'b1;
-                wmask = '1
+                wmask = '1;
                 if(SizeWrite_m == 2'b00) begin
                     bottom_bit = block_offset * 32;
                     top_bit = bottom_bit + 31;
-                    wmask[bottom_bit:+ 32] = '0;
+                    wmask[bottom_bit +: 32] = '0;
                 end
 
                 else if(SizeWrite_m == 2'b01) begin
                     bottom_bit = block_offset * 32 + byte_offset * 8;
                     top_bit = bottom_bit + 15;
-                    wmask[bottom_bit:+ 16] = '0;
+                    wmask[bottom_bit +: 16] = '0;
                 end
 
                 else if(SizeWrite_m == 2'b10) begin
                     bottom_bit = block_offset * 32 + byte_offset * 8;
                     top_bit = bottom_bit + 7;
-                    wmask[bottom_bit:+ 8] = '0;
+                    wmask[bottom_bit +: 8] = '0;
                 end
 
                 wmask = ~wmask;
