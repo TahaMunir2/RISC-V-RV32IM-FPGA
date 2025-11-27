@@ -18,7 +18,8 @@ module hazard_unit#(
     output logic flush_d_exec,
     output logic flush_f_d,
     output logic F_Write,
-    output logic PCWrite
+    output logic PCWrite,
+    input logic PCSrcE
 );
     
 //forwarding:
@@ -50,7 +51,7 @@ always_comb begin
 
 end
     
-logic wstall;
+logic wStall;
 //logic lw_write_back;
 
 assign wStall = (resultSrCE == 2'b01) &&

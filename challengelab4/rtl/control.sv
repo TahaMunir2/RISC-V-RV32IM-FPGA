@@ -15,7 +15,9 @@ module control #(
     output logic [1:0]SizeWrite, //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
     output logic ALUsrc2, //additional output signal
     output logic [1:0]LoadSize, //additional output signal
-    output logic LoadUnsigned //additional output signal
+    output logic LoadUnsigned, //additional output signal
+    output logic Branch,
+    output logic [2:0] function3
 
 );
 
@@ -25,6 +27,7 @@ logic [2:0] funct3;
 logic [6:0] funct7;
 assign op = instr[6:0];
 assign funct3 = instr[14:12];
+assign function3 = funct3;
 assign funct7 = instr [31:25];
 
 logic [6:0] imm_11_5;
@@ -112,6 +115,7 @@ assign imm_11_5 = instr[31:25];
 
             //  Branch Instruction
             OPC_BRANCH: begin
+                Branch = 1;
                 case (funct3)
 
                     //Branch If Equal (BEQ)

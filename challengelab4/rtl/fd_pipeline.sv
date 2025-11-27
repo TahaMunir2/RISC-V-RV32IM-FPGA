@@ -1,4 +1,4 @@
-module f-d_pipeline #(
+module fd_pipeline #(
     DATA_WIDTH = 32
 ) (
     input logic clk,

@@ -1,4 +1,4 @@
-module m-w_pipeline #(
+module mw_pipeline #(
     DATA_WIDTH = 32
 ) (
     input logic clk,

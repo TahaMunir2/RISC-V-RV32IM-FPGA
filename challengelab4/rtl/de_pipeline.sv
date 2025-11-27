@@ -1,4 +1,4 @@
-module d-e_pipeline #(
+module de_pipeline #(
     DATA_WIDTH = 32
 ) (
     input logic clk,
@@ -38,10 +38,12 @@ module d-e_pipeline #(
     output logic Branch_e,
     output logic [3:0] ALUCtrl_e,
     output logic ALUSrc_e,
-    output logic [1:0] SizeWrite_e
+    output logic [1:0] SizeWrite_e,
     output logic [1:0]LoadSize_e, 
     output logic LoadUnsigned_e,
-    output logic ALUSrc2_e
+    output logic ALUSrc2_e,
+    input logic [2:0] funct3_d,
+    output logic [2:0] funct3_e
 );
 
     always @(posedge clk) begin

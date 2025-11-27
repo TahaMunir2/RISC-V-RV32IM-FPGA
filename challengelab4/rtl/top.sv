@@ -28,6 +28,15 @@ module top #(
     logic [DATA_WIDTH-1: 0] output_DataMem;
     logic [DATA_WIDTH-1: 0] write_to_reg;
 
+    logic                   LT;
+    logic                   LTU;
+    logic [1:0] ResultSrc; //adding the aditional output representing the select line of the additional multiplexer in the regaludmem block
+     logic MemWrite;
+     logic [1:0]SizeWrite; //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
+     logic ALUsrc2; //additional output signal
+     logic [1:0]LoadSize; //additional output signal
+     logic LoadUnsigned; //additional output signal
+
 
 ///extra logic for hazard unit
      logic [1:0] selectline1;
@@ -78,6 +87,39 @@ module top #(
      logic [1:0]LoadSizeE; 
      logic LoadUnsignedE;
      logic ALUSrc2_e;
+     logic enable_de;
+     assign enable_de = 1;
+     logic [2:0] function3_d;
+     logic [2:0] function3_e;
+     logic PCSrcE;
+
+
+
+
+     
+
+//extra wires added for the pipeline register:
+    logic [DATA_WIDTH-1:0] PCPlus4M;
+    logic [DATA_WIDTH-1:0] RdM;
+    logic [DATA_WIDTH-1:0] ALUResultM;
+    logic [DATA_WIDTH-1:0] WriteDataM;
+     logic RegWriteM;
+     logic [1:0] ResultSrCM;
+     logic MemWriteM;
+     logic [1:0] SizeWriteM;
+     logic [1:0]LoadSizeM; 
+     logic LoadUnsignedm;
+//extra wires for the output of the memory-writeback pipeline register:
+logic RegWriteW;
+logic [1:0] ResultSrcW;
+logic [DATA_WIDTH-1 :0] datamem_output;
+logic [DATA_WIDTH-1 :0] ALUResultW;
+logic [DATA_WIDTH-1 :0] ReadDataW;
+logic [DATA_WIDTH-1 :0] RdW;
+logic [DATA_WIDTH-1:0] PCPlus4W;
+logic [DATA_WIDTH-1:0] ResultW;
+
+
 
 
 /*
@@ -101,23 +143,24 @@ module f-d_pipeline #(
         .rs2D(RD2_d),
         .rs1E(RD1_e), 
         .rs2E(RD2_e),
-        .rdM(rdM),
-        .rdE(rdE), 
-        .rdWB(rdWB),
-        .regWriteM(regWriteM),
+        .rdM(RdM),
+        .rdE(RdE), 
+        .rdWB(RdW),
+        .regWriteM(RegWriteM),
         .resultSrCE(ResultSrcE),
-        .resultSrCM(ResultSrcM),
+        .resultSrCM(ResultSrCM),
         .WriteBack_Regfile(RegWriteW),    
         .selectline1(ForwardAE),
         .selectline2(ForwardBE),
         .flush_d_exec(flush_d_exec),
         .flush_f_d(flush_f_d),
         .F_Write(F_Write),
-        .PCWrite(PCWrite)
+        .PCWrite(PCWrite),
+        .PCSrcE(PCSrcE)
 
     );
 
-    fd_pipeline fd_pipeline(
+    fd_pipeline fd_pip(
         .clk(clk),
         .rst(rst),
         .flush(flush_f_d),/////////SEE WHAT TO PUT HERE
@@ -137,11 +180,11 @@ module f-d_pipeline #(
     );
 
 
-    de_pipeline de_pipeline(
+    de_pipeline de_pip(
          .clk(clk),
     .rst(rst),
      .flush(flush_d_exec),
-     .enable(1),
+     .enable(enable_de),
     // data logic
       .pc_save_d (PCD_save),
       .RD1_d (instr_d[19:15]),
@@ -178,52 +221,77 @@ module f-d_pipeline #(
      .SizeWrite_e(SizeWriteE),
      .LoadSize_e(LoadSizeE), 
      .LoadUnsigned_e(LoadUnsignedE),
-     .ALUSrc2_e(ALUSrc2_e)
+     .ALUSrc2_e(ALUSrc2_e),//ALUSrc2 not ou
+     .funct3_d(function3_d),
+     .funct3_e(function3_e)
+    );
+
+    PCSrc_assertion PCSource(
+        .EQ(EQ),
+        .LT(LT),
+        .LTU(LTU),
+        .Branch_e(Branch_e),
+        .funct3(function3_e),
+        .Jump_e(Jump_e),
+        .PCSrcE(PCSrcE)
     );
     
     control control (
         .EQ(EQ),
+        .LT(LT),
+        .LTU(LTU),
         .instr(instr_d),
         .RegWrite(RegWrite_d),
         .ALUCtrl(ALUCtrl_d),
         .ALUSrc(ALUSrc_d),
         .ImmSrc(ImmSrc),
         .PCSrc(PCSrc),
-        .reg_entry(reg_entry)
+        .ResultSrc(ResultSrc),
+        .MemWrite(MemWrite),
+        .SizeWrite(SizeWrite),
+        .ALUsrc2(ALUsrc2),
+        .LoadSize(LoadSize),
+        .LoadUnsigned(LoadUnsigned),
+        .Branch(Branch_d),
+        .function3(function3_d)
+
     );
 
-    signext sign_extension (
-        .instr(instr),
-        .ImmSrc(ImmSrc),
-        .immext(ImmOp)
-    );
 
     insmem Instr_Mem (
         .instr(instr),
         .addr(PC)
     );
 
+    logic [DATA_WIDTH-1:0] ALU;
+
     pc_block pc_block (
         .clk(clk),
         .rst(rst),
-        .enable(enable);
+        .enable(PCWrite),
         .Imm_op(ImmOp),
-        .pc_src(PCSrc),
+        .pc_src(PCSrcE),
         .pc(PC),
-        .pc_save(PC_save)
+        .pc_save(PC_save),
+        .ALU(ALU)
     );
 
+     logic [DATA_WIDTH-1:0] WD3;
+     logic WE3;
+     logic [4:0] AD3;
+     logic [4:0] AD2;
+     logic [4:0] AD1;
 
     regfile regfile(
         .clk(clk),
-        .WD3(write_to_reg), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
+        .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
         .AD3(AD3),
         .AD2(AD2),
         .AD1(AD1),
         .WE3(WE3),
         .RD1(ALUop1),
         .RD2(regOp2),
-        .A0(A0)
+        .A0(a0)
     );
 
   
@@ -257,13 +325,13 @@ mux4 forwardingRS2(
     mux mux_immVSreg( 
         .in0(SrcBE),
         .in1(ImmOp),
-        .sel(ALUsrc),
+        .sel(ALUSrc_e),
         .out(ALUop2)
     );
 
     mux mux_pcVSreg( //additional mux, because we never use data from a register and from pc_save in any instructiom
         .in0(SrcAE),
-        .in1(pc_save),
+        .in1(pc_save_e),
         .sel(ALUsrc2),
         .out(ALUop1)
     );
@@ -272,21 +340,21 @@ mux4 forwardingRS2(
     alu alu(
         .ALUop1(ALUop1),
         .ALUop2(ALUop2),
-        .ALUctrl(ALUControlE),
         .ALUout(output_ALU),
-        .EQ(EQ)
+        .EQ(EQ),
+        .LT(LT),
+        .LTU(LTU),
+        .ALUCtrl(ALUCtrl_e)
     );
 
 
-//extra wires added for the pipeline register:
-    logic [DATA_WIDTH-1:0] PCPlus4M,
-    logic [DATA_WIDTH-1:0] RdM,
-    logic [DATA_WIDTH-1:0] ALUResultM,
-    logic [DATA_WIDTH-1:0] WriteDataM,
+
 
 
 em_pipeline em_pipeline(
     //control inputs coming from the previous pipeline register
+    .rst(rst),
+    .clk(clk),
     .RegWrite_e(RegWriteE),
     .ResultSrc_e(ResultSrcE),
     .MemWrite_e(MemWriteE),
@@ -296,11 +364,11 @@ em_pipeline em_pipeline(
     
     //control outputs:
     .RegWrite_m(RegWriteM),
-    .ResultSrc_m(ResultSrcM),
+    .ResultSrc_m(ResultSrCM),
     .MemWrite_m(MemWriteM),
     .SizeWrite_m(SizeWriteM),
     .LoadSize_m(LoadSizeM), 
-    .LoadUnsigned_m(LoadUnsignedm)
+    .LoadUnsigned_m(LoadUnsignedm),
 
     //inputs to the register processed in the execute stage
     .pc_save_e(PCPlus4dE),
@@ -312,7 +380,7 @@ em_pipeline em_pipeline(
     .pc_save_m(PCPlus4M),
     .Rd_m(RdM),
     .ALU_Result_m(ALUResultM),
-    .Write_Data_m(WriteDataM),
+    .Write_Data_m(WriteDataM)
 );
 
 //data memory (Asynchronous input) :
@@ -328,22 +396,18 @@ em_pipeline em_pipeline(
         .LoadUnsigned(LoadUnsigned) //additional output signal        
     );
 
-//extra wires for the output of the memory-writeback pipeline register:
-logic RegWriteW;
-logic [1:0] ResultSrcW;
-logic [DATA_WIDTH-1 :0] datamem_output;
-logic [DATA_WIDTH-1 :0] ALUResultW;
-logic [DATA_WIDTH-1 :0] ReadDataW;
 
 
 mw_pipeline mw_pipeline(
     //inputs from the previous pipeline register: (control inputs)
     .RegWrite_m(RegWriteM),
-    .ResultSrc_m(ResultSrcM),
+    .ResultSrc_m(ResultSrCM),
 
     //corresponding outputs
     .RegWrite_w(RegWriteW),
     .ResultSrc_w(ResultSrcW),
+    .rst(rst),
+    .clk(clk),
 
 //inputs to the register processed in the memory stage
     .pc_save_m(PCPlus4M),
@@ -360,11 +424,11 @@ mw_pipeline mw_pipeline(
 );
 
     always_comb begin
-        case (ResultSrc)
-            2'b00: write_to_reg = ALUResultW;     // ALU
-            2'b01: write_to_reg = ReadDataW; // Memory
-            2'b10: write_to_reg = PCPlus4W;        // for jump instructions
-            default: write_to_reg = 32'b0;
+        case (ResultSrcW)
+            2'b00: ResultW = ALUResultW;     // ALU
+            2'b01: ResultW = ReadDataW; // Memory
+            2'b10: ResultW = PCPlus4W;        // for jump instructions
+            default: ResultW = 32'b0;
         endcase
     end
 

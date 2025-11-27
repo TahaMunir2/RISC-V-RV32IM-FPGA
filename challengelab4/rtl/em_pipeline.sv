@@ -1,4 +1,4 @@
-module e-m_pipeline #(
+module em_pipeline #(
     DATA_WIDTH = 32
 ) (
     input logic clk,
@@ -24,7 +24,7 @@ module e-m_pipeline #(
     output logic RegWrite_m,
     output logic [1:0] ResultSrc_m,
     output logic MemWrite_m,
-    output logic [1:0] SizeWrite_m
+    output logic [1:0] SizeWrite_m,
     output logic [1:0]LoadSize_m, 
     output logic LoadUnsigned_m
 );
