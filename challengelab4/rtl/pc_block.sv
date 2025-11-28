@@ -13,7 +13,7 @@ module pc_block #(
 );
 
 logic [WIDTH-1:0] branch_pc, inc_pc, internal_pc;
-assign branch_pc = internal_pc+Imm_op;
+assign branch_pc = Imm_op;
 assign inc_pc = internal_pc+4;
 assign pc_save = inc_pc;
 

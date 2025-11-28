@@ -17,7 +17,7 @@ module top #(
     logic [DATA_WIDTH-1 : 0] RD2E;
     logic [DATA_WIDTH-1 : 0] RD1D;
     logic [DATA_WIDTH-1 : 0] RD2D;
-    logic [DATA_WIDTH-1 : 0] ExtImmE;
+    logic [DATA_WIDTH-1 : 0]  ExtImmE;
     logic [DATA_WIDTH-1 : 0] ExtImmD;
     logic [1 : 0] ResultSrcD;
     logic [1 : 0] ResultSrcM;
