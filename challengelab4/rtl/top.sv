@@ -26,7 +26,7 @@ module top #(
     logic [DATA_WIDTH-1 : 0] InstrF;
     logic RegWriteD;
     logic [DATA_WIDTH-1 : 0] ReadDataM;
-
+    logic [DATA_WIDTH-1 : 0] WriteDataE;
     logic [DATA_WIDTH-1:0] InstrD;
     logic EQ;
     
@@ -39,6 +39,8 @@ module top #(
     logic [DATA_WIDTH-1 : 0] PCPlus4F;
     logic [DATA_WIDTH-1 : 0] PCPlus4D;
     logic [DATA_WIDTH-1 : 0] PCPlus4E;
+
+
 
     //logic RegWrite; Not used here : the namings come from the pipeline stage
     //logic [3:0] ALUCtrl; Not used here : the namings come from the pipeline stage
@@ -53,8 +55,6 @@ module top #(
 //extra logic added because we splitted the register file , alu and data memory block
     logic [DATA_WIDTH-1: 0] ALUResultE;
     logic [DATA_WIDTH-1: 0] ALUop1;
-    logic [DATA_WIDTH-1: 0] ALUop2;
-    logic [DATA_WIDTH-1: 0] regOp2;
 
     //logic [DATA_WIDTH-1: 0] write_to_reg; Not used here : the namings come from the pipeline stage
 
@@ -76,18 +76,13 @@ module top #(
      logic F_Write;
      logic PCWrite;
     
-//extra logic for f_d pipeline
-    //logic [DATA_WIDTH-1:0] PCD;
-    logic [DATA_WIDTH-1:0] PCD_save;
-
 // d-e pipeline buses
     // data logic
      //logic [DATA_WIDTH-1:0] RD1_d;
      //logic [DATA_WIDTH-1:0] RD2_d;
      //logic [DATA_WIDTH-1:0] pc_d;
      //logic [4:0] Rd_d;
-     logic [DATA_WIDTH-1:0] ImmExt_d;
-     logic [DATA_WIDTH-1:0] PCPlus4dE;
+     //logic [DATA_WIDTH-1:0] PCPlus4dE;
      //logic [DATA_WIDTH-1:0] RD1_e;
      //logic [DATA_WIDTH-1:0] RD2_e;
      //logic [DATA_WIDTH-1:0] pc_e;
@@ -116,8 +111,8 @@ module top #(
      logic ALUSrc2E;
      logic enable_de;
      assign enable_de = 1;
-     logic [2:0] function3_d;
-     logic [2:0] function3_e;
+     //logic [2:0] function3_d;
+     //logic [2:0] function3_e;
      logic [1:0] PCSrcE;
 
 
@@ -131,7 +126,6 @@ module top #(
     logic [DATA_WIDTH-1:0] ALUResultM;
     logic [DATA_WIDTH-1:0] WriteDataM;
      logic RegWriteM;
-     logic [1:0] ResultSrCM;
      logic MemWriteM;
      logic [1:0] SizeWriteM;
      logic [1:0]LoadSizeM; 
@@ -158,7 +152,7 @@ logic [DATA_WIDTH-1:0] ResultW;
         .rdWB(RdW),
         .regWriteM(RegWriteM),
         .resultSrCE(ResultSrcE),
-        .resultSrCM(ResultSrCM),
+        .resultSrCM(ResultSrcM),
         .WriteBack_Regfile(RegWriteW),    
         .selectline1(ForwardAE),
         .selectline2(ForwardBE),
@@ -186,7 +180,7 @@ logic [DATA_WIDTH-1:0] ResultW;
     signext sign_extension (
         .instr(InstrD),
         .ImmSrc(ImmSrcD),
-        .immext(ImmExt_d)
+        .immext(ExtImmD)
     );
 
 
@@ -202,7 +196,7 @@ logic [DATA_WIDTH-1:0] ResultW;
       .pc_d(PCD),
       .pc_e(PCE), //added signal 
       .Rd_d(RdD),
-      .ImmExt_d(ImmExt_d),
+      .ImmExt_d(ExtImmD),
       .pc_save_e(PCPlus4E),
       .RD1_e(RD1E),
       .RD2_e(RD2E),
@@ -236,7 +230,9 @@ logic [DATA_WIDTH-1:0] ResultW;
      .LoadUnsigned_e(LoadUnsignedE),
      .ALUSrc2_e(ALUSrc2E),//ALUSrc2 not ou
      .funct3_d(function3_d),
-     .funct3_e(function3_e)
+     .funct3_e(function3_e),
+     .PCSrcD(PCSrcD),
+     .PCSrcE(PCSrcE)
     );
 
 /*
@@ -302,7 +298,7 @@ logic [DATA_WIDTH-1:0] ResultW;
         .AD3(AD3),
         .AD2(AD2),
         .AD1(AD1),
-        .WE3(WE3),
+        .WE3(RegWriteW),
         .RD1(RD1D),
         .RD2(RD2D),
         .A0(a0)
@@ -333,14 +329,14 @@ mux4 forwardingRS2(
     .in2(ALUResultM),
     .in3(RD2E), //unused input, by default we set it to be the output of the ALU
     .select_line(ForwardBE), //input taken from the hazard unit
-    .out(SrcBE)    
+    .out(WriteDataE)    
 );
 
     mux mux_immVSreg( 
-        .in0(SrcBE),
+        .in0(WriteDataE),
         .in1(ExtImmE),
         .sel(ALUSrcE),
-        .out(ALUop2)
+        .out(SrcBE)
     );
 
     mux mux_pcVSreg( //additional mux, because we never use data from a register and from pc_save in any instructiom
@@ -353,7 +349,7 @@ mux4 forwardingRS2(
 
     alu alu(
         .ALUop1(ALUop1),
-        .ALUop2(ALUop2),
+        .ALUop2(SrcBE),
         .ALUout(ALUResultE),
         .EQ(EQ),
         .LT(LT),
@@ -378,7 +374,7 @@ em_pipeline em_pipeline(
     
     //control outputs:
     .RegWrite_m(RegWriteM),
-    .ResultSrc_m(ResultSrCM),
+    .ResultSrc_m(ResultSrcM),
     .MemWrite_m(MemWriteM),
     .SizeWrite_m(SizeWriteM),
     .LoadSize_m(LoadSizeM), 
@@ -388,7 +384,7 @@ em_pipeline em_pipeline(
     .pc_save_e(PCPlus4dE),
     .Rd_e(RdE),
     .ALU_Result_e(ALUResultE),
-    .Write_Data_e(SrcBE),
+    .Write_Data_e(WriteDataE),
 
     //corresponding data outputs
     .pc_save_m(PCPlus4M),
@@ -404,7 +400,7 @@ em_pipeline em_pipeline(
         .A(ALUResultM),
         .dout(ReadDataM),
         .MemWrite(MemWriteM),
-        .WD(regOp2),
+        .WD(WriteDataM),
         .SizeWrite(SizeWriteM),
         .LoadSize(LoadSizeM), //additional output signal
         .LoadUnsigned(LoadUnsignedM) //additional output signal        
@@ -415,7 +411,7 @@ em_pipeline em_pipeline(
 mw_pipeline mw_pipeline(
     //inputs from the previous pipeline register: (control inputs)
     .RegWrite_m(RegWriteM),
-    .ResultSrc_m(ResultSrCM),
+    .ResultSrc_m(ResultSrcM),
 
     //corresponding outputs
     .RegWrite_w(RegWriteW),
@@ -427,7 +423,7 @@ mw_pipeline mw_pipeline(
     .pc_save_m(PCPlus4M),
     .Rd_m(RdM),
     .ALU_Result_m(ALUResultM),
-    .dout_m(datamem_output), 
+    .dout_m(ReadDataM), 
 
 //corresponding outputs:
 

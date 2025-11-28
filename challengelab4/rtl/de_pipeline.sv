@@ -46,8 +46,12 @@ module de_pipeline #(
     output logic [1:0]LoadSize_e, 
     output logic LoadUnsigned_e,
     output logic ALUSrc2_e,
-    input logic [2:0] funct3_d,
-    output logic [2:0] funct3_e
+    //input logic [2:0] funct3_d,
+    //output logic [2:0] funct3_e,
+    
+    //pcsrc signal propagation (taking into account jumping and branching)
+    input  logic [1:0] PCSrcD,
+    output logic [1:0] PCSrcE
 );
 
     always @(posedge clk) begin
@@ -72,6 +76,7 @@ module de_pipeline #(
             LoadSize_e <= 0;
             LoadUnsigned_e <= 0;
             ALUSrc2_e <= 0;
+            PCSrcE <= 0;
         end
         
         else if (flush) begin
@@ -100,6 +105,7 @@ module de_pipeline #(
             LoadSize_e <= LoadSize_d;
             LoadUnsigned_e <= LoadUnsigned_d;
             ALUSrc2_e <= ALUSrc2_d;
+            PCSrcE <= PCSrcD;
         end
     end
 
