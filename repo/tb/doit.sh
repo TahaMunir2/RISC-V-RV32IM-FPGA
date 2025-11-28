@@ -24,34 +24,19 @@ else
     files=("$@")
 fi
 
-# Cleanup
-rm -rf obj_dir
-
 cd $SCRIPT_DIR
+
+# Wipe previous test output
+rm -rf test_out/*
 
 # Iterate through files
 for file in "${files[@]}"; do
     name=$(basename "$file" _tb.cpp | cut -f1 -d\-)
-    
+
     # If verify.cpp -> we are testing the top module
     if [ $name == "verify.cpp" ]; then
         name="top"
     fi
-
-    # Automatically detect latest GoogleTest installation under Homebrew
-    if [ -d "/usr/include/gtest" ] || [ -d "/usr/local/include/gtest" ]; then
-        GTEST_INCLUDE="/usr/include"
-        GTEST_LIB="/usr/lib"
-    else
-        echo "${RED}Error: GoogleTest not installed. Install with:${RESET}"
-        echo "    sudo apt install libgtest-dev"
-        echo "    cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp *.a /usr/lib"
-        exit 1
-    fi
-    
-    # Construct include and lib paths dynamically
-    GTEST_INCLUDE="$GTEST_BASE/include"
-    GTEST_LIB="$GTEST_BASE/lib"
 
     # Translate Verilog -> C++ including testbench
     verilator   -Wall --trace \
@@ -60,30 +45,30 @@ for file in "${files[@]}"; do
                 -y ${RTL_FOLDER} \
                 --prefix "Vdut" \
                 -o Vdut \
-                -CFLAGS "-std=c++17 -isystem ${GTEST_INCLUDE}" \
-                -LDFLAGS "-L${GTEST_LIB} -lgtest -lgtest_main -lpthread"
+                -CFLAGS "-std=c++17 -isystem /opt/homebrew/opt/googletest/include" \
+                -LDFLAGS "-L/opt/homebrew/opt/googletest/lib -lgtest -lgtest_main -lpthread"
 
     # Build C++ project with automatically generated Makefile
     make -j -C obj_dir/ -f Vdut.mk
-    
+
     # Run executable simulation file
     ./obj_dir/Vdut
-    
+
+    mkdir -p test_out/$name
+    if [ -f "waveform.vcd" ]; then
+        mv waveform.vcd test_out/$name/waveform.vcd
+    fi
+    # ------------------------
+
+
     # Check if the test succeeded or not
     if [ $? -eq 0 ]; then
         ((passes++))
     else
         ((fails++))
     fi
-    
+
 done
 
-# Exit as a pass or fail (for CI purposes)
-if [ $fails -eq 0 ]; then
-    echo "${GREEN}Success! All ${passes} test(s) passed!"
-    exit 0
-else
-    total=$((passes + fails))
-    echo "${RED}Failure! Only ${passes} test(s) passed out of ${total}."
-    exit 1
-fi
+# Save obj_dir in test_out
+mv obj_dir test_out/
