@@ -39,9 +39,13 @@ for file in "${files[@]}"; do
     fi
 
     # Automatically detect latest GoogleTest installation under Homebrew
-    GTEST_BASE=$(brew --prefix googletest 2>/dev/null)
-    if [ -z "$GTEST_BASE" ]; then
-        echo "${RED}Error: GoogleTest not found via Homebrew.${RESET}"
+    if [ -d "/usr/include/gtest" ] || [ -d "/usr/local/include/gtest" ]; then
+        GTEST_INCLUDE="/usr/include"
+        GTEST_LIB="/usr/lib"
+    else
+        echo "${RED}Error: GoogleTest not installed. Install with:${RESET}"
+        echo "    sudo apt install libgtest-dev"
+        echo "    cd /usr/src/gtest && sudo cmake . && sudo make && sudo cp *.a /usr/lib"
         exit 1
     fi
     

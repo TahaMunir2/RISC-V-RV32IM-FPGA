@@ -1,8 +1,8 @@
-module data_cache #(
-    DATA_WIDTH = 32,
-    ADDRESS_WIDTH = 32,
-    BLOCK_SIZE = 4,
-    ASSOCIATIVITY = 2
+module l1d_cache #(
+    parameter DATA_WIDTH = 32,
+    parameter ADDRESS_WIDTH = 32,
+    parameter BLOCK_SIZE = 4,
+    parameter ASSOCIATIVITY = 2
 ) (
     input logic clk,
     input logic fetch, // ******* we need to use this as a cache enable
@@ -12,35 +12,35 @@ module data_cache #(
     input  logic [1:0] SizeWrite_m,
     input  logic MemWrite_m,
     input  logic [1:0] LoadSize,
-    input  logic LoadUnsigned
+    input  logic LoadUnsigned,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
     output logic stall
 );
 
-typedef struct packed {
-    logic [7:0] byte3;  
-    logic [7:0] byte2;  
-    logic [7:0] byte1;  
-    logic [7:0] byte0;
-} word_store;
+    typedef struct packed {
+        logic [7:0] byte3;  
+        logic [7:0] byte2;  
+        logic [7:0] byte1;  
+        logic [7:0] byte0;
+    } word_store;
 
-typedef struct packed {
-    logic valid;
-    logic dirty;
-    logic [20:0] tag; // ****** changed to 20 idk if its meant to be 21 or 20
-    word_store word3;
-    word_store word2;
-    word_store word1;
-    word_store word0;
-} block_store;
+    typedef struct packed {
+        logic valid;
+        logic dirty;
+        logic [20:0] tag;
+        word_store word3;
+        word_store word2;
+        word_store word1;
+        word_store word0;
+    } block_store;
 
-typedef struct packed {
-    logic used;
-    block_store block1;
-    block_store block0;
-} set_store;
+    typedef struct packed {
+        logic used;
+        block_store block1;
+        block_store block0;
+    } set_store;
 
     logic wr_en;
     logic rd_en;
@@ -58,10 +58,13 @@ typedef struct packed {
     assign block_offset = addr[3:2];
     assign byte_offset = addr[1:0];
 
-    initial begin // initialise CACHE
+    initial begin
         for (int i = 0; i < 128; i++) begin
-            cache[i].block0.valid = 1'b0;
-            cache[i].block1.valid = 1'b0; // ****** what about dirty and used bits?
+            cache[i].used           = 1'b0;
+            cache[i].block0.valid   = 1'b0;
+            cache[i].block0.dirty   = 1'b0;
+            cache[i].block1.valid   = 1'b0;
+            cache[i].block1.dirty   = 1'b0;
         end
     end
 
@@ -98,9 +101,8 @@ typedef struct packed {
         end
 
         else begin
-
+            way = hit1;   // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
             if (MemWrite_m && fetch) begin // sb logic, determine size
-                way = hit1; // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
                 wr_en = 1'b1;
                 wmask = '1;
                 if(SizeWrite_m == 2'b00) begin //sb
@@ -121,18 +123,28 @@ typedef struct packed {
                 wmask = ~wmask;
             end
         end
-    // wr and rd en logic
-        if (fetch) begin //no access this cycle: do nothing (no fetching from ROM)
-            rd_en= 1'b1;
-            if (miss) begin  // write full line into chosen way
+
+        // wr and rd en logic
+        if (fetch) begin
+            if (miss) begin
+                // On a miss: fill the line, but don't read from cache this cycle
+                rd_en      = 1'b0;
                 wr_en      = 1'b1;
-                write_data = line_from_mem; // **** not sure what this means
+                write_data = line_from_mem;
             end
-            else if (MemWrite_m) begin
-                write_data = {4{wd}}; 
+            else begin
+                // On a hit: enable read from cache
+                rd_en = 1'b1;
+
+                //If it is also a store, enable write
+                if (MemWrite_m) begin
+                    wr_en      = 1'b1;
+                    write_data = {4{wd}};
+                end
+            end
         end
 
-            //read logic
+        //read logic
         if (rd_en) begin
             // we don't update valid or dirty since we are only reading        
             
@@ -182,7 +194,6 @@ typedef struct packed {
             endcase
         end
     end
-end
 
     always_ff @(posedge clk) begin // only write is synchronous
         write_back_en <= 0; // default to prevent latching
@@ -200,14 +211,13 @@ end
                 end
                 else begin
                    cache[set].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
-                   bottom_bit <= byte_offset * 32;
                 end
                 cache[set].block0[127:0] <= (cache[set].block0[127:0] & ~wmask) | (write_data & wmask);
                 cache[set].block0.tag <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end
             else begin
-                if (cache[set].block1.dirty == 1) begin
+                if (cache[set].block1.dirty == 1 && miss) begin
                     write_back <= cache[set].block1[127:0];
                     write_back_en <= 1;
                 end
@@ -216,7 +226,6 @@ end
                 end
                 else begin
                    cache[set].block1.dirty <= 1'b1; // if we are writing over it then it is dirty
-                   bottom_bit <= byte_offset * 32;
                 end
                 cache[set].block1[127:0] <= (cache[set].block1[127:0] & ~wmask) | (write_data & wmask);
                 cache[set].block1.tag <= tag_bits;

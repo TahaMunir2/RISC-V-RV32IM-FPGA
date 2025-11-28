@@ -1,4 +1,4 @@
-module data_cache #(
+module l1i_cache #(
     DATA_WIDTH = 32,
     ADDRESS_WIDTH = 32,
     BLOCK_SIZE = 4,
@@ -9,57 +9,60 @@ module data_cache #(
     input  logic [ADDRESS_WIDTH-1:0] addr,
     input  logic [DATA_WIDTH*BLOCK_SIZE-1:0] line_from_mem,
     input  logic [1:0] LoadSize,
-    input  logic LoadUnsigned
+    input  logic LoadUnsigned,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic stall
 );
 
-typedef struct packed {
-    logic [7:0] byte3;  
-    logic [7:0] byte2;  
-    logic [7:0] byte1;  
-    logic [7:0] byte0;
-} word_store;
+    typedef struct packed {
+        logic [7:0] byte3;  
+        logic [7:0] byte2;  
+        logic [7:0] byte1;  
+        logic [7:0] byte0;
+    } word_store;
 
-typedef struct packed {
-    logic valid;
-    logic [20:0] tag; // ****** changed to 20 idk if its meant to be 21 or 20
-    word_store word3;
-    word_store word2;
-    word_store word1;
-    word_store word0;
-} block_store;
+    typedef struct packed {
+        logic valid;
+        logic [20:0] tag;
+        word_store word3;
+        word_store word2;
+        word_store word1;
+        word_store word0;
+    } block_store;
 
-typedef struct packed {
-    logic used;
-    block_store block1;
-    block_store block0;
-} set_store;
+    typedef struct packed {
+        logic used;
+        block_store block1;
+        block_store block0;
+    } set_store;
 
-    logic wr_en;
-    logic rd_en;
-    logic way;
-    logic [ADDRESS_WIDTH-1:11] tag_bits;
-    logic [6:0] set;
-    logic [1:0] block_offset;
-    logic [1:0] byte_offset;
-    set_store cache [128];
+        logic wr_en;
+        logic rd_en;
+        logic way;
+        logic [ADDRESS_WIDTH-1:11] tag_bits;
+        logic [6:0] set;
+        logic [1:0] block_offset;
+        logic [1:0] byte_offset;
+        set_store cache [128];
 
-    assign tag_bits = addr[ADDRESS_WIDTH-1:11];
-    assign set = addr[10:4];
-    assign block_offset = addr[3:2];
-    assign byte_offset = addr[1:0];
+        assign tag_bits = addr[ADDRESS_WIDTH-1:11];
+        assign set = addr[10:4];
+        assign block_offset = addr[3:2];
+        assign byte_offset = addr[1:0];
 
-    initial begin // initialise CACHE
+    initial begin
         for (int i = 0; i < 128; i++) begin
-            cache[i].block0.valid = 1'b0;
-            cache[i].block1.valid = 1'b0; // ****** what about dirty and used bits?
+            cache[i].used           = 1'b0;
+            cache[i].block0.valid   = 1'b0;
+            cache[i].block0.dirty   = 1'b0;
+            cache[i].block1.valid   = 1'b0;
+            cache[i].block1.dirty   = 1'b0;
         end
     end
 
-        logic hit0, hit1;
-        logic valid0, valid1;
-        logic miss;
+    logic hit0, hit1;
+    logic valid0, valid1;
+    logic miss;
 
     always_comb begin
          // hit detection
