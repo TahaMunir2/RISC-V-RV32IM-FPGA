@@ -1,8 +1,7 @@
 module l1d_cache #(
     parameter DATA_WIDTH = 32,
     parameter ADDRESS_WIDTH = 32,
-    parameter BLOCK_SIZE = 4,
-    parameter ASSOCIATIVITY = 2
+    parameter BLOCK_SIZE = 4
 ) (
     input logic clk,
     input logic fetch, // ******* we need to use this as a cache enable
@@ -71,7 +70,7 @@ module l1d_cache #(
         logic hit0, hit1;
         logic valid0, valid1;
         logic miss;
-        logic [7:0] bottom_bit;
+        logic [6:0] bottom_bit;
 
     always_comb begin
          // hit detection
@@ -107,17 +106,17 @@ module l1d_cache #(
                 wmask = '1;
                 if(SizeWrite_m == 2'b00) begin //sb
                     bottom_bit = block_offset * 32 + byte_offset * 8;
-                    wmask[bottom_bit:+ 8] = '0;
+                    wmask[bottom_bit[6:0] +: 8] = '0;
                 end
 
                 else if(SizeWrite_m == 2'b01) begin // sh
                     bottom_bit = block_offset * 32 + byte_offset * 8;
-                    wmask[bottom_bit:+ 16] = '0;
+                    wmask[bottom_bit[6:0] +: 16] = '0;
                 end
 
                 else if(SizeWrite_m == 2'b10) begin // sw
                     bottom_bit = block_offset * 32;
-                    wmask[bottom_bit:+ 32] = '0;
+                    wmask[bottom_bit[6:0] +: 32] = '0;
                 end
 
                 wmask = ~wmask;
@@ -173,18 +172,18 @@ module l1d_cache #(
                 2'b00: begin
                     bottom_bit = 8 * byte_offset;
                     if (LoadUnsigned)
-                        data_out = {24'b0, data_out[bottom_bit +:8]};
+                        data_out = {24'b0, data_out[bottom_bit[4:0] +:8]};
                     else
-                        data_out = {{24{data_out[bottom_bit + 7]}}, data_out[bottom_bit +:8]};
+                        data_out = {{24{data_out[bottom_bit[4:0] + 7]}}, data_out[bottom_bit[4:0] +:8]};
                 end
 
                 // LH / LHU
                 2'b01: begin
                     bottom_bit = 16 * byte_offset;
                     if (LoadUnsigned)
-                        data_out = {16'b0, data_out[bottom_bit +:16]};
+                        data_out = {16'b0, data_out[bottom_bit[4:0] +:16]};
                     else
-                        data_out = {{16{data_out[bottom_bit + 15]}},data_out[bottom_bit+:16]};
+                        data_out = {{16{data_out[bottom_bit[4:0] + 15]}},data_out[bottom_bit[4:0]+:16]};
                 end
 
                 // LW
