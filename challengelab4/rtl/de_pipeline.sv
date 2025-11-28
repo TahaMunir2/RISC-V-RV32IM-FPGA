@@ -77,6 +77,8 @@ module de_pipeline #(
             LoadUnsigned_e <= 0;
             ALUSrc2_e <= 0;
             PCSrcE <= 0;
+            Rs1E <= 0;
+            Rs2E <= 0;
         end
         
         else if (flush) begin
@@ -106,6 +108,8 @@ module de_pipeline #(
             LoadUnsigned_e <= LoadUnsigned_d;
             ALUSrc2_e <= ALUSrc2_d;
             PCSrcE <= PCSrcD;
+            Rs1E <= Rs1D;
+            Rs2E <= Rs2D;
         end
     end
 

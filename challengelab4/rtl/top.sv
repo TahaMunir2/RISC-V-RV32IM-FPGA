@@ -7,7 +7,6 @@ module top #(
 );
     
 //extra logic added when debugging (to map correctly for better presentation) :
-    //logic [DATA_WIDTH-1 : 0] pc_save_e;
     logic [4:0] Rs1D = InstrD[19:15];
     logic [4:0] Rs2D = InstrD[24:20];
     logic [4:0] RdD = InstrD[11:7];
@@ -49,7 +48,6 @@ module top #(
     //logic [1:0] PCSrc;Not used here : the namings come from the pipeline stage
     //logic [DATA_WIDTH-1:0] ImmOp; Not used here : the namings come from the pipeline stage
     //logic [DATA_WIDTH-1:0] PC;
-    //logic [DATA_WIDTH-1:0] PC_save;
     //logic reg_entry; Not used here : the namings come from the pipeline stage
 
 //extra logic added because we splitted the register file , alu and data memory block
@@ -111,8 +109,6 @@ module top #(
      logic ALUSrc2E;
      logic enable_de;
      assign enable_de = 1;
-     //logic [2:0] function3_d;
-     //logic [2:0] function3_e;
      logic [1:0] PCSrcE;
 
 
@@ -133,7 +129,6 @@ module top #(
 //extra wires for the output of the memory-writeback pipeline register:
 logic RegWriteW;
 logic [1:0] ResultSrcW;
-logic [DATA_WIDTH-1 :0] datamem_output;
 logic [DATA_WIDTH-1 :0] ALUResultW;
 logic [DATA_WIDTH-1 :0] ReadDataW;
 logic [4:0] RdW;
@@ -152,7 +147,6 @@ logic [DATA_WIDTH-1:0] ResultW;
         .rdWB(RdW),
         .regWriteM(RegWriteM),
         .resultSrCE(ResultSrcE),
-        .resultSrCM(ResultSrcM),
         .WriteBack_Regfile(RegWriteW),    
         .selectline1(ForwardAE),
         .selectline2(ForwardBE),
@@ -200,7 +194,6 @@ logic [DATA_WIDTH-1:0] ResultW;
       .pc_save_e(PCPlus4E),
       .RD1_e(RD1E),
       .RD2_e(RD2E),
-      //.pc_e(pc_save_e),
       .Rd_e(RdE),
       .ImmExt_e(ExtImmE),
       .Rs1E(Rs1E),
@@ -229,8 +222,6 @@ logic [DATA_WIDTH-1:0] ResultW;
      .LoadSize_e(LoadSizeE), 
      .LoadUnsigned_e(LoadUnsignedE),
      .ALUSrc2_e(ALUSrc2E),//ALUSrc2 not ou
-     .funct3_d(function3_d),
-     .funct3_e(function3_e),
      .PCSrcD(PCSrcD),
      .PCSrcE(PCSrcE)
     );
@@ -261,10 +252,7 @@ logic [DATA_WIDTH-1:0] ResultW;
         .SizeWrite(SizeWriteD),
         .ALUsrc2(ALUSrc2D),
         .LoadSize(LoadSizeD),
-        .LoadUnsigned(LoadUnsignedD),
-        //.Branch(BranchD),
-        .function3(function3_d)
-
+        .LoadUnsigned(LoadUnsignedD)
     );
 
 
@@ -273,7 +261,6 @@ logic [DATA_WIDTH-1:0] ResultW;
         .addr(PCF)
     );
 
-    logic [DATA_WIDTH-1:0] ALU;
 
     pc_block pc_block (
         .clk(clk),
@@ -283,19 +270,16 @@ logic [DATA_WIDTH-1:0] ResultW;
         .pc_src(PCSrcE),
         .pc(PCF),
         .pc_save(PCPlus4F),
-        .ALU(ALU)
+        .ALU(ALUResultE)
     );
 
-     logic [DATA_WIDTH-1:0] WD3;
-     logic WE3;
-     logic [4:0] AD3;
-     logic [4:0] AD2;
-     logic [4:0] AD1;
+     logic [4:0] AD2 = InstrD[24:20];
+     logic [4:0] AD1 = InstrD[19:15];
 
     regfile regfile(
         .clk(clk),
         .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
-        .AD3(AD3),
+        .AD3(RdW),
         .AD2(AD2),
         .AD1(AD1),
         .WE3(RegWriteW),
@@ -381,7 +365,7 @@ em_pipeline em_pipeline(
     .LoadUnsigned_m(LoadUnsignedM),
 
     //inputs to the register processed in the execute stage
-    .pc_save_e(PCPlus4dE),
+    .pc_save_e(PCPlus4E),
     .Rd_e(RdE),
     .ALU_Result_e(ALUResultE),
     .Write_Data_e(WriteDataE),

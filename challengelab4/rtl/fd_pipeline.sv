@@ -28,7 +28,7 @@ module fd_pipeline #(
         else if(enable) begin
             instr_d <= instr_f;
             pc_d <= pc_f;
-            pc_save_d <= pc_f;
+            pc_save_d <= pc_save_f;
         end
 
     end

@@ -8,7 +8,7 @@ module insmem #(
 
 initial begin
     $display("Loading rom.", );
-    $readmemh("../rtl/program.hex", rom_array);
+    $readmemh("program.hex", rom_array, 32'h10000);
 end;
 
 ///asynchronous instruction read

@@ -11,7 +11,6 @@ module hazard_unit#(
     input logic [reg_addressing_width-1:0] rdWB,
     input logic regWriteM,
     input logic [1:0] resultSrCE,
-    input logic [1:0] resultSrCM, //DID WE MEAN OT USE THIS?????????
     input logic WriteBack_Regfile,    
     output logic [1:0] selectline1,
     output logic [1:0] selectline2,
