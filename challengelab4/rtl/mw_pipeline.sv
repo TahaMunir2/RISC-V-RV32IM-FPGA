@@ -5,11 +5,11 @@ module mw_pipeline #(
     input logic rst,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_m,
-    input logic [DATA_WIDTH-1:0] Rd_m,
+    input logic [4:0] Rd_m,
     input logic [DATA_WIDTH-1:0] ALU_Result_m,
     input logic [DATA_WIDTH-1:0] dout_m,    
     output logic [DATA_WIDTH-1:0] pc_save_w,
-    output logic [DATA_WIDTH-1:0] Rd_w,
+    output logic [4:0] Rd_w,
     output logic [DATA_WIDTH-1:0] ALU_Result_w,
     output logic [DATA_WIDTH-1:0] dout_w,
 

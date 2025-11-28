@@ -11,7 +11,7 @@ module hazard_unit#(
     input logic [reg_addressing_width-1:0] rdWB,
     input logic regWriteM,
     input logic [1:0] resultSrCE,
-    input logic [1:0] resultSrCM,
+    input logic [1:0] resultSrCM, //DID WE MEAN OT USE THIS?????????
     input logic WriteBack_Regfile,    
     output logic [1:0] selectline1,
     output logic [1:0] selectline2,
@@ -19,7 +19,7 @@ module hazard_unit#(
     output logic flush_f_d,
     output logic F_Write,
     output logic PCWrite,
-    input logic PCSrcE
+    input logic [1:0] PCSrcE
 );
     
 //forwarding:
@@ -71,7 +71,7 @@ always_comb begin
     flush_d_exec = 0;
     flush_f_d = 0;
 
-    if(PCSrcE == 1) begin
+    if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
         flush_f_d = 1;
         flush_d_exec = 1;
     end
@@ -89,16 +89,6 @@ always_comb begin
 
     //     ;
 
-
-
-
-
-
 end
-
-
-
-
-
 
 endmodule

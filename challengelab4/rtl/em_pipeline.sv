@@ -5,11 +5,11 @@ module em_pipeline #(
     input logic rst,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_e,
-    input logic [DATA_WIDTH-1:0] Rd_e,
+    input logic [4:0] Rd_e, //changed the size of this register
     input logic [DATA_WIDTH-1:0] ALU_Result_e,
     input logic [DATA_WIDTH-1:0] Write_Data_e,
     output logic [DATA_WIDTH-1:0] pc_save_m,
-    output logic [DATA_WIDTH-1:0] Rd_m,
+    output logic [4:0] Rd_m, //changed the size of this register
     output logic [DATA_WIDTH-1:0] ALU_Result_m,
     output logic [DATA_WIDTH-1:0] Write_Data_m,
     

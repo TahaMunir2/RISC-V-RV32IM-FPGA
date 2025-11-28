@@ -2,13 +2,12 @@ module PCSrc_assertion #(
     DATA_WIDTH = 32
 )
 (
-input logic Jump_e,
 input logic [2:0] funct3,
 input logic Branch_e,
 input logic EQ,
 input logic LT,
 input logic LTU,
-output logic PCSrcE
+output logic [1:0] PCSrcE
 );
 
 
@@ -20,7 +19,7 @@ always_comb begin
                     //Branch If Equal (BEQ)
                     3'b000:begin
                             if (EQ) begin
-                                PCSrcE = 1;  // branch taken when rs1 == rs2
+                                PCSrcE = 2'b01;  // branch taken when rs1 == rs2
                             end
                             else begin
                                 PCSrcE = 0;  // fall-through
@@ -32,14 +31,14 @@ always_comb begin
                                 PCSrcE = 0;
                             end
                             else begin
-                                PCSrcE = 1;
+                                PCSrcE = 2'b01;
                             end
                     end
 
                     //Less Then (Signed)
                     3'b100:begin
                             if (LT) begin
-                                PCSrcE = 1;  // branch when rs1 < rs2 (signed)
+                                PCSrcE = 2'b01;  // branch when rs1 < rs2 (signed)
                             end
                             else begin
                                 PCSrcE = 0;  // fall-through
@@ -52,7 +51,7 @@ always_comb begin
                                 PCSrcE = 0;  // no branch when rs1 < rs2
                             end
                             else begin
-                                PCSrcE = 1;  // branch when rs1 >= rs2 (signed)
+                                PCSrcE = 2'b01;  // branch when rs1 >= rs2 (signed)
                             end
 
 
@@ -62,7 +61,7 @@ always_comb begin
                     3'b110:begin
 
                             if (LTU) begin
-                                PCSrcE = 1;  // branch when rs1 < rs2 (unsigned)
+                                PCSrcE = 2'b01;  // branch when rs1 < rs2 (unsigned)
                             end
                             else begin
                                 PCSrcE = 0;  // fall-through
@@ -75,7 +74,7 @@ always_comb begin
                                 PCSrcE = 0;  // no branch when rs1 < rs2
                             end
                             else begin
-                                PCSrcE = 1;  // branch when rs1 >= rs2 (unsigned)
+                                PCSrcE = 2'b01;  // branch when rs1 >= rs2 (unsigned)
                             end
 
 
@@ -87,12 +86,9 @@ always_comb begin
                 endcase
     end
     else if(Jump_e) begin
-        PCSrcE = 1;
+        PCSrcE = 2'b10;
 
     end
-
-
-
 
 end
 

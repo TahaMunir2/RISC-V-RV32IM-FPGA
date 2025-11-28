@@ -20,9 +20,9 @@ module fd_pipeline #(
             pc_d <= 0;
             pc_save_d <= 0;
         end
-
+//CHECK BACK WITH TAHA ABOUT FLUSHING (BELOW):
         else if (flush) begin
-            instr_d <= 8'h00000033; // add r0 r0
+            instr_d <= 32'h00000033; // add r0 r0
         end
 
         else if(enable) begin

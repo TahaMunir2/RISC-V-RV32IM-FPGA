@@ -16,7 +16,7 @@ module control #(
     output logic ALUsrc2, //additional output signal
     output logic [1:0]LoadSize, //additional output signal
     output logic LoadUnsigned, //additional output signal
-    output logic Branch,
+    //output logic Branch,
     output logic [2:0] function3
 
 );
@@ -115,7 +115,7 @@ assign imm_11_5 = instr[31:25];
 
             //  Branch Instruction
             OPC_BRANCH: begin
-                Branch = 1;
+                //Branch = 1;
                 case (funct3)
 
                     //Branch If Equal (BEQ)
@@ -280,6 +280,10 @@ assign imm_11_5 = instr[31:25];
                     3'b101: begin // LHU
                         LoadSize     = 2'b01;
                         LoadUnsigned = 1'b1;
+                    end
+                    default: begin
+                        LoadSize  = 2'b10;// word
+                        LoadUnsigned = 1'b0;  // signed
                     end
                 endcase
 
