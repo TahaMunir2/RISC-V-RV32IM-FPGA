@@ -46,17 +46,19 @@ module de_pipeline #(
     output logic [1:0]LoadSize_e, 
     output logic LoadUnsigned_e,
     output logic ALUSrc2_e,
-    //input logic [2:0] funct3_d,
-    //output logic [2:0] funct3_e,
     
-    //pcsrc signal propagation (taking into account jumping and branching)
-    input  logic [1:0] PCSrcD,
-    output logic [1:0] PCSrcE
+    input logic [2:0] funct3D,
+    output logic [2:0] funct3E,
+
+    input logic BranchD,
+    output logic BranchE,
+    input logic JumpD,
+    output logic JumpE
 );
 
     always @(posedge clk) begin
         
-        if (rst) begin 
+        if (rst || flush) begin 
              // data
             pc_save_e <= 0;
             RD1_e <= 0;
@@ -76,16 +78,13 @@ module de_pipeline #(
             LoadSize_e <= 0;
             LoadUnsigned_e <= 0;
             ALUSrc2_e <= 0;
-            PCSrcE <= 0;
             Rs1E <= 0;
             Rs2E <= 0;
+            funct3E <= 0;
+            BranchE <= 0;
+            JumpE <= 0;
         end
         
-        else if (flush) begin
-            RegWrite_e <= 0; // to not edit the registers
-            MemWrite_e <= 0; // to not edit the memory
-            //Branch_e <= 0; // to not change pc
-        end
 
         else if(enable) begin
             // data
@@ -107,9 +106,11 @@ module de_pipeline #(
             LoadSize_e <= LoadSize_d;
             LoadUnsigned_e <= LoadUnsigned_d;
             ALUSrc2_e <= ALUSrc2_d;
-            PCSrcE <= PCSrcD;
             Rs1E <= Rs1D;
             Rs2E <= Rs2D;
+            funct3E <= funct3D;
+            BranchE <= BranchD;
+            JumpE <= JumpD;
         end
     end
 

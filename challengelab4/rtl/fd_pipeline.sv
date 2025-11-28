@@ -15,16 +15,12 @@ module fd_pipeline #(
 
     always @(posedge clk) begin
 
-        if (rst) begin
-            instr_d <= 0;
+        if (rst || flush) begin
+            instr_d <= 32'h00000033;
             pc_d <= 0;
             pc_save_d <= 0;
         end
-//CHECK BACK WITH TAHA ABOUT FLUSHING (BELOW):
-        else if (flush) begin
-            instr_d <= 32'h00000033; // add r0 r0
-        end
-
+        
         else if(enable) begin
             instr_d <= instr_f;
             pc_d <= pc_f;

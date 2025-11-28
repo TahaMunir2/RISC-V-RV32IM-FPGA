@@ -2,20 +2,19 @@ module control #(
     parameter DATA_WIDTH = 32
 )(
     input logic [DATA_WIDTH-1 : 0] instr,
-    input logic EQ,
-    input logic LT,
-    input logic LTU,
     output logic RegWrite,
     output logic [3:0] ALUCtrl, //!!!!!!!!!!!!!!!Size of the signal changed from 3 bits to 4 bits !!!!!!!!!!!!!!!!!!!!!!!!!
     output logic ALUSrc,
     output logic [2:0] ImmSrc,
-    output logic [1:0] PCSrc,
     output logic [1:0] ResultSrc, //adding the aditional output representing the select line of the additional multiplexer in the regaludmem block
     output logic MemWrite,
     output logic [1:0]SizeWrite, //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
     output logic ALUsrc2, //additional output signal
     output logic [1:0]LoadSize, //additional output signal
-    output logic LoadUnsigned //additional output signal
+    output logic LoadUnsigned, //additional output signal
+    output logic Jump,
+    output logic Branch,
+    output logic [2:0] funct3OUT
 
 );
 
@@ -26,6 +25,8 @@ logic [6:0] funct7;
 assign op = instr[6:0];
 assign funct3 = instr[14:12];
 assign funct7 = instr [31:25];
+
+assign funct3OUT = funct3;
 
 logic [6:0] imm_11_5;
 assign imm_11_5 = instr[31:25];
@@ -50,7 +51,8 @@ assign imm_11_5 = instr[31:25];
         ALUCtrl   = 4'b0000; //indicates which operation takes place in the ALU
         ALUSrc    = 0; //indicates of the second operand is a register (ALUsrc = 0) or an immediate (ALUsrc = 1)
         ImmSrc    = 3'b000; //how to obtain the immediate value (control bit for the signext module)
-        PCSrc     = 2'b00; //indicates how we increment the value of the program counter
+        Jump = 0;
+        Branch =0;
         ResultSrc = 0; //result taken from the ALU, from the datamem or from pc
         MemWrite  = 0; //enabling writing to memory
         SizeWrite = 0; //byte addressing or word addressing
@@ -66,7 +68,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl = 4'b1010;
                         ALUSrc    = 1;
                         ImmSrc    = 3'b100; // =4 so we take the upper 20 bits of the instruction as an immediate
-                        PCSrc     = 2'b00; //normal PC
+                        Jump    = 0; 
+                        Branch    = 0; 
                         ResultSrc = 0;
                         MemWrite  = 0;
                         SizeWrite = 0;
@@ -77,7 +80,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b1011; 
                         ALUSrc    = 1;
                         ImmSrc    = 3'b100;
-                        PCSrc     = 2'b00;
+                        Jump =0;
+                        Branch =0;
                         ResultSrc = 0;
                         MemWrite  = 0;
                         SizeWrite = 0;
@@ -88,7 +92,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl = 4'b0; // doesn't matter, ALU not used
                         ALUSrc = 0; // //doesn't matter
                         ImmSrc = 3'b11; // 11 for j type instruction
-                        PCSrc = 1; // for adding an offset to PC
+                        Jump = 1; // for adding an offset to PC
+                        Branch =0;
                         ResultSrc = 2'b10; // don't care
                         MemWrite = 0; // don't care
                         SizeWrite = 0; // don't care
@@ -98,7 +103,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl = 4'b0; // we need to add r1 and imm
                         ALUSrc = 1; // to add imm
                         ImmSrc = 3'b000; // not j type -> we need 12 bit immediate (I-type)
-                        PCSrc = 2'b10; // for adding an offset to PC and register
+                        Jump = 1; // for adding an offset to PC and register
+                        Branch = 0;
                         ResultSrc = 2'b10; // don't care
                         MemWrite = 0; // don't care
                         SizeWrite = 0; // don't care
@@ -110,6 +116,38 @@ assign imm_11_5 = instr[31:25];
 //LTU = LESS THEN UNSIGNED
 
 
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//THIS WHOLE CODE CAN BE SIMPLIFIED BECAUSE ALL THE BRANCHES OUTPUT THE SAME IN THIS NEW CONFIGURATION OF THE CONTROL UNIT
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //  Branch Instruction
             OPC_BRANCH: begin
                 //Branch = 1;
@@ -123,14 +161,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc    = 3'b010;
                             MemWrite  = 0; // don't care
                             SizeWrite = 0;
-                    
-                            if (EQ) begin
-                                PCSrc = 1;  // branch taken when rs1 == rs2
-                            end
-                            else begin
-                                PCSrc = 0;  // fall-through
-                            end
-
+                            Jump =0;
+                            Branch =1;
                             ResultSrc = 0; // don't care (no regfile write)         
                     end
                     
@@ -141,13 +173,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc = 3'b010;
                             MemWrite = 0; // don't care
                             SizeWrite = 0;
-                        
-                            if (EQ) begin
-                                PCSrc = 0;
-                            end
-                            else begin
-                                PCSrc = 1;
-                            end
+                            Jump =0;
+                            Branch = 1;
                             ResultSrc = 0; //Don't care can take any value (because we are not writing to the regfile)
                     end
 
@@ -159,14 +186,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc    = 3'b010;
                             MemWrite  = 0; // don't care
                             SizeWrite = 0;
-
-                            if (LT) begin
-                                PCSrc = 1;  // branch when rs1 < rs2 (signed)
-                            end
-                            else begin
-                                PCSrc = 0;  // fall-through
-                            end
-
+                            Jump =0;
+                            Branch =1;
                             ResultSrc = 0; // don't care
                     end
 
@@ -177,14 +198,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc    = 3'b010;
                             MemWrite  = 0; // don't care
                             SizeWrite = 0;
-
-                            if (LT) begin
-                                PCSrc = 0;  // no branch when rs1 < rs2
-                            end
-                            else begin
-                                PCSrc = 1;  // branch when rs1 >= rs2 (signed)
-                            end
-
+                            Jump =0;
+                            Branch =1;
                             ResultSrc = 0; // don't care
 
                     end
@@ -197,14 +212,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc    = 3'b010;
                             MemWrite  = 0; // don't care
                             SizeWrite = 0;
-
-                            if (LTU) begin
-                                PCSrc = 1;  // branch when rs1 < rs2 (unsigned)
-                            end
-                            else begin
-                                PCSrc = 0;  // fall-through
-                            end
-
+                            Jump =0;
+                            Branch =1;
                             ResultSrc = 0; // don't care
 
                     end
@@ -215,14 +224,8 @@ assign imm_11_5 = instr[31:25];
                             ImmSrc    = 3'b010;
                             MemWrite  = 0; // don't care
                             SizeWrite = 0;
-
-                            if (LTU) begin
-                                PCSrc = 0;  // no branch when rs1 < rs2
-                            end
-                            else begin
-                                PCSrc = 1;  // branch when rs1 >= rs2 (unsigned)
-                            end
-
+                            Jump =0;
+                            Branch =1;
                             ResultSrc = 0; // don't care
 
                     end
@@ -231,7 +234,8 @@ assign imm_11_5 = instr[31:25];
                                 ALUCtrl   = 4'b000; //indicates which operation takes place in the ALU
                                 ALUSrc    = 0; //indicates of the second operand is a register (ALUsrc = 0) or an immediate (ALUsrc = 1)
                                 ImmSrc    = 3'b000; //how to obtain the immediate value (control bit for the signext module)
-                                PCSrc     = 2'b00; //indicates how we increment the value of the program counter
+                                Jump =0; 
+                                Branch =1;
                                 ResultSrc = 0; //result taken from the ALU, from the datamem or from pc
                                 MemWrite  = 0; //enabling writing to memory
                                 SizeWrite = 0; //byte addressing or word addressing
@@ -248,7 +252,8 @@ assign imm_11_5 = instr[31:25];
                 ALUCtrl   = 4'b000;
                 ALUSrc    = 1;
                 ImmSrc    = 3'b000;
-                PCSrc     = 2'b00;
+                Branch     = 0;
+                Jump =0;
                 MemWrite  = 0;
                 ResultSrc = 2'b01;
                 SizeWrite = 0; // don't care for loads
@@ -297,7 +302,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b000;   // ADD
                     ALUSrc    = 1'b1;     // immediate
                     ImmSrc    = 3'b001;   // S-type imm
-                    PCSrc     = 2'b00;    // normal PC+4
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;    // don't care
                     MemWrite  = 1;        // write to memory
                     SizeWrite = 2'b00;    // BYTE
@@ -309,7 +315,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b000;
                     ALUSrc    = 1'b1;
                     ImmSrc    = 3'b001;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 1;
                     SizeWrite = 2'b01;    // HALFWORD
@@ -321,7 +328,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b000;
                     ALUSrc    = 1'b1;
                     ImmSrc    = 3'b001;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 1;
                     SizeWrite = 2'b10;    // WORD
@@ -338,7 +346,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b0000;   // ADD
                     ALUSrc    = 1;         // rs1 + imm
                     ImmSrc    = 3'b000;    // I-type immediate
-                    PCSrc     = 2'b00;     // normal PC+4
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;     // from ALU
                     MemWrite  = 0;
                     ALUsrc2   = 0;         // operand A = rs1
@@ -350,7 +359,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b1000;   // SLT (signed less-than)
                     ALUSrc    = 1;
                     ImmSrc    = 3'b000;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
@@ -362,7 +372,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b1001;   // SLTU (unsigned less-than)
                     ALUSrc    = 1;
                     ImmSrc    = 3'b000;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
@@ -374,7 +385,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b0100;   // XOR
                     ALUSrc    = 1;
                     ImmSrc    = 3'b000;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
@@ -386,7 +398,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b0011;   // OR
                     ALUSrc    = 1;
                     ImmSrc    = 3'b000;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
@@ -398,7 +411,8 @@ assign imm_11_5 = instr[31:25];
                     ALUCtrl   = 4'b0010;   // AND
                     ALUSrc    = 1;
                     ImmSrc    = 3'b000;
-                    PCSrc     = 2'b00;
+                    Branch     =0;    // normal PC+4
+                    Jump =0;
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
@@ -411,7 +425,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0101;   // SLL
                         ALUSrc    = 1;         // immediate contains shamt in [24:20]
                         ImmSrc    = 3'b000;    // I-type (shamt extraction done in ALU)
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -430,7 +445,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0110;   // SRL (logical right shift)
                         ALUSrc    = 1;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -441,7 +457,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0111;   // SRA (arithmetic right shift)
                         ALUSrc    = 1;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -474,7 +491,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0000;   // ADD
                         ALUSrc    = 0;         // rs2
                         ImmSrc    = 3'b000;    // don't care for R-type
-                        PCSrc     = 2'b00;     // PC+4
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;     // from ALU
                         MemWrite  = 0;
                         ALUsrc2   = 0;         // A = rs1
@@ -486,7 +504,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0001;   // SUB
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -503,7 +522,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0101;   // SLL
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -520,7 +540,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b1000;   // SLT (signed)
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -537,7 +558,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b1001;   // SLTU (unsigned)
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -554,7 +576,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0100;   // XOR
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -573,7 +596,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0110;   // SRL
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -585,7 +609,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0111;   // SRA
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -603,7 +628,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0011;   // OR
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -620,7 +646,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b0010;   // AND
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        PCSrc     = 2'b00;
+                        Branch     =0;    // normal PC+4
+                        Jump =0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;

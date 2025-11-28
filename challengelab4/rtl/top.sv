@@ -21,7 +21,6 @@ module top #(
     logic [DATA_WIDTH-1 : 0] ExtImmD;
     logic [1 : 0] ResultSrcD;
     logic [1 : 0] ResultSrcM;
-    logic [1:0] PCSrcD;
     logic [DATA_WIDTH-1 : 0] InstrF;
     logic RegWriteD;
     logic [DATA_WIDTH-1 : 0] ReadDataM;
@@ -39,16 +38,16 @@ module top #(
     logic [DATA_WIDTH-1 : 0] PCPlus4D;
     logic [DATA_WIDTH-1 : 0] PCPlus4E;
 
+//logic for branch and jump
+    logic BranchD;
+    logic BranchE;
+    logic JumpD;
+    logic JumpE;
+    logic [2:0] funct3D;
+    logic [2:0] funct3E;
 
-
-    //logic RegWrite; Not used here : the namings come from the pipeline stage
-    //logic [3:0] ALUCtrl; Not used here : the namings come from the pipeline stage
-    //logic ALUSrc; Not used here : the namings come from the pipeline stage
     logic [2:0] ImmSrcD;
-    //logic [1:0] PCSrc;Not used here : the namings come from the pipeline stage
-    //logic [DATA_WIDTH-1:0] ImmOp; Not used here : the namings come from the pipeline stage
-    //logic [DATA_WIDTH-1:0] PC;
-    //logic reg_entry; Not used here : the namings come from the pipeline stage
+
 
 //extra logic added because we splitted the register file , alu and data memory block
     logic [DATA_WIDTH-1: 0] ALUResultE;
@@ -222,31 +221,35 @@ logic [DATA_WIDTH-1:0] ResultW;
      .LoadSize_e(LoadSizeE), 
      .LoadUnsigned_e(LoadUnsignedE),
      .ALUSrc2_e(ALUSrc2E),//ALUSrc2 not ou
-     .PCSrcD(PCSrcD),
-     .PCSrcE(PCSrcE)
+     .BranchD(BranchD),
+     .JumpD(JumpD),
+     .BranchE(BranchE),
+     .JumpE(JumpE),
+     .funct3D(funct3D),
+     .funct3E(funct3E)
     );
 
-/*
+
     PCSrc_assertion PCSource(
         .EQ(EQ),
         .LT(LT),
         .LTU(LTU),
-        .Branch_e(Branch_e),
-        .funct3(function3_e),
+        .Branch_e(BranchE),
+        .Jump_e(JumpE),
+        .funct3(funct3E),
         .PCSrcE(PCSrcE)
     );
-*/
+
 
     control control (
-        .EQ(EQ),
-        .LT(LT),
-        .LTU(LTU),
         .instr(InstrD),
         .RegWrite(RegWriteD),
         .ALUCtrl(ALUCtrlD),
         .ALUSrc(ALUSrcD),
         .ImmSrc(ImmSrcD),
-        .PCSrc(PCSrcD),
+        .Branch(BranchD),
+        .Jump(JumpD),
+        .funct3OUT(funct3D),
         .ResultSrc(ResultSrcD),
         .MemWrite(MemWriteD),
         .SizeWrite(SizeWriteD),

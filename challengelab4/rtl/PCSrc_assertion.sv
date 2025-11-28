@@ -4,6 +4,7 @@ module PCSrc_assertion #(
 (
 input logic [2:0] funct3,
 input logic Branch_e,
+input logic Jump_e,
 input logic EQ,
 input logic LT,
 input logic LTU,
@@ -85,21 +86,12 @@ always_comb begin
                     end
                 endcase
     end
+
     else if(Jump_e) begin
         PCSrcE = 2'b10;
-
     end
 
 end
-
-
-
-
-
-
-
-
-
 
 
 
