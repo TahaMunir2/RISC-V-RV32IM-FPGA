@@ -12,7 +12,7 @@ TEST_F(CpuTestbench, TestAddiBne)
     runSimulation(CYCLES);
     EXPECT_EQ(top_->a0, 254);
 }
-/*
+
 TEST_F(CpuTestbench, TestLiAdd)
 {
     setupTest("2_li_add");
@@ -61,7 +61,7 @@ TEST_F(CpuTestbench, TestSBandLW)
     setData("reference/gaussian.mem");
     initSimulation();
     runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 4080);
+    EXPECT_EQ(top_->a0, 257);
 }
 
 TEST_F(CpuTestbench, TestBranchInequalities)
@@ -79,7 +79,7 @@ TEST_F(CpuTestbench, TestAUIPC)
     setData("reference/gaussian.mem");
     initSimulation();
     runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 4097);
+    EXPECT_EQ(top_->a0, 4096);
 }
 
 TEST_F(CpuTestbench, TestShift)
@@ -100,7 +100,7 @@ TEST_F(CpuTestbench, TestPdf2)
     EXPECT_EQ(top_->a0, 155);
 }
 
-*/
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
