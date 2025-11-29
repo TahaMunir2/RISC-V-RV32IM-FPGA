@@ -16,7 +16,7 @@ module regfile#(
 
     logic [DATA_WIDTH-1: 0] regfile_array [REG_FILE_WIDTH-1: 0];
 
-    assign regfile_array[25] = trigger ;//s9 is a saved register type (it represents the value of trigger: the signal that starts the program)
+    assign regfile_array[25] = {31'b0, trigger} ;//s9 is a saved register type (it represents the value of trigger: the signal that starts the program)
 
     always_ff @(negedge clk) begin
         if(WE3) regfile_array[AD3] <= WD3;
