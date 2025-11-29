@@ -3,6 +3,7 @@ module top #(
 ) (
     input   logic clk,
     input   logic rst,
+    input logic trigger,
     output  logic [DATA_WIDTH-1:0] a0    
 );
     
@@ -125,6 +126,7 @@ module top #(
      logic [1:0] SizeWriteM;
      logic [1:0]LoadSizeM; 
      logic LoadUnsignedM;
+
 //extra wires for the output of the memory-writeback pipeline register:
 logic RegWriteW;
 logic [1:0] ResultSrcW;
@@ -237,7 +239,8 @@ logic [DATA_WIDTH-1:0] ResultW;
         .Branch_e(BranchE),
         .Jump_e(JumpE),
         .funct3(funct3E),
-        .PCSrcE(PCSrcE)
+        .PCSrcE(PCSrcE),
+        .ALUSrcE(ALUSrcE)
     );
 
 
@@ -281,6 +284,7 @@ logic [DATA_WIDTH-1:0] ResultW;
 
     regfile regfile(
         .clk(clk),
+        .trigger(trigger),
         .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
         .AD3(RdW),
         .AD2(AD2),
@@ -344,7 +348,7 @@ mux4 forwardingRS2(
         .ALUCtrl(ALUCtrlE)
     );
 
-
+ 
 
 
 

@@ -26,7 +26,7 @@ always_ff @(posedge clk)
         case (pc_src)
             2'b00: internal_pc <= inc_pc;    // PC + 4
             2'b01: internal_pc <= branch_pc; // PC + Imm
-            2'b10: internal_pc <= ALU;       // JALR
+            2'b10: internal_pc <= ALU;       // JALR / JAL
             default: internal_pc <= inc_pc;  
         endcase
     end

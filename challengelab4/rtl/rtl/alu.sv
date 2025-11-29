@@ -43,7 +43,7 @@ module alu#(
         4'b1001: ALUout = (ALUop1 < ALUop2) ? 32'b1 : 32'b0; // SLTU: Set Less Then Unsigned     
         4'b1010: ALUout = ALUop2; // Out = Entry for LUI: Load Upper Immediate
         4'b1011: ALUout = ALUop1 + ALUop2 - 32'd4;  // AUIPC : Add Upper Immediate and Program Counter (we need the current program counter: pc = pc_save -4)
-
+    
         default: ALUout = 32'b0;
         endcase
     end

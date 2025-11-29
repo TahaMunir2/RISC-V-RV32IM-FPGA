@@ -8,6 +8,7 @@ input logic Jump_e,
 input logic EQ,
 input logic LT,
 input logic LTU,
+input logic ALUSrcE,
 output logic [1:0] PCSrcE
 );
 
@@ -16,7 +17,6 @@ always_comb begin
     PCSrcE = 0; //Default: normal PC increment
     if(Branch_e) begin
     case (funct3)
-
                     //Branch If Equal (BEQ)
                     3'b000:begin
                             if (EQ) begin
@@ -88,7 +88,8 @@ always_comb begin
     end
 
     else if(Jump_e) begin
-        PCSrcE = 2'b10;
+        if (ALUSrcE) PCSrcE = 2'b10; // jalr
+        else PCSrcE = 2'b01; // jalr
     end
 
 end
