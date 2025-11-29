@@ -286,7 +286,7 @@ logic [1:0] PCSrcF;
         .clk(clk),
         .rst(rst),
         .enable(BranchE),//enable signal for the FSM: we write in the FSM only when the instruction in the execute stage is a branch instruction
-        .update_index(PCE), //index of that branch PC
+        .update_index(PCE[7:2]), //index of that branch PC
         .actual_taken(actual_taken), //real outcome
         .predict_index(PCF[7:2]),//index from PC (we take the bus [7:2] corresponding to 6 bits from PC to identify the specific jump we are dealing with)
         .pred_taken(branch_prediction)//prediction output 

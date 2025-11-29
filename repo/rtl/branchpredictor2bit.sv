@@ -23,7 +23,7 @@ module branchpredictor2bit #(
     my_state next_array [TARGET_BUFFER_SIZE-1:0]; //next state
 
     //Advance state registers on clock or reset, FSM flip-flop
-    always_ff @(negedge clk or posedge rst) begin
+    always_ff @(negedge clk) begin
         if (rst) begin
             for (int i = 0; i <TARGET_BUFFER_SIZE; i++) //we initialize all the predictions to weakly not taken (no extreme initialization because we don't know about the branches yet)
                 array[i] <= WEAKLY_NOT_TAKEN;
