@@ -16,9 +16,11 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     , LoadSize{vlSymsp->TOP.LoadSize}
     , LoadUnsigned{vlSymsp->TOP.LoadUnsigned}
     , wake{vlSymsp->TOP.wake}
+    , l2_fetch{vlSymsp->TOP.l2_fetch}
     , stall{vlSymsp->TOP.stall}
     , addr{vlSymsp->TOP.addr}
     , line_from_mem{vlSymsp->TOP.line_from_mem}
+    , l2_addr{vlSymsp->TOP.l2_addr}
     , data_out{vlSymsp->TOP.data_out}
     , rootp{&(vlSymsp->TOP)}
 {

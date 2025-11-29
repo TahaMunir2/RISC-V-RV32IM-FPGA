@@ -27,9 +27,9 @@ TEST_F(DcacheTestbench, DcacheTest0)
     top->wake         = 0;
     top->addr         = 0x00000000;
 
-
-    
+    top->addr = 0x00F00000;
     top->fetch = 1;
+    
     runSimulation(1);
     //testing stall on non valid fetch (read)
     EXPECT_EQ(top->stall, 1)
@@ -38,6 +38,14 @@ TEST_F(DcacheTestbench, DcacheTest0)
     //checking that the cache doesnt write back the invalid value
     EXPECT_EQ(top->write_back_en, 0)
         << "Cache should not assert a write back for an invalid value.";
+
+    //checking that the l1 cache asserts a fetch request on the l2 cache
+    EXPECT_EQ(top->l2_fetch, 1)
+        << "Cache should assert l2_fetch on a miss.";    
+
+    //checkin that the l1 cache asserts the correct l2_addr for the l2 to fetch from
+    EXPECT_EQ(top->l2_addr, 0x00F00000)
+        << "Cache should assert l2_fetch using the correct l2_addr";
 
     runSimulation(1);
     //testing stall works until wake asserted
@@ -55,6 +63,10 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->stall, 0)
         << "Cache should deassert stall on subsequent access to the same line after data is retrieved from L2 (hit).";
 
+    //testing l2_fetch deassertion
+    EXPECT_EQ(top->l2_fetch, 0)
+        << "Cache should deassert l2_fetch on subsequent access to the same line after data is retrieved from L2 (hit).";
+
     top->wake = 0;
     top->addr = 0x00000010; //address goes to set 1, block 0
     top->fetch = 0;
@@ -65,7 +77,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
         << "Cache should not stall when fetch is deasserted.";
     
     top->fetch = 1;
-    top->addr = 0x00000000;
+    top->addr = 0x00F00000;
     
     runSimulation(1);
     //testing correct word being loaded into correct position
@@ -134,7 +146,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->data_out, 0x00000FFF)
         << "Wrong data value read.";
 
-    top->addr = 0x00000000;
+    top->addr = 0x00F00000;
 
     runSimulation(1);
     //should read the value in set 0, way 0
@@ -189,7 +201,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->data_out, 0x000000FF)
         << "Wrong data value read.";
 
-    top->addr = 0x00000000;
+    top->addr = 0x00F00000;
 
     runSimulation(1);
     //checking that the previous most recently used value is still in the cache
@@ -201,7 +213,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     top->wd = 0xFFFF0000;
     top->MemWrite_m = 1;
 
-    runSimulation(1); //should write only the bottom half of 0xFFFF0000 into address 0x00000000
+    runSimulation(1); //should write only the bottom half of 0xFFFF0000 into address 0x00F00000
 
     top->MemWrite_m = 0;
 
@@ -214,7 +226,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     top->wd = 0xFFFFFFFF;
     top->MemWrite_m = 1;
 
-    runSimulation(1); //should write only the bottom byte of 0xFFFFFFFF into address 0x00000000
+    runSimulation(1); //should write only the bottom byte of 0xFFFFFFFF into address 0x00F00000
 
     top->MemWrite_m = 0;
 

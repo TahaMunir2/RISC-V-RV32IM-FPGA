@@ -45,13 +45,15 @@ void Vdut___024root__trace_chg_sub_0(Vdut___024root* vlSelf, VerilatedVcd::Buffe
     bufp->chgCData(oldp+21,(vlSelf->LoadSize),2);
     bufp->chgBit(oldp+22,(vlSelf->LoadUnsigned));
     bufp->chgBit(oldp+23,(vlSelf->wake));
-    bufp->chgIData(oldp+24,(vlSelf->data_out),32);
-    bufp->chgBit(oldp+25,(vlSelf->stall));
-    bufp->chgIData(oldp+26,((vlSelf->addr >> 0xbU)),21);
-    bufp->chgCData(oldp+27,((0x7fU & (vlSelf->addr 
+    bufp->chgIData(oldp+24,(vlSelf->l2_addr),32);
+    bufp->chgBit(oldp+25,(vlSelf->l2_fetch));
+    bufp->chgIData(oldp+26,(vlSelf->data_out),32);
+    bufp->chgBit(oldp+27,(vlSelf->stall));
+    bufp->chgIData(oldp+28,((vlSelf->addr >> 0xbU)),21);
+    bufp->chgCData(oldp+29,((0x7fU & (vlSelf->addr 
                                       >> 4U))),7);
-    bufp->chgCData(oldp+28,((3U & (vlSelf->addr >> 2U))),2);
-    bufp->chgCData(oldp+29,((3U & vlSelf->addr)),2);
+    bufp->chgCData(oldp+30,((3U & (vlSelf->addr >> 2U))),2);
+    bufp->chgCData(oldp+31,((3U & vlSelf->addr)),2);
 }
 
 void Vdut___024root__trace_cleanup(void* voidSelf, VerilatedVcd* /*unused*/) {

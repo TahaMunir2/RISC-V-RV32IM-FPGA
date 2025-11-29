@@ -30,9 +30,11 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     VL_IN8(&LoadSize,1,0);
     VL_IN8(&LoadUnsigned,0,0);
     VL_IN8(&wake,0,0);
+    VL_OUT8(&l2_fetch,0,0);
     VL_OUT8(&stall,0,0);
     VL_IN(&addr,31,0);
     VL_INW(&line_from_mem,127,0,4);
+    VL_OUT(&l2_addr,31,0);
     VL_OUT(&data_out,31,0);
 
     // CELLS

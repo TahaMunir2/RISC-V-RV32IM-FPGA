@@ -18,6 +18,7 @@ class Vdut___024root final : public VerilatedModule {
     VL_IN8(LoadSize,1,0);
     VL_IN8(LoadUnsigned,0,0);
     VL_IN8(wake,0,0);
+    VL_OUT8(l2_fetch,0,0);
     VL_OUT8(stall,0,0);
     CData/*0:0*/ l1i_cache__DOT__wr_en;
     CData/*0:0*/ l1i_cache__DOT__rd_en;
@@ -31,6 +32,7 @@ class Vdut___024root final : public VerilatedModule {
     CData/*0:0*/ __Vclklast__TOP__clk;
     VL_IN(addr,31,0);
     VL_INW(line_from_mem,127,0,4);
+    VL_OUT(l2_addr,31,0);
     VL_OUT(data_out,31,0);
     VlWide<4>/*127:0*/ l1i_cache__DOT__write_data;
     IData/*31:0*/ l1i_cache__DOT__unnamedblk1__DOT__i;

@@ -18,12 +18,14 @@ VL_ATTR_COLD void Vdut___024root__trace_init_sub__TOP__0(Vdut___024root* vlSelf,
     tracep->declBus(c+22,"LoadSize", false,-1, 1,0);
     tracep->declBit(c+23,"LoadUnsigned", false,-1);
     tracep->declBit(c+24,"wake", false,-1);
-    tracep->declBus(c+25,"data_out", false,-1, 31,0);
-    tracep->declBit(c+26,"stall", false,-1);
+    tracep->declBus(c+25,"l2_addr", false,-1, 31,0);
+    tracep->declBit(c+26,"l2_fetch", false,-1);
+    tracep->declBus(c+27,"data_out", false,-1, 31,0);
+    tracep->declBit(c+28,"stall", false,-1);
     tracep->pushNamePrefix("l1i_cache ");
-    tracep->declBus(c+31,"DATA_WIDTH", false,-1, 31,0);
-    tracep->declBus(c+31,"ADDRESS_WIDTH", false,-1, 31,0);
-    tracep->declBus(c+32,"BLOCK_SIZE", false,-1, 31,0);
+    tracep->declBus(c+33,"DATA_WIDTH", false,-1, 31,0);
+    tracep->declBus(c+33,"ADDRESS_WIDTH", false,-1, 31,0);
+    tracep->declBus(c+34,"BLOCK_SIZE", false,-1, 31,0);
     tracep->declBit(c+15,"clk", false,-1);
     tracep->declBit(c+16,"fetch", false,-1);
     tracep->declBus(c+17,"addr", false,-1, 31,0);
@@ -31,16 +33,18 @@ VL_ATTR_COLD void Vdut___024root__trace_init_sub__TOP__0(Vdut___024root* vlSelf,
     tracep->declBus(c+22,"LoadSize", false,-1, 1,0);
     tracep->declBit(c+23,"LoadUnsigned", false,-1);
     tracep->declBit(c+24,"wake", false,-1);
-    tracep->declBus(c+25,"data_out", false,-1, 31,0);
-    tracep->declBit(c+26,"stall", false,-1);
+    tracep->declBus(c+25,"l2_addr", false,-1, 31,0);
+    tracep->declBit(c+26,"l2_fetch", false,-1);
+    tracep->declBus(c+27,"data_out", false,-1, 31,0);
+    tracep->declBit(c+28,"stall", false,-1);
     tracep->declBit(c+2,"wr_en", false,-1);
     tracep->declBit(c+3,"rd_en", false,-1);
     tracep->declArray(c+4,"write_data", false,-1, 127,0);
     tracep->declBit(c+8,"way", false,-1);
-    tracep->declBus(c+27,"tag_bits", false,-1, 31,11);
-    tracep->declBus(c+28,"set", false,-1, 6,0);
-    tracep->declBus(c+29,"block_offset", false,-1, 1,0);
-    tracep->declBus(c+30,"byte_offset", false,-1, 1,0);
+    tracep->declBus(c+29,"tag_bits", false,-1, 31,11);
+    tracep->declBus(c+30,"set", false,-1, 6,0);
+    tracep->declBus(c+31,"block_offset", false,-1, 1,0);
+    tracep->declBus(c+32,"byte_offset", false,-1, 1,0);
     tracep->declBit(c+9,"hit0", false,-1);
     tracep->declBit(c+10,"hit1", false,-1);
     tracep->declBit(c+11,"valid0", false,-1);
@@ -110,13 +114,15 @@ VL_ATTR_COLD void Vdut___024root__trace_full_sub_0(Vdut___024root* vlSelf, Veril
     bufp->fullCData(oldp+22,(vlSelf->LoadSize),2);
     bufp->fullBit(oldp+23,(vlSelf->LoadUnsigned));
     bufp->fullBit(oldp+24,(vlSelf->wake));
-    bufp->fullIData(oldp+25,(vlSelf->data_out),32);
-    bufp->fullBit(oldp+26,(vlSelf->stall));
-    bufp->fullIData(oldp+27,((vlSelf->addr >> 0xbU)),21);
-    bufp->fullCData(oldp+28,((0x7fU & (vlSelf->addr 
+    bufp->fullIData(oldp+25,(vlSelf->l2_addr),32);
+    bufp->fullBit(oldp+26,(vlSelf->l2_fetch));
+    bufp->fullIData(oldp+27,(vlSelf->data_out),32);
+    bufp->fullBit(oldp+28,(vlSelf->stall));
+    bufp->fullIData(oldp+29,((vlSelf->addr >> 0xbU)),21);
+    bufp->fullCData(oldp+30,((0x7fU & (vlSelf->addr 
                                        >> 4U))),7);
-    bufp->fullCData(oldp+29,((3U & (vlSelf->addr >> 2U))),2);
-    bufp->fullCData(oldp+30,((3U & vlSelf->addr)),2);
-    bufp->fullIData(oldp+31,(0x20U),32);
-    bufp->fullIData(oldp+32,(4U),32);
+    bufp->fullCData(oldp+31,((3U & (vlSelf->addr >> 2U))),2);
+    bufp->fullCData(oldp+32,((3U & vlSelf->addr)),2);
+    bufp->fullIData(oldp+33,(0x20U),32);
+    bufp->fullIData(oldp+34,(4U),32);
 }

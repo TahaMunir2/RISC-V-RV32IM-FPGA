@@ -16,6 +16,8 @@ module l1d_cache #(
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
+    output logic [ADDRESS_WIDTH-1:0] l2_addr,
+    output logic l2_fetch,
     output logic stall
 );
 
@@ -91,6 +93,8 @@ module l1d_cache #(
         write_data = '0;
         data_out = '0;
         write_back_en = 0;
+        l2_fetch = 1'b0;
+        l2_addr = addr;
 
         // wr and rd en logic
         if (fetch) begin
@@ -123,7 +127,8 @@ module l1d_cache #(
                 if (!wake) begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b0;
-                    stall      = 1'b1;                 
+                    stall      = 1'b1;
+                    l2_fetch   = 1'b1;             
                 end
 
                 // When hazard unit wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
