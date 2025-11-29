@@ -15,7 +15,7 @@ module regfile#(
 
     logic [DATA_WIDTH-1: 0] regfile_array [REG_FILE_WIDTH-1: 0];
 
-    always_ff @(negedge clk) begin
+    always_ff @(posedge clk) begin
         if(WE3) regfile_array[AD3] <= WD3;
     end
     

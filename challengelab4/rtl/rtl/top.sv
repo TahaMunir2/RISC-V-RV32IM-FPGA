@@ -125,7 +125,6 @@ module top #(
      logic [1:0] SizeWriteM;
      logic [1:0]LoadSizeM; 
      logic LoadUnsignedM;
-
 //extra wires for the output of the memory-writeback pipeline register:
 logic RegWriteW;
 logic [1:0] ResultSrcW;
@@ -238,8 +237,7 @@ logic [DATA_WIDTH-1:0] ResultW;
         .Branch_e(BranchE),
         .Jump_e(JumpE),
         .funct3(funct3E),
-        .PCSrcE(PCSrcE),
-        .ALUSrcE(ALUSrcE)
+        .PCSrcE(PCSrcE)
     );
 
 
@@ -346,7 +344,7 @@ mux4 forwardingRS2(
         .ALUCtrl(ALUCtrlE)
     );
 
- 
+
 
 
 
