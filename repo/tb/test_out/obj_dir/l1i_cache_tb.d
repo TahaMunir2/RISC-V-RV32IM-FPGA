@@ -1,4 +1,4 @@
-l1d_cache_tb.o: ../tests/l1d_cache_tb.cpp ../tests/testbench.h \
+l1i_cache_tb.o: ../tests/l1i_cache_tb.cpp ../tests/testbench.h \
  ../tests/base_testbench.h Vdut.h \
  /usr/local/share/verilator/include/verilated.h \
  /usr/local/share/verilator/include/verilatedos.h \

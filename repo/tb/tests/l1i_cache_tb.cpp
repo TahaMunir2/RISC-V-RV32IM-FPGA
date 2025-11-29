@@ -19,11 +19,8 @@ TEST_F(DcacheTestbench, DcacheTest0)
 {
     top->clk          = 0;
     top->fetch        = 0;
-    top->MemWrite_m   = 0;
     top->LoadSize     = 0b10;
     top->LoadUnsigned = 1;
-    top->SizeWrite_m  = 0;
-    top->wd           = 0;
     top->wake         = 0;
     top->addr         = 0x00000000;
 
@@ -34,11 +31,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     //testing stall on non valid fetch (read)
     EXPECT_EQ(top->stall, 1)
         << "Cache should assert stall on first access to a cold line (miss 1).";
-    
-    //checking that the cache doesnt write back the invalid value
-    EXPECT_EQ(top->write_back_en, 0)
-        << "Cache should not assert a write back for an invalid value.";
-
+        
     runSimulation(1);
     //testing stall works until wake asserted
     EXPECT_EQ(top->stall, 1)
@@ -94,10 +87,8 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->data_out, 0x000000FF)
         << "Wrong data value read.";
 
-    top->MemWrite_m = 1;
-    top->wd = 0x0000FFFF;
     top->addr = 0xF0000000;
-    top->SizeWrite_m = 0b10;
+    top->LoadSize = 0b10;
 
     runSimulation(1);
     //testing stall on non valid fetch (write)
@@ -117,14 +108,9 @@ TEST_F(DcacheTestbench, DcacheTest0)
 
     top->wake = 0;
 
-    runSimulation(1); //cache should write in value from ALU
-
-    top->MemWrite_m = 0;
-    top->LoadSize = 0b10;
-
     runSimulation(1);
-    //testing write from ALU
-    EXPECT_EQ(top->data_out, 0x0000FFFF)
+    //testing correct value being written in
+    EXPECT_EQ(top->data_out, 0x00000FFF)
         << "Wrong data value read.";
 
     top->addr = 0xF0000004;
@@ -151,26 +137,6 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->stall, 1)
         << "Cache should assert stall on first access to a cold line (miss 3).";
     
-    //checking that the cache writes back the replaced value
-    EXPECT_EQ(top->write_back_en, 1)
-        << "Cache should assert a write back for an replaced value.";
-
-    //checking that the cache writes back the correct value
-    EXPECT_EQ(top->write_back[0], 0x0000FFFF)
-        << "Cache should write back the correct value";
-
-    //checking that the cache writes back the correct value
-    EXPECT_EQ(top->write_back[1], 0x00000FFF)
-        << "Cache should write back the correct value";
-
-    //checking that the cache writes back the correct value
-    EXPECT_EQ(top->write_back[2], 0x00000FFF)
-        << "Cache should write back the correct value";
-    
-    //checking that the cache writes back the correct value
-    EXPECT_EQ(top->write_back[3], 0x00000FFF)
-        << "Cache should write back the correct value";
-    
     for (int i = 0; i < 4; ++i) {
         top->line_from_mem[i] = 0x000000FF; //should write this into set 0 way 1
     }
@@ -196,33 +162,6 @@ TEST_F(DcacheTestbench, DcacheTest0)
     //and that LRU replacement was successful
     EXPECT_EQ(top->data_out, 0x00FFFFFF)
         << "Wrong data value read.";
-
-    top->SizeWrite_m = 0b01;
-    top->wd = 0xFFFF0000;
-    top->MemWrite_m = 1;
-
-    runSimulation(1); //should write only the bottom half of 0xFFFF0000 into address 0x00000000
-
-    top->MemWrite_m = 0;
-
-    runSimulation(1);
-    //checking that SizeWrite_m changes the size of the write
-    EXPECT_EQ(top->data_out, 0x00FF0000)
-        << "Wrong data value read.";
-
-    top->SizeWrite_m = 0b00;
-    top->wd = 0xFFFFFFFF;
-    top->MemWrite_m = 1;
-
-    runSimulation(1); //should write only the bottom byte of 0xFFFFFFFF into address 0x00000000
-
-    top->MemWrite_m = 0;
-
-    runSimulation(1);
-    //checking that SizeWrite_m changes the size of the write
-    EXPECT_EQ(top->data_out, 0x00FF00FF)
-        << "Wrong data value read.";
-    
 }
 
 int main(int argc, char **argv)

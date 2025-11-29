@@ -27,18 +27,13 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     // propagate new values into/out from the Verilated model.
     VL_IN8(&clk,0,0);
     VL_IN8(&fetch,0,0);
-    VL_IN8(&SizeWrite_m,1,0);
-    VL_IN8(&MemWrite_m,0,0);
     VL_IN8(&LoadSize,1,0);
     VL_IN8(&LoadUnsigned,0,0);
     VL_IN8(&wake,0,0);
-    VL_OUT8(&write_back_en,0,0);
     VL_OUT8(&stall,0,0);
     VL_IN(&addr,31,0);
-    VL_IN(&wd,31,0);
     VL_INW(&line_from_mem,127,0,4);
     VL_OUT(&data_out,31,0);
-    VL_OUTW(&write_back,127,0,4);
 
     // CELLS
     // Public to allow access to /* verilator public */ items.

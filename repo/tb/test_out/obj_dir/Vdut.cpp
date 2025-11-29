@@ -13,18 +13,13 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     , vlSymsp{new Vdut__Syms(contextp(), _vcname__, this)}
     , clk{vlSymsp->TOP.clk}
     , fetch{vlSymsp->TOP.fetch}
-    , SizeWrite_m{vlSymsp->TOP.SizeWrite_m}
-    , MemWrite_m{vlSymsp->TOP.MemWrite_m}
     , LoadSize{vlSymsp->TOP.LoadSize}
     , LoadUnsigned{vlSymsp->TOP.LoadUnsigned}
     , wake{vlSymsp->TOP.wake}
-    , write_back_en{vlSymsp->TOP.write_back_en}
     , stall{vlSymsp->TOP.stall}
     , addr{vlSymsp->TOP.addr}
-    , wd{vlSymsp->TOP.wd}
     , line_from_mem{vlSymsp->TOP.line_from_mem}
     , data_out{vlSymsp->TOP.data_out}
-    , write_back{vlSymsp->TOP.write_back}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context
@@ -73,7 +68,7 @@ static void _eval_initial_loop(Vdut__Syms* __restrict vlSymsp) {
             Verilated::debug(1);
             __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
             Verilated::debug(__Vsaved_debug);
-            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1d_cache.sv", 1, "",
+            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1i_cache.sv", 1, "",
                 "Verilated model didn't DC converge\n"
                 "- See https://verilator.org/warn/DIDNOTCONVERGE");
         } else {
@@ -104,7 +99,7 @@ void Vdut::eval_step() {
             Verilated::debug(1);
             __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
             Verilated::debug(__Vsaved_debug);
-            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1d_cache.sv", 1, "",
+            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1i_cache.sv", 1, "",
                 "Verilated model didn't converge\n"
                 "- See https://verilator.org/warn/DIDNOTCONVERGE");
         } else {
