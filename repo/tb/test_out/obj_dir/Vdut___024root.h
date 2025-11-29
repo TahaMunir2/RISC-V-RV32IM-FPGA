@@ -7,10 +7,9 @@
 
 #include "verilated.h"
 
-
 class Vdut__Syms;
 
-class alignas(VL_CACHE_LINE_BYTES) Vdut___024root final : public VerilatedModule {
+class Vdut___024root final : public VerilatedModule {
   public:
 
     // DESIGN SPECIFIC STATE
@@ -20,6 +19,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vdut___024root final : public VerilatedModule
     VL_IN8(MemWrite_m,0,0);
     VL_IN8(LoadSize,1,0);
     VL_IN8(LoadUnsigned,0,0);
+    VL_IN8(wake,0,0);
     VL_OUT8(write_back_en,0,0);
     VL_OUT8(stall,0,0);
     CData/*0:0*/ l1d_cache__DOT__wr_en;
@@ -31,11 +31,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vdut___024root final : public VerilatedModule
     CData/*0:0*/ l1d_cache__DOT__valid1;
     CData/*0:0*/ l1d_cache__DOT__miss;
     CData/*6:0*/ l1d_cache__DOT__bottom_bit;
-    CData/*6:0*/ l1d_cache__DOT____VdfgExtracted_h18ae9b83__0;
-    CData/*0:0*/ __VstlFirstIteration;
-    CData/*0:0*/ __VicoFirstIteration;
-    CData/*0:0*/ __Vtrigprevexpr___TOP__clk__0;
-    CData/*0:0*/ __VactContinue;
+    CData/*0:0*/ __Vclklast__TOP__clk;
     VL_IN(addr,31,0);
     VL_IN(wd,31,0);
     VL_INW(line_from_mem,127,0,4);
@@ -44,25 +40,21 @@ class alignas(VL_CACHE_LINE_BYTES) Vdut___024root final : public VerilatedModule
     VlWide<4>/*127:0*/ l1d_cache__DOT__write_data;
     VlWide<4>/*127:0*/ l1d_cache__DOT__wmask;
     IData/*31:0*/ l1d_cache__DOT__unnamedblk1__DOT__i;
-    IData/*31:0*/ __VactIterCount;
     VlUnpacked<VlWide<10>/*302:0*/, 128> l1d_cache__DOT__cache;
-    VlUnpacked<CData/*0:0*/, 3> __Vm_traceActivity;
-    VlTriggerVec<1> __VstlTriggered;
-    VlTriggerVec<1> __VicoTriggered;
-    VlTriggerVec<1> __VactTriggered;
-    VlTriggerVec<1> __VnbaTriggered;
+    VlUnpacked<VlWide<10>/*302:0*/, 128> __Vchglast__TOP__l1d_cache__DOT__cache;
+    VlUnpacked<CData/*0:0*/, 2> __Vm_traceActivity;
 
     // INTERNAL VARIABLES
     Vdut__Syms* const vlSymsp;
 
     // CONSTRUCTORS
-    Vdut___024root(Vdut__Syms* symsp, const char* v__name);
+    Vdut___024root(Vdut__Syms* symsp, const char* name);
     ~Vdut___024root();
     VL_UNCOPYABLE(Vdut___024root);
 
     // INTERNAL METHODS
     void __Vconfigure(bool first);
-};
+} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);
 
 
 #endif  // guard

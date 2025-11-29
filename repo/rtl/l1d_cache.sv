@@ -12,6 +12,7 @@ module l1d_cache #(
     input  logic MemWrite_m,
     input  logic [1:0] LoadSize,
     input  logic LoadUnsigned,
+    input  logic wake,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
@@ -57,6 +58,13 @@ module l1d_cache #(
     assign block_offset = addr[3:2];
     assign byte_offset = addr[1:0];
 
+
+
+    logic hit0, hit1;
+    logic valid0, valid1;
+    logic miss;
+    logic [6:0] bottom_bit;
+
     initial begin
         for (int i = 0; i < 128; i++) begin
             cache[i].used           = 1'b0;
@@ -66,11 +74,6 @@ module l1d_cache #(
             cache[i].block1.dirty   = 1'b0;
         end
     end
-
-        logic hit0, hit1;
-        logic valid0, valid1;
-        logic miss;
-        logic [6:0] bottom_bit;
 
     always_comb begin
          // hit detection
@@ -87,67 +90,91 @@ module l1d_cache #(
         rd_en = 1'b0;
         write_data = '0;
         data_out = '0;
-
-        // way determination
-        if (miss) begin
-            stall = 1'b1;
-            wmask = '1;
-
-            if (!valid0 && !valid1)     way = 1'b0; //both bits are invalid, we choose the default 
-            else if (!valid0)           way = 1'b0; //way0 is invalid
-            else if (!valid1)           way = 1'b1; //way1 is invalid
-            else                        way = ~cache[set].used;  //both bits are valid, we take into account which way was least recently used (LRU logic)
-        end
-
-        else begin
-            way = hit1;   // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
-            if (MemWrite_m && fetch) begin // sb logic, determine size
-                wr_en = 1'b1;
-                wmask = '1;
-                if(SizeWrite_m == 2'b00) begin //sb
-                    bottom_bit = block_offset * 32 + byte_offset * 8;
-                    wmask[bottom_bit[6:0] +: 8] = '0;
-                end
-
-                else if(SizeWrite_m == 2'b01) begin // sh
-                    bottom_bit = block_offset * 32 + byte_offset * 8;
-                    wmask[bottom_bit[6:0] +: 16] = '0;
-                end
-
-                else if(SizeWrite_m == 2'b10) begin // sw
-                    bottom_bit = block_offset * 32;
-                    wmask[bottom_bit[6:0] +: 32] = '0;
-                end
-
-                wmask = ~wmask;
-            end
-        end
+        write_back_en = 0;
 
         // wr and rd en logic
         if (fetch) begin
             if (miss) begin
-                // On a miss: fill the line, but don't read from cache this cycle
-                rd_en      = 1'b0;
-                wr_en      = 1'b1;
-                write_data = line_from_mem;
+
+                wmask = '1;
+
+                //way determination
+                if (!valid0 && !valid1)     way = 1'b0; //both bits are invalid, we choose the default 
+                else if (!valid0)           way = 1'b0; //way0 is invalid
+                else if (!valid1)           way = 1'b1; //way1 is invalid
+                else begin 
+
+                    way = ~cache[set].used;  //both bits are valid, we take into account which way was least recently used (LRU logic)
+                    if (!way) begin
+                        if (fetch && !wake && cache[set].block0.dirty) begin 
+                            write_back_en = 1;
+                            write_back = cache[set].block0[127:0];      
+                        end             
+                    end
+                    else begin
+                        if (fetch && !wake && cache[set].block1.dirty) begin 
+                            write_back_en = 1;
+                            write_back = cache[set].block1[127:0];
+                        end
+                    end
+                end
+
+                // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
+                if (!wake) begin
+                    rd_en      = 1'b0;
+                    wr_en      = 1'b0;
+                    stall      = 1'b1;                 
+                end
+
+                // When hazard unit wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
+                else begin
+                    rd_en      = 1'b0;
+                    wr_en      = 1'b1;
+                    stall      = 1'b0;
+                    write_data = line_from_mem;
+                end
+
             end
+
             else begin
+
+                //way determination
+                way = hit1;   // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
+
+                if (MemWrite_m) begin // sb logic, determine size
+                    wr_en = 1'b1;
+                    wmask = '1;
+                    write_data = {4{wd}};
+
+                    if(SizeWrite_m == 2'b00) begin //sb
+                        bottom_bit = block_offset * 32 + byte_offset * 8;
+                        wmask[bottom_bit[6:0] +: 8] = '0;
+                    end
+
+                    else if(SizeWrite_m == 2'b01) begin // sh
+                        bottom_bit = block_offset * 32 + byte_offset * 8;
+                        wmask[bottom_bit[6:0] +: 16] = '0;
+                    end
+
+                    else if(SizeWrite_m == 2'b10) begin // sw
+                        bottom_bit = block_offset * 32;
+                        wmask[bottom_bit[6:0] +: 32] = '0;
+                    end
+
+                    wmask = ~wmask;
+                end
+
                 // On a hit: enable read from cache
                 rd_en = 1'b1;
 
-                //If it is also a store, enable write
-                if (MemWrite_m) begin
-                    wr_en      = 1'b1;
-                    write_data = {4{wd}};
-                end
             end
         end
+
 
         //read logic
         if (rd_en) begin
             // we don't update valid or dirty since we are only reading        
-            
-
+            cache[set].used = way; //now that way has been determined, assert current way as most recently used
             if (way == 1'b0) begin
                 case(block_offset)
                 2'b00: data_out = cache[set].block0.word0;
@@ -195,36 +222,38 @@ module l1d_cache #(
     end
 
     always_ff @(posedge clk) begin // only write is synchronous
-        write_back_en <= 0; // default to prevent latching
-        cache[set].used <= way; // set the last used to whichever one you are reading from
+
     //write logic
         if (wr_en) begin
-            cache[set].used <= way; // update used
+
+            cache[set].used <= way; //now that way has been determined, assert current way as most recently used
+            
             if (~way) begin
-                if (cache[set].block0.dirty == 1 && miss) begin
-                    write_back <= cache[set].block0[127:0];
-                    write_back_en <= 1;
-                end
+
                 if (!MemWrite_m) begin
                     cache[set].block0.dirty <= 1'b0; // if first time then clean
                 end
+                else if (MemWrite_m && wake) begin
+                   cache[set].block0.dirty <= 1'b0; // if first time then clean
+                end
                 else begin
-                   cache[set].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
+                    cache[set].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
                 end
                 cache[set].block0[127:0] <= (cache[set].block0[127:0] & ~wmask) | (write_data & wmask);
                 cache[set].block0.tag <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end
+
             else begin
-                if (cache[set].block1.dirty == 1 && miss) begin
-                    write_back <= cache[set].block1[127:0];
-                    write_back_en <= 1;
-                end
+
                 if (!MemWrite_m) begin
                     cache[set].block1.dirty <= 1'b0; // if first time then clean
                 end
+                else if (MemWrite_m && wake) begin
+                   cache[set].block1.dirty <= 1'b0; // if first time then clean
+                end
                 else begin
-                   cache[set].block1.dirty <= 1'b1; // if we are writing over it then it is dirty
+                    cache[set].block1.dirty <= 1'b1; // if we are writing over it then it is dirty
                 end
                 cache[set].block1[127:0] <= (cache[set].block1[127:0] & ~wmask) | (write_data & wmask);
                 cache[set].block1.tag <= tag_bits;
