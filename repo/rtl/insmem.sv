@@ -1,19 +1,33 @@
+
 module insmem #(
-    parameter DATA_WIDTH = 32
+    parameter ADDRESS_WIDTH = 32,
+              DATA_WIDTH = 8
 )(
-    input logic [DATA_WIDTH-1 : 0] addr,
-    output logic [DATA_WIDTH-1 : 0] instr
+    input logic [ADDRESS_WIDTH-1:0] addr,
+    output logic [31:0] instr
 );
-    logic [7 : 0] rom_array [2**17:0];
+
+
+logic [DATA_WIDTH-1:0] romArray [2**16-1:0];
+
+
+
+logic [15:0] instrAddr = addr[15:0];
+
+
+logic[15:0] unused;
 
 initial begin
-    $display("Loading rom.", );
-    $readmemh("../rtl/program.hex", rom_array);
+        $display("Loading Instruction Memory");
+        $readmemh("program.hex", romArray);
 end;
 
-///asynchronous instruction read
+
 always_comb begin
-    instr = {rom_array[addr + 3], rom_array[addr + 2], rom_array[addr + 1], rom_array[addr]};
-end;
+    unused = addr[31:16];
+    unused = unused & 16'b0;
+    instr = {romArray[instrAddr+3], romArray[instrAddr+2], romArray[instrAddr+1], romArray[instrAddr]};
+end
 
 endmodule
+
