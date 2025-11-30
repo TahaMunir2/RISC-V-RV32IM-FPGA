@@ -14,7 +14,9 @@ module control #(
     output logic LoadUnsigned, //additional output signal
     output logic Jump,
     output logic Branch,
-    output logic [2:0] funct3OUT
+    output logic [2:0] funct3OUT,
+    output logic [1:0] csr_type,
+    output logic ALUSrc3; // if high then pick immext instead of RS1
 
 );
 
@@ -43,6 +45,7 @@ assign imm_11_5 = instr[31:25];
         OPC_STORE  = 7'b0100011,
         OPC_OPIMM  = 7'b0010011,
         OPC_OP     = 7'b0110011;
+        OPC_CSR    = 7'b1110011;
 
     always_comb begin
     
@@ -59,6 +62,8 @@ assign imm_11_5 = instr[31:25];
         ALUsrc2 = 0; //indicates if the second source of the ALU is rs1 (ALUsrc2 =0) or the current value of pc from pc_save (ALUsrc2 =1)
         LoadSize     = 2'b10; // default=word
         LoadUnsigned = 1'b0;  // signed by default
+        ALUSrc3 = 1'b0;
+        csr_type = 2'b00;
 
         case(op)
 
@@ -540,8 +545,8 @@ assign imm_11_5 = instr[31:25];
                         ALUCtrl   = 4'b1000;   // SLT (signed)
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
-                        Branch     =0;    // normal PC+4
-                        Jump =0;
+                        Branch     = 0;    // normal PC+4
+                        Jump = 0;
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
@@ -662,6 +667,33 @@ assign imm_11_5 = instr[31:25];
                     RegWrite = 0;
                 end
 
+            end
+
+            OPC_CSR: begin
+                csr_type = funct3[1:0];
+                ALUSrc3 = funct3[2];
+
+                if(funct3 == 3'b001) RegWrite = 1'b1; // CSSRW
+                if(funct3 == 3'b010) RegWrite = 1'b1; // CSSRS
+                if(funct3 == 3'b011) RegWrite = 1'b1; // CSSRC
+                
+                if(funct3 == 3'b101) begin // CSSRWI
+                    RegWrite = 1'b1;
+                    ALUSrc3 = 1'b1; // to pick the int
+                    ImmSrc = 3'b101; // for CSR--I instructions
+                end
+                
+                if(funct3 == 3'b110) begin // CSSRSI
+                    RegWrite = 1'b1;
+                    ALUSrc3 = 1'b1;
+                    ImmSrc = 3'b101;
+                end 
+                
+                if(funct3 == 3'b111) begin // CSSRCI
+                    RegWrite = 1'b1;
+                    ALUSrc3 = 1'b1;
+                    ImmSrc = 3'b101; 
+                end
             end
         endcase
     end
