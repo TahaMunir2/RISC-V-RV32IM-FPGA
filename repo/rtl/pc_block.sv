@@ -8,6 +8,7 @@ module pc_block #(
     input logic [WIDTH-1:0] ALU,
     input logic rst,
     input logic [1:0] pc_src,
+    input logic [WIDTH-1:0] pc_saved,
     output logic [WIDTH-1:0] pc,
     output logic [WIDTH-1:0] pc_save
 );
@@ -27,6 +28,7 @@ always_ff @(posedge clk)
             2'b00: internal_pc <= inc_pc;    // PC + 4
             2'b01: internal_pc <= branch_pc; // PC + Imm
             2'b10: internal_pc <= ALU;       // JALR / JAL
+            2'b11: internal_pc <=pc_saved;
             default: internal_pc <= inc_pc;  
         endcase
     end

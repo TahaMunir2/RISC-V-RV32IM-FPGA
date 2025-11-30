@@ -136,6 +136,19 @@ logic [4:0] RdW;
 logic [DATA_WIDTH-1:0] PCPlus4W;
 logic [DATA_WIDTH-1:0] ResultW;
 
+logic pred_takenF;
+logic pred_takenD;
+logic pred_takenE;
+
+logic false_prediction;
+
+
+    evalprediction evalprediction(
+        .PCSrcE(PCSrcE),
+        .BranchE(BranchE),
+        .pred_taken(pred_takenE),
+        .false_prediction(false_prediction)
+    );
 
 
     hazard_unit hazard_unit (
@@ -155,9 +168,10 @@ logic [DATA_WIDTH-1:0] ResultW;
         .flush_f_d(flush_f_d),
         .F_Write(F_Write),
         .PCWrite(PCWrite),
-        .PCSrcE(PCSrcE)
-
+        .JumpE(JumpE),
+        .false_prediction(false_prediction)
     );
+
 
     fd_pipeline fd_pip(
         .clk(clk),
@@ -169,7 +183,9 @@ logic [DATA_WIDTH-1:0] ResultW;
         .pc_save_f(PCPlus4F),
         .instr_d(InstrD),
         .pc_d(PCD),
-        .pc_save_d(PCPlus4D)
+        .pc_save_d(PCPlus4D),
+        .pred_takenF(pred_takenF),
+        .pred_takenD(pred_takenD)
     );
 
     signext sign_extension (
@@ -228,7 +244,11 @@ logic [DATA_WIDTH-1:0] ResultW;
      .BranchE(BranchE),
      .JumpE(JumpE),
      .funct3D(funct3D),
-     .funct3E(funct3E)
+     .funct3E(funct3E),
+
+//branch prediction logic propagating
+    .pred_takenD(pred_takenD),
+    .pred_takenE(pred_takenE)
     );
 
 
@@ -267,7 +287,6 @@ logic [DATA_WIDTH-1:0] ResultW;
         .addr(PCF)
     );
 
-logic branch_prediction;
 logic actual_taken;
 logic [1:0] PCSrcF;
 
@@ -289,16 +308,36 @@ logic [1:0] PCSrcF;
         .update_index(PCE[7:2]), //index of that branch PC
         .actual_taken(actual_taken), //real outcome
         .predict_index(PCF[7:2]),//index from PC (we take the bus [7:2] corresponding to 6 bits from PC to identify the specific jump we are dealing with)
-        .pred_taken(branch_prediction)//prediction output 
+        .pred_taken(pred_takenF)//prediction output 
     );
+/*
+input logic JumpE,
+input logic BranchE,
+input logic [6:0] opcodeF,
+input logic [1:0] PCSrcE,
+input logic predictionE,
+input logic predictionF,
+input logic false_prediction,
+input logic [31:0] targetF,
+input logic [31:0] targetE,
+output logic [1:0] PCSrcF,
+output logic [31:0] FinalTarget
+*/
+
+logic [31:0] target;
 
     PCSrcF_assertion PCSourceF(
-    .JumpE(JumpE),
-    .BranchE(BranchE),
-    .opcodeF(InstrF[6:0]),
-    .PCSrcE(PCSrcE),
-    .prediction(branch_prediction),
-    .PCSrcF(PCSrcF)
+        .JumpE(JumpE),
+        .BranchE(BranchE),
+        .opcodeF(InstrF[6:0]),
+        .PCSrcE(PCSrcE),
+        .predictionF(pred_takenF),
+        .predictionE(pred_takenE),
+        .false_prediction(false_prediction),
+        .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
+        .targetE(PCE + ExtImmE),
+        .FinalTarget(target),
+        .PCSrcF(PCSrcF)
     );
 
 
@@ -306,9 +345,10 @@ logic [1:0] PCSrcF;
         .clk(clk),
         .rst(rst),
         .enable(PCWrite),
-        .Imm_op(PCE + ExtImmE), //very important line 
+        .Imm_op(target), //very important line 
         .pc_src(PCSrcF),
         .pc(PCF),
+        .pc_saved(PCPlus4E), //in the case the predictor forecasted a jump and made a false guess
         .pc_save(PCPlus4F),
         .ALU(ALUResultE)
     );

@@ -18,14 +18,12 @@ module hazard_unit#(
     output logic flush_f_d,
     output logic F_Write,
     output logic PCWrite,
-    input logic [1:0] PCSrcE
+    input logic JumpE,
+    input logic false_prediction 
+    //we replace the input PCSrcE with false prediction because we don't want to flush everytime a jump/branch is taken, we want to flush everytime the branch predictor makes an incorrect guess
 );
     
 //forwarding:
-//select line conventions for the pipeline multiplexers (in the execute stage):
-// no forwarding : select line = 00
-//forwarding from the memory stage (consecutive instructions Read-After-Write) : select line = 01
-//forwarding from the Write Back stage : select line = 10
 
 always_comb begin
     //Default:no forwarding
@@ -70,7 +68,7 @@ always_comb begin
     flush_d_exec = 0;
     flush_f_d = 0;
 
-    if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
+    if(false_prediction || JumpE) begin
         flush_f_d = 1;
         flush_d_exec = 1;
     end

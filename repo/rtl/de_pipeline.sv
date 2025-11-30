@@ -53,7 +53,10 @@ module de_pipeline #(
     input logic BranchD,
     output logic BranchE,
     input logic JumpD,
-    output logic JumpE
+    output logic JumpE,
+
+    input logic pred_takenD,
+    output logic pred_takenE
 );
 
     always @(posedge clk) begin
@@ -83,6 +86,7 @@ module de_pipeline #(
             funct3E <= 0;
             BranchE <= 0;
             JumpE <= 0;
+            pred_takenE <=0;
         end
         
 
@@ -111,6 +115,7 @@ module de_pipeline #(
             funct3E <= funct3D;
             BranchE <= BranchD;
             JumpE <= JumpD;
+            pred_takenE <= pred_takenD;
         end
     end
 
