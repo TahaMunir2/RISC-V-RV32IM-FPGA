@@ -12,10 +12,11 @@ module l1d_cache #(
     input  logic MemWrite_m,
     input  logic [1:0] LoadSize,
     input  logic LoadUnsigned,
-    input  logic wake,
+    input  logic ready,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
+    output logic [ADDRESS_WIDTH-1:0] write_back_addr,
     output logic [ADDRESS_WIDTH-1:0] l2_addr,
     output logic l2_fetch,
     output logic stall
@@ -94,7 +95,7 @@ module l1d_cache #(
         data_out = '0;
         write_back_en = 0;
         l2_fetch = 1'b0;
-        l2_addr = addr;
+        l2_addr = {addr[31:4], 4'b0000};
 
         // wr and rd en logic
         if (fetch) begin
@@ -110,32 +111,34 @@ module l1d_cache #(
 
                     way = ~cache[set].used;  //both bits are valid, we take into account which way was least recently used (LRU logic)
                     if (!way) begin
-                        if (fetch && !wake && cache[set].block0.dirty) begin 
+                        if (fetch && !ready && cache[set].block0.dirty) begin 
                             write_back_en = 1;
-                            write_back = cache[set].block0[127:0];      
+                            write_back = cache[set].block0[127:0];
+                            write_back_addr = {cache[set].block0.tag, set, 4'b0000};    
                         end             
                     end
                     else begin
-                        if (fetch && !wake && cache[set].block1.dirty) begin 
+                        if (fetch && !ready && cache[set].block1.dirty) begin 
                             write_back_en = 1;
                             write_back = cache[set].block1[127:0];
+                            write_back_addr = {cache[set].block1.tag, set, 4'b0000};    
                         end
                     end
                 end
 
                 // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
-                if (!wake) begin
+                if (!ready) begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b0;
                     stall      = 1'b1;
                     l2_fetch   = 1'b1;             
                 end
 
-                // When hazard unit wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
+                // When L2 cache asserts ready: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
                 else begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b1;
-                    stall      = 1'b0;
+                    stall      = 1'b1;
                     write_data = line_from_mem;
                 end
 
@@ -238,7 +241,7 @@ module l1d_cache #(
                 if (!MemWrite_m) begin
                     cache[set].block0.dirty <= 1'b0; // if first time then clean
                 end
-                else if (MemWrite_m && wake) begin
+                else if (MemWrite_m && ready) begin
                    cache[set].block0.dirty <= 1'b0; // if first time then clean
                 end
                 else begin
@@ -254,7 +257,7 @@ module l1d_cache #(
                 if (!MemWrite_m) begin
                     cache[set].block1.dirty <= 1'b0; // if first time then clean
                 end
-                else if (MemWrite_m && wake) begin
+                else if (MemWrite_m && ready) begin
                    cache[set].block1.dirty <= 1'b0; // if first time then clean
                 end
                 else begin

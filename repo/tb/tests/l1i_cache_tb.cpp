@@ -21,7 +21,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     top->fetch        = 0;
     top->LoadSize     = 0b10;
     top->LoadUnsigned = 1;
-    top->wake         = 0;
+    top->ready        = 0;
     top->addr         = 0x00000000;
 
     top->addr = 0x00F00000;
@@ -41,15 +41,15 @@ TEST_F(DcacheTestbench, DcacheTest0)
         << "Cache should assert l2_fetch using the correct l2_addr";
 
     runSimulation(1);
-    //testing stall works until wake asserted
+    //testing stall works until ready asserted
     EXPECT_EQ(top->stall, 1)
-        << "Cache should assert stall until wake is asserted (miss 1).";
+        << "Cache should assert stall until ready is asserted (miss 1).";
 
     for (int i = 0; i < 4; ++i) {
         top->line_from_mem[i] = 0x00FFFFFF; //should write this into set 0 way 0 with tag = '0
     }
 
-    top->wake = 1; //L2 cache has found the value and inputted it into line_from_mem. Hazard unit wakes L1 cache
+    top->ready = 1; //L2 cache has found the value and inputted it into line_from_mem. Hazard unit readys L1 cache
 
     runSimulation(1);
     //testing stall deassertion
@@ -60,7 +60,7 @@ TEST_F(DcacheTestbench, DcacheTest0)
     EXPECT_EQ(top->l2_fetch, 0)
         << "Cache should deassert l2_fetch on subsequent access to the same line after data is retrieved from L2 (hit).";
 
-    top->wake = 0;
+    top->ready = 0;
     top->addr = 0x00000010; //address goes to set 1, block 0
     top->fetch = 0;
 
@@ -111,14 +111,14 @@ TEST_F(DcacheTestbench, DcacheTest0)
         top->line_from_mem[i] = 0x00000FFF; //should write this into set 0 way 1 with tag = addr[31:11]
     }
 
-    top->wake = 1;
+    top->ready = 1;
 
     runSimulation(1);
     //testing stall deassertion. Cache should write to set 0, way 1.
     EXPECT_EQ(top->stall, 0)
         << "Cache should deassert stall on subsequent access to the same line (hit).";
 
-    top->wake = 0;
+    top->ready = 0;
 
     runSimulation(1);
     //testing correct value being written in
@@ -153,14 +153,14 @@ TEST_F(DcacheTestbench, DcacheTest0)
         top->line_from_mem[i] = 0x000000FF; //should write this into set 0 way 1
     }
 
-    top->wake = 1;
+    top->ready = 1;
 
     runSimulation(1);
     //testing stall deassertion. Cache should also write to set 0, way 1, but shouldn't read new value yet.
     EXPECT_EQ(top->stall, 0)
         << "Cache should deassert stall on subsequent access to the same line (hit).";
 
-    top->wake = 0;
+    top->ready = 0;
 
     runSimulation(1);
     //should read the new value just inputted

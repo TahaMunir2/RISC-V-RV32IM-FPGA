@@ -1,22 +1,23 @@
 module l2_cache #(
     parameter DATA_WIDTH = 32,
     parameter ADDRESS_WIDTH = 32,
-    parameter BLOCK_SIZE = 4
+    parameter BLOCK_SIZE = 8
 ) (
     input logic clk,
-    input logic fetch, // ******* we need to use this as a cache enable
-    input  logic [ADDRESS_WIDTH-1:0] addr,
-    input  logic [DATA_WIDTH-1:0] wd,
+    input logic fetch_i,
+    input logic fetch_d,
+    input  logic [ADDRESS_WIDTH-1:0] addr_i,
+    input  logic [ADDRESS_WIDTH-1:0] addr_d,
     input  logic [DATA_WIDTH*BLOCK_SIZE-1:0] line_from_mem,
-    input  logic [1:0] SizeWrite_m,
-    input  logic MemWrite_m,
-    input  logic [1:0] LoadSize,
-    input  logic LoadUnsigned,
-    input  logic wake,
-    output logic [DATA_WIDTH-1 : 0] data_out,
+    input  logic [DATA_WIDTH*4-1:0] l1write_back_data,
+    input  logic l1write_back_en,
+    input  logic [ADDRESS_WIDTH-1:0] l1write_back_addr,
+    input  logic ready,
+    output logic ready_i,
+    output logic ready_d,
+    output logic [DATA_WIDTH*4-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
-    output logic write_back_en,
-    output logic stall
+    output logic write_back_en
 );
 
     typedef struct packed {
@@ -29,7 +30,11 @@ module l2_cache #(
     typedef struct packed {
         logic valid;
         logic dirty;
-        logic [20:0] tag;
+        logic [18:0] tag;
+        word_store word7;
+        word_store word6;
+        word_store word5;
+        word_store word4;
         word_store word3;
         word_store word2;
         word_store word1;
@@ -37,60 +42,113 @@ module l2_cache #(
     } block_store;
 
     typedef struct packed {
-        logic used;
+        logic used3;
+        logic used2;
+        logic used1;
+        logic used0;
+        block_store block3;
+        block_store block2;
         block_store block1;
         block_store block0;
     } set_store;
 
+    set_store cache [256];
+
     logic wr_en;
     logic rd_en;
     logic [(DATA_WIDTH * BLOCK_SIZE)-1 : 0] write_data;
-    logic way;
-    logic [ADDRESS_WIDTH-1:11] tag_bits;
-    logic [6:0] set;
-    logic [1:0] block_offset;
+    logic [1:0] way;
+    logic [ADDRESS_WIDTH-1:13] tag_bits;
+    logic [7:0] set;
+    logic [2:0] block_offset;
     logic [1:0] byte_offset;
     logic [DATA_WIDTH*BLOCK_SIZE-1:0] wmask;
-    set_store cache [128];
+    logic fetch;
+    logic l1write;
 
-    assign tag_bits = addr[ADDRESS_WIDTH-1:11];
-    assign set = addr[10:4];
-    assign block_offset = addr[3:2];
+    assign tag_bits = addr[ADDRESS_WIDTH-1:13];
+    assign set = addr[12:5];
+    assign block_offset = addr[4:2];
     assign byte_offset = addr[1:0];
 
+    logic [ADDRESS_WIDTH-1:13] tag_bits_wb;
+    logic [7:0] set_wb;
+    logic [2:0] block_offset_wb;
+    logic [1:0] byte_offset_wb;
 
+    assign tag_bits_wb = l1write_back_addr[ADDRESS_WIDTH-1:13];
+    assign set_wb = l1write_back_addr[12:5];
+    assign block_offset_wb = l1write_back_addr[4:2];
+    assign byte_offset_wb = l1write_back_addr[1:0];
+    
 
-    logic hit0, hit1;
-    logic valid0, valid1;
+    logic hit0, hit1, hit2, hit3;
+    logic valid0, valid1, valid2, valid3;
     logic miss;
     logic [6:0] bottom_bit;
 
     initial begin
         for (int i = 0; i < 128; i++) begin
-            cache[i].used           = 1'b0;
+            cache[i].used3          = 1'b0;
+            cache[i].used2          = 1'b0;
+            cache[i].used1          = 1'b0;
+            cache[i].used0          = 1'b0;
             cache[i].block0.valid   = 1'b0;
             cache[i].block0.dirty   = 1'b0;
             cache[i].block1.valid   = 1'b0;
             cache[i].block1.dirty   = 1'b0;
+            cache[i].block2.valid   = 1'b0;
+            cache[i].block2.dirty   = 1'b0;
+            cache[i].block3.valid   = 1'b0;
+            cache[i].block3.dirty   = 1'b0;            
         end
     end
 
     always_comb begin
-         // hit detection
-        hit0 = (cache[set].block0.tag == tag_bits && cache[set].block0.valid && fetch); // if the tags are the same, and its a valid set and we are working with the cache then its a hit0
-        hit1 = (cache[set].block1.tag == tag_bits && cache[set].block1.valid && fetch);
-        miss = ~(hit0 | hit1) && fetch; // we need to know if we are accessing the cache 
-
-        valid0 = cache[set].block0.valid; // check validity
-        valid1 = cache[set].block1.valid;
-
+        //default case
         wmask = '0;
-        stall = 0;
         wr_en= 1'b0;
         rd_en = 1'b0;
         write_data = '0;
         data_out = '0;
         write_back_en = 0;
+
+        //arbiter logic
+        if (!fetch_i && !fetch_d) begin
+            fetch = 0;
+        end
+
+        else if (fetch_i && !fetch_d) begin
+            fetch = 1;
+            addr = addr_i;
+            l1write = 0;
+        end
+
+        else if (!fetch_i && fetch_d) begin
+            fetch = 1;
+            addr = addr_d;
+            l1write = l1write_back;
+        end
+
+        else if (fetch_i && fetch_d) begin
+            fetch = 1;
+            addr = addr_d;
+            l1write = l1write_back;
+        end
+
+
+        // hit detection
+        hit0 = (cache[set].block0.tag == tag_bits && cache[set].block0.valid && fetch); // if the tags are the same, and its a valid set and we are working with the cache then its a hit0
+        hit1 = (cache[set].block1.tag == tag_bits && cache[set].block1.valid && fetch);
+        hit2 = (cache[set].block2.tag == tag_bits && cache[set].block2.valid && fetch);
+        hit3 = (cache[set].block3.tag == tag_bits && cache[set].block3.valid && fetch);
+        miss = ~(hit0 | hit1 | hit2 | hit3) && fetch; // we need to know if we are accessing the cache 
+
+        valid0 = cache[set].block0.valid; // check validity
+        valid1 = cache[set].block1.valid;
+        valid2 = cache[set].block2.valid;
+        valid3 = cache[set].block3.valid;
+
 
         // wr and rd en logic
         if (fetch) begin
@@ -99,12 +157,13 @@ module l2_cache #(
                 wmask = '1;
 
                 //way determination
-                if (!valid0 && !valid1)     way = 1'b0; //both bits are invalid, we choose the default 
-                else if (!valid0)           way = 1'b0; //way0 is invalid
-                else if (!valid1)           way = 1'b1; //way1 is invalid
+                if (!valid0)      way = 2'b00; //both bits are invalid, we choose the default 
+                else if (!valid1) way = 2'b01; //way0 is invalid
+                else if (!valid2) way = 2'b10;          
+                else if (!valid3) way = 2'b11; //way1 is invalid
                 else begin 
 
-                    way = ~cache[set].used;  //both bits are valid, we take into account which way was least recently used (LRU logic)
+                    way = cache[set].used0;  //both bits are valid, we take into account which way was least recently used (LRU logic)
                     if (!way) begin
                         if (fetch && !wake && cache[set].block0.dirty) begin 
                             write_back_en = 1;
@@ -119,18 +178,16 @@ module l2_cache #(
                     end
                 end
 
-                // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
-                if (!wake) begin
+                // On a miss, disable read and write and let main memory retrieve the data before writing it in.
+                if (!ready) begin
                     rd_en      = 1'b0;
-                    wr_en      = 1'b0;
-                    stall      = 1'b1;                 
+                    wr_en      = 1'b0;             
                 end
 
-                // When hazard unit wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
+                // When main memory wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
                 else begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b1;
-                    stall      = 1'b0;
                     write_data = line_from_mem;
                 end
 
@@ -139,27 +196,18 @@ module l2_cache #(
             else begin
 
                 //way determination
-                way = hit1;   // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
+                if (hit0) way = 0;
+                else if (hit1) way = 1;
+                else if (hit2) way = 2;
+                else if (hit3) way = 3;
 
-                if (MemWrite_m) begin // sb logic, determine size
+                if (l1write) begin // sb logic, determine size
                     wr_en = 1'b1;
-                    wmask = '1;
+                    wmask = '0;
                     write_data = {4{wd}};
 
-                    if(SizeWrite_m == 2'b00) begin //sb
-                        bottom_bit = block_offset * 32 + byte_offset * 8;
-                        wmask[bottom_bit[6:0] +: 8] = '0;
-                    end
-
-                    else if(SizeWrite_m == 2'b01) begin // sh
-                        bottom_bit = block_offset * 32 + byte_offset * 8;
-                        wmask[bottom_bit[6:0] +: 16] = '0;
-                    end
-
-                    else if(SizeWrite_m == 2'b10) begin // sw
-                        bottom_bit = block_offset * 32;
-                        wmask[bottom_bit[6:0] +: 32] = '0;
-                    end
+                    bottom_bit = block_offset * 32 + byte_offset * 8;
+                    wmask[bottom_bit[6:0] +: 32] = '1;
 
                     wmask = ~wmask;
                 end
@@ -222,6 +270,9 @@ module l2_cache #(
     end
 
     always_ff @(posedge clk) begin // only write is synchronous
+    //default values
+    ready_i = 0;
+    ready_d = 0;
 
     //write logic
         if (wr_en) begin
@@ -250,7 +301,7 @@ module l2_cache #(
                     cache[set].block1.dirty <= 1'b0; // if first time then clean
                 end
                 else if (MemWrite_m && wake) begin
-                   cache[set].block1.dirty <= 1'b0; // if first time then clean
+                    cache[set].block1.dirty <= 1'b0; // if first time then clean
                 end
                 else begin
                     cache[set].block1.dirty <= 1'b1; // if we are writing over it then it is dirty
@@ -259,6 +310,15 @@ module l2_cache #(
                 cache[set].block1.tag <= tag_bits;
                 cache[set].block1.valid <= 1'b1;
             end
+        end
+
+        if (l1write) begin
+            // hit detection
+            hit0_wb <= (cache[set_wb].block0.tag == tag_bits && cache[set_wb].block0.valid && fetch); // if the tags are the same, and its a valid set and we are working with the cache then its a hit0
+            hit1_wb <= (cache[set_wb].block1.tag == tag_bits && cache[set_wb].block1.valid && fetch);
+            hit2_wb <= (cache[set_wb].block2.tag == tag_bits && cache[set_wb].block2.valid && fetch);
+            hit3_wb <= (cache[set_wb].block3.tag == tag_bits && cache[set_wb].block3.valid && fetch);
+            miss_wb = ~(hit0 | hit1 | hit2 | hit3) && fetch; // we need to know if we are accessing the cache 
         end
     end
 

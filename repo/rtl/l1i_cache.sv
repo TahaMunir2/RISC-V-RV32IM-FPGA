@@ -9,7 +9,7 @@ module l1i_cache #(
     input  logic [DATA_WIDTH*BLOCK_SIZE-1:0] line_from_mem,
     input  logic [1:0] LoadSize,
     input  logic LoadUnsigned,
-    input  logic wake,
+    input  logic ready,
     output logic [ADDRESS_WIDTH-1:0] l2_addr,
     output logic l2_fetch,
     output logic [DATA_WIDTH-1 : 0] data_out,
@@ -83,7 +83,7 @@ module l1i_cache #(
         write_data = '0;
         data_out = '0;
         l2_fetch = 1'b0;
-        l2_addr = addr;
+        l2_addr = {addr[31:4], 4'b0000};
 
         // wr and rd en logic
         if (fetch) begin
@@ -96,18 +96,18 @@ module l1i_cache #(
                 else way = ~cache[set].used; //both bits are valid, we take into account which way was least recently used (LRU logic)                      
 
                 // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
-                if (!wake) begin
+                if (!ready) begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b0;
                     stall      = 1'b1;
                     l2_fetch   = 1'b1;              
                 end
 
-                // When hazard unit wakes cache back up: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
+                // When L2 cache asserts ready: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
                 else begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b1;
-                    stall      = 1'b0;
+                    stall      = 1'b1;
                     write_data = line_from_mem;
                 end
 
