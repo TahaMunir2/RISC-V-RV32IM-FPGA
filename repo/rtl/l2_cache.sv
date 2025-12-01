@@ -42,10 +42,12 @@ module l2_cache #(
     } block_store;
 
     typedef struct packed {
-        logic used3;
-        logic used2;
-        logic used1;
-        logic used0;
+        logic u01;
+        logic u02;
+        logic u03;
+        logic u04;
+        logic u05;
+        logic u06;
         block_store block3;
         block_store block2;
         block_store block1;
@@ -89,10 +91,6 @@ module l2_cache #(
 
     initial begin
         for (int i = 0; i < 128; i++) begin
-            cache[i].used3          = 1'b0;
-            cache[i].used2          = 1'b0;
-            cache[i].used1          = 1'b0;
-            cache[i].used0          = 1'b0;
             cache[i].block0.valid   = 1'b0;
             cache[i].block0.dirty   = 1'b0;
             cache[i].block1.valid   = 1'b0;
@@ -157,23 +155,70 @@ module l2_cache #(
                 wmask = '1;
 
                 //way determination
-                if (!valid0)      way = 2'b00; //both bits are invalid, we choose the default 
-                else if (!valid1) way = 2'b01; //way0 is invalid
+                if (!valid0)      way = 2'b00;
+                else if (!valid1) way = 2'b01;
                 else if (!valid2) way = 2'b10;          
-                else if (!valid3) way = 2'b11; //way1 is invalid
+                else if (!valid3) way = 2'b11;
                 else begin 
 
                     way = cache[set].used0;  //both bits are valid, we take into account which way was least recently used (LRU logic)
-                    if (!way) begin
-                        if (fetch && !wake && cache[set].block0.dirty) begin 
-                            write_back_en = 1;
-                            write_back = cache[set].block0[127:0];      
-                        end             
+
+                    if (cache[set].u01) begin
+
+                        if (cache[set].u12) begin
+
+                            if (cache[set].u23) begin
+                                way = 2'b11;
+                            end
+
+                            else way = 2'b10;
+                        end
+
+                        else if (cache[set].u13) begin
+                            way = 2'b11;
+                        end
+
+                        else way = 2'b01;
+
                     end
-                    else begin
-                        if (fetch && !wake && cache[set].block1.dirty) begin 
+
+                    else if (cache[set].u02) begin
+
+                        if (cache[set].u23) begin
+                            way = 2'b11;
+                        end
+
+                        else way = 2'b10;
+                    end
+
+                    else if (cache[set].u03) begin
+                        way = 2'b11;
+                    end
+
+                    else way = 2'b00;
+
+                    if (way = 2'b00) begin
+                        if (fetch && !ready && cache[set].block0.dirty) begin 
                             write_back_en = 1;
-                            write_back = cache[set].block1[127:0];
+                            write_back = cache[set].block0[255:0];      
+                        end
+                    end
+                    else if (way = 2'b01) begin
+                        if (fetch && !ready && cache[set].block1.dirty) begin 
+                            write_back_en = 1;
+                            write_back = cache[set].block1[255:0];
+                        end
+                    end
+                    else if (way = 2'b10) begin
+                        if (fetch && !ready && cache[set].block2.dirty) begin 
+                            write_back_en = 1;
+                            write_back = cache[set].block2[255:0];      
+                        end
+                    end
+                    else if (way = 2'b11) begin
+                        if (fetch && !ready && cache[set].block3.dirty) begin 
+                            write_back_en = 1;
+                            write_back = cache[set].block3[255:0];
                         end
                     end
                 end
@@ -223,49 +268,33 @@ module l2_cache #(
         if (rd_en) begin
             // we don't update valid or dirty since we are only reading        
             cache[set].used = way; //now that way has been determined, assert current way as most recently used
-            if (way == 1'b0) begin
-                case(block_offset)
-                2'b00: data_out = cache[set].block0.word0;
-                2'b01: data_out = cache[set].block0.word1;
-                2'b10: data_out = cache[set].block0.word2;
-                2'b11: data_out = cache[set].block0.word3;
+            if (way == 2'b00) begin
+                case(block_offset[2])
+                1'b0: data_out = cache[set].block0[127:0];
+                1'b1: data_out = cache[set].block0[255:128];
                 endcase
             end
 
-            else if (way == 1'b1) begin
-                case(block_offset)
-                2'b00: data_out = cache[set].block1.word0;
-                2'b01: data_out = cache[set].block1.word1;
-                2'b10: data_out = cache[set].block1.word2;
-                2'b11: data_out = cache[set].block1.word3;
+            else if (way == 2'b01) begin
+                case(block_offset[2])
+                1'b0: data_out = cache[set].block1[127:0];
+                1'b1: data_out = cache[set].block1[255:128];
                 endcase
             end
 
-            // lw logic
-            case (LoadSize)
-                // LB / LBU
-                2'b00: begin
-                    bottom_bit = 8 * byte_offset;
-                    if (LoadUnsigned)
-                        data_out = {24'b0, data_out[bottom_bit[4:0] +:8]};
-                    else
-                        data_out = {{24{data_out[bottom_bit[4:0] + 7]}}, data_out[bottom_bit[4:0] +:8]};
-                end
+            else if (way == 2'b10) begin
+                case(block_offset[2])
+                1'b0: data_out = cache[set].block2[127:0];
+                1'b1: data_out = cache[set].block2[255:128];
+                endcase
+            end
 
-                // LH / LHU
-                2'b01: begin
-                    bottom_bit = 16 * byte_offset;
-                    if (LoadUnsigned)
-                        data_out = {16'b0, data_out[bottom_bit[4:0] +:16]};
-                    else
-                        data_out = {{16{data_out[bottom_bit[4:0] + 15]}},data_out[bottom_bit[4:0]+:16]};
-                end
-
-                // LW
-                default: begin
-                    data_out = data_out;
-                end
-            endcase
+            else if (way == 2'b11) begin
+                case(block_offset[2])
+                1'b0: data_out = cache[set].block3[127:0];
+                1'b1: data_out = cache[set].block3[255:128];
+                endcase
+            end
         end
     end
 
