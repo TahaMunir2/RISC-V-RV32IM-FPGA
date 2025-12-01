@@ -91,7 +91,7 @@ module top #(
      //logic [1:0] ResultSrc_d;
      //logic MemWrite_d;
      //logic Branch_d;
-     logic [3:0] ALUCtrlD;
+     logic [4:0] ALUCtrlD;
      logic ALUSrcD;
      //logic [1:0] SizeWrite_d;
      //logic [1:0]LoadSize_d; 
@@ -101,7 +101,7 @@ module top #(
      logic [1:0] ResultSrcE;
      logic MemWriteE;
      //logic Branch_e;
-     logic [3:0] ALUCtrlE;
+     logic [4:0] ALUCtrlE;
      logic ALUSrcE;
      logic [1:0] SizeWriteE;
      logic [1:0]LoadSizeE; 
