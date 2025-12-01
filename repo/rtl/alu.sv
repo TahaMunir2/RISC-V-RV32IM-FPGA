@@ -3,13 +3,20 @@ module alu#(
     )(
     input logic [DATA_WIDTH-1:0] ALUop1, //RS1 or PCsave
     input logic [DATA_WIDTH-1:0] ALUop2, //RS2 or IMM
-    input logic  [3:0]           ALUCtrl, //ALUCtrl is now 4 bits (in order to accomodate all 37 instrcutions we need a more extensive use of the ALU)
+    input logic  [4:0]           ALUCtrl, //ALUCtrl is now 4 bits (in order to accomodate all 37 instrcutions we need a more extensive use of the ALU)
     output logic [DATA_WIDTH-1: 0] ALUout,
     output logic                   EQ,
     output logic                   LT,
     output logic                   LTU
     );
 
+    logic [63:0] unsigned_mult; //I might need to get rid of these intermediaries
+    logic [63:0] signed_mult;   //because they are computed regardless of whether they are used
+    logic [63:0] signed_unsigned_mult; //... and I just did get rid of it
+
+    assign unsigned_mult = $unsigned(ALUop1) * $unsigned(ALUop2);
+    assign signed_mult = $signed(ALUop1) * $signed(ALUop2);
+    assign signed_unsigned_mult = $signed(ALUop1) * $unsigned(ALUop2);
 
 //extra signals:
 //branch signals: (currently we have EQ): LTU= Less Then Unsigned , LT = Less Then (Signed)
@@ -24,12 +31,6 @@ module alu#(
         //the two instructions implemented
         if (ALUop1 == ALUop2) EQ = 1'b1;
         else EQ = 1'b0;
-
-        logic [63:0] unsigned_mult; //I might need to get rid of these intermediaries
-        logic [63:0] signed_mult;   //because they are computed regardless of whether they are used
-        logic [63:0] signed_unsigned_mult; //... and I just did get rid of it
-
-
 
 
         //the extra two signals for branch
@@ -49,10 +50,10 @@ module alu#(
         5'b1001: ALUout = (ALUop1 < ALUop2) ? 32'b1 : 32'b0; // SLTU: Set Less Then Unsigned     
         5'b1010: ALUout = ALUop2; // Out = Entry for LUI: Load Upper Immediate
         5'b1011: ALUout = ALUop1 + ALUop2 - 32'd4;  // AUIPC : Add Upper Immediate and Program Counter (we need the current program counter: pc = pc_save -4)
-        5'b1100: ALUout = ($unsigned(ALUop1) * $unsigned(ALUop2))[31:0]; //MUL
-        5'b1101: ALUout = ($signed(ALUop1) * $signed(ALUop2))[63:32]; //MULH
-        5'b1110: ALUout = ($unsigned(ALUop1) * $unsigned(ALUop2))[63:32]; //MULHU
-        5'b1111: ALUout = ($signed(ALUop1) * $unsigned(ALUop2))[63:32]; //MULHSU
+        5'b1100: ALUout = unsigned_mult[31:0]; //MUL
+        5'b1101: ALUout = signed_mult[63:32]; //MULH
+        5'b1110: ALUout = unsigned_mult[63:32]; //MULHU
+        5'b1111: ALUout = signed_unsigned_mult[63:32]; //MULHSU
         5'b10000: begin //DIV
             if (ALUop2 == 0) begin
                 ALUout = -1;
