@@ -86,6 +86,39 @@ TEST_F(ALUTestbench, ALUTest5) // MULH
     EXPECT_EQ(top->ALUout, 0);
 }
 
+TEST_F(ALUTestbench, ALUTest6) // DIV
+{
+    top->ALUCtrl = 16;
+    top->ALUop1 = 0xFFFFFFF0;
+    top->ALUop2 = 0xFFFFFFF0;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 1);
+}
+
+TEST_F(ALUTestbench, ALUTest7) // REM
+{
+    top->ALUCtrl = 18;
+    top->ALUop1 = 0xFFFFFFFD;
+    top->ALUop2 = 0xFFFFFFFE;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 0xFFFFFFFF);
+}
+
+TEST_F(ALUTestbench, ALUTest8) // REMU
+{
+    top->ALUCtrl = 19;
+    top->ALUop1 = 0xFFFFFFFD;
+    top->ALUop2 = 0xFFFFFFFE;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 0xFFFFFFFD);
+}
+
 int main(int argc, char **argv)
 {
     top = new Vdut;
