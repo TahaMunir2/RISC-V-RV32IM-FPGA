@@ -13,7 +13,7 @@ class ALUTestbench : public BaseTestbench
 protected:
     void initializeInputs() override
     {
-        top->ALUctrl = 0;
+        top->ALUCtrl = 0;
         top->ALUop1 = 0;
         top->ALUop2 = 0;
     }
@@ -21,7 +21,7 @@ protected:
 
 TEST_F(ALUTestbench, ALUTest0) // test addition
 {
-    top->ALUctrl = 0;
+    top->ALUCtrl = 0;
     top->ALUop1 = 5;
     top->ALUop2 = 5;
 
@@ -32,7 +32,7 @@ TEST_F(ALUTestbench, ALUTest0) // test addition
 
 TEST_F(ALUTestbench, ALUTest1) // eq flag raised
 {
-    top->ALUctrl = 1;
+    top->ALUCtrl = 1;
     top->ALUop1 = 5;
     top->ALUop2 = 5;
 
@@ -43,13 +43,47 @@ TEST_F(ALUTestbench, ALUTest1) // eq flag raised
 
 TEST_F(ALUTestbench, ALUTest2) // eq flag reset
 {
-    top->ALUctrl = 1;
+    top->ALUCtrl = 1;
     top->ALUop1 = 5;
     top->ALUop2 = 4;
 
     top->eval();
 
     EXPECT_EQ(top->EQ, 0);
+}
+
+TEST_F(ALUTestbench, ALUTest3) // MUL
+{
+    top->ALUCtrl = 12;
+    top->ALUop1 = 5;
+    top->ALUop2 = 4;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 20);
+}
+
+
+TEST_F(ALUTestbench, ALUTest4) // MULH
+{
+    top->ALUCtrl = 13;
+    top->ALUop1 = 0x0FFF0000;
+    top->ALUop2 = 256;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 0xF);
+}
+
+TEST_F(ALUTestbench, ALUTest5) // MULH
+{
+    top->ALUCtrl = 13;
+    top->ALUop1 = 0xFFFFFFF0;
+    top->ALUop2 = 0xFFFFFFF0;
+
+    top->eval();
+
+    EXPECT_EQ(top->ALUout, 0);
 }
 
 int main(int argc, char **argv)
