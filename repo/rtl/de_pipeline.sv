@@ -29,7 +29,7 @@ module de_pipeline #(
     input logic MemWrite_d,
     //input logic Jump_d, NO NEED FOR JUMP IN OUT CIRCUIT, IT IS EMBEDED IN PCSRC AND ALUSRC2
     //input logic Branch_d,
-    input logic [3:0] ALUCtrl_d,
+    input logic [4:0] ALUCtrl_d,
     input logic ALUSrc_d,
     input logic [1:0] SizeWrite_d,
     input logic [1:0]LoadSize_d, 
@@ -40,7 +40,7 @@ module de_pipeline #(
     output logic MemWrite_e,
     //output logic Jump_e, NO NEED FOR JUMP IN OUT CIRCUIT, IT IS EMBEDED IN PCSRC AND ALUSRC2
     //output logic Branch_e,
-    output logic [3:0] ALUCtrl_e,
+    output logic [4:0] ALUCtrl_e,
     output logic ALUSrc_e,
     output logic [1:0] SizeWrite_e,
     output logic [1:0]LoadSize_e, 
