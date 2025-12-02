@@ -14,6 +14,7 @@ module de_pipeline #(
     input logic [DATA_WIDTH-1:0] ImmExt_d,
     input logic [4:0] Rs1D,
     input logic [4:0] Rs2D,
+    input logic [11:0] csr_addrD,
     output logic [DATA_WIDTH-1:0] pc_save_e,
     output logic [DATA_WIDTH-1:0] RD1_e,
     output logic [DATA_WIDTH-1:0] RD2_e,
@@ -22,6 +23,8 @@ module de_pipeline #(
     output logic [DATA_WIDTH-1:0] ImmExt_e,
     output logic [4:0] Rs1E,
     output logic [4:0] Rs2E,
+    output logic [11:0] csr_addrE,
+
 
     // control logic
     input logic RegWrite_d,
@@ -35,6 +38,8 @@ module de_pipeline #(
     input logic [1:0]LoadSize_d, 
     input logic LoadUnsigned_d,
     input logic ALUSrc2_d,
+    input logic [1:0] csr_typeD,
+    input logic ALUSrc3D,
     output logic RegWrite_e,
     output logic [1:0] ResultSrc_e,
     output logic MemWrite_e,
@@ -46,6 +51,8 @@ module de_pipeline #(
     output logic [1:0]LoadSize_e, 
     output logic LoadUnsigned_e,
     output logic ALUSrc2_e,
+    output logic [1:0] csr_typeE,
+    output logic ALUSrc3E,
     
     input logic [2:0] funct3D,
     output logic [2:0] funct3E,
@@ -69,6 +76,7 @@ module de_pipeline #(
             pc_e <= 0;
             Rd_e <= 0;
             ImmExt_e <= 0;
+            csr_addrE <= 0;
 
             // control
             RegWrite_e <= 0;
@@ -87,6 +95,9 @@ module de_pipeline #(
             BranchE <= 0;
             JumpE <= 0;
             pred_takenE <=0;
+            ALUSrc3E <= 0;
+            csr_typeE <= 0;
+
         end
         
 
@@ -98,6 +109,7 @@ module de_pipeline #(
             pc_e <= pc_d;
             Rd_e <= Rd_d;
             ImmExt_e <= ImmExt_d;
+            csr_addrE <= csr_addrD;
 
             // control
             RegWrite_e <= RegWrite_d;
@@ -116,6 +128,9 @@ module de_pipeline #(
             BranchE <= BranchD;
             JumpE <= JumpD;
             pred_takenE <= pred_takenD;
+            ALUSrc3E <= ALUSrc3D;
+            csr_typeE <= csr_typeD;
+
         end
     end
 

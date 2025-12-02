@@ -8,10 +8,12 @@ module em_pipeline #(
     input logic [4:0] Rd_e, //changed the size of this register
     input logic [DATA_WIDTH-1:0] ALU_Result_e,
     input logic [DATA_WIDTH-1:0] Write_Data_e,
+    input logic [11:0] csr_addrE,
     output logic [DATA_WIDTH-1:0] pc_save_m,
     output logic [4:0] Rd_m, //changed the size of this register
     output logic [DATA_WIDTH-1:0] ALU_Result_m,
     output logic [DATA_WIDTH-1:0] Write_Data_m,
+    output logic [11:0] csr_addrM,
     
 
     // control logic
@@ -21,12 +23,14 @@ module em_pipeline #(
     input logic [1:0] SizeWrite_e,
     input logic [1:0]LoadSize_e, 
     input logic LoadUnsigned_e,
+    input logic [1:0] csr_typeE,
     output logic RegWrite_m,
     output logic [1:0] ResultSrc_m,
     output logic MemWrite_m,
     output logic [1:0] SizeWrite_m,
     output logic [1:0]LoadSize_m, 
-    output logic LoadUnsigned_m
+    output logic LoadUnsigned_m,
+    output logic [1:0] csr_typeM
 );
 
     always @(posedge clk) begin
@@ -38,6 +42,7 @@ module em_pipeline #(
             Rd_m <= 0;
             ALU_Result_m <= 0;
             Write_Data_m <= 0;
+            csr_addrM <= 0;
 
             // control
             RegWrite_m <= 0;
@@ -46,6 +51,7 @@ module em_pipeline #(
             SizeWrite_m <= 0;
             LoadSize_m <= 0;
             LoadUnsigned_m <= 0;
+            csr_typeM <= 0;
         end
 
         else begin
@@ -54,6 +60,7 @@ module em_pipeline #(
             Rd_m <= Rd_e;
             ALU_Result_m <= ALU_Result_e;
             Write_Data_m <= Write_Data_e;
+            csr_addrM <= csr_addrE;
 
             // control
             RegWrite_m <= RegWrite_e;
@@ -62,6 +69,7 @@ module em_pipeline #(
             SizeWrite_m <= SizeWrite_e;
             LoadSize_m <= LoadSize_e;
             LoadUnsigned_m <= LoadUnsigned_e;
+            csr_typeM <= csr_typeE;
         end
     end
 

@@ -128,20 +128,41 @@ module top #(
      logic LoadUnsignedM;
 
 //extra wires for the output of the memory-writeback pipeline register:
-logic RegWriteW;
-logic [1:0] ResultSrcW;
-logic [DATA_WIDTH-1 :0] ALUResultW;
-logic [DATA_WIDTH-1 :0] ReadDataW;
-logic [4:0] RdW;
-logic [DATA_WIDTH-1:0] PCPlus4W;
-logic [DATA_WIDTH-1:0] ResultW;
+    logic RegWriteW;
+    logic [1:0] ResultSrcW;
+    logic [DATA_WIDTH-1 :0] ALUResultW;
+    logic [DATA_WIDTH-1 :0] ReadDataW;
+    logic [4:0] RdW;
+    logic [DATA_WIDTH-1:0] PCPlus4W;
+    logic [DATA_WIDTH-1:0] ResultW;
 
-logic pred_takenF;
-logic pred_takenD;
-logic pred_takenE;
+    logic pred_takenF;
+    logic pred_takenD;
+    logic pred_takenE;
 
-logic false_prediction;
+    logic false_prediction;
 
+    // CSR signals and hazards
+
+    logic [11:0] csr_addrD;
+    logic [11:0] csr_addrE;
+    logic [11:0] csr_addrM;
+    logic [11:0] csr_addrW;
+
+    logic [1:0] csr_typeD;
+    logic [1:0] csr_typeE;
+    logic [1:0] csr_typeM;
+    logic [1:0] csr_typeW;
+
+    logic ALUSrc3D;
+    logic ALUSrc3E;
+
+    logic [31:0] CSR_read;
+    logic [31:0] CSR_write;
+    logic [31:0] ALUResultE_internal; 
+    logic [31:0] ResultE_Final;
+
+    assign csr_addrD = InstrD[31:20];
 
     evalprediction evalprediction(
         .PCSrcE(PCSrcE),
@@ -169,7 +190,16 @@ logic false_prediction;
         .F_Write(F_Write),
         .PCWrite(PCWrite),
         .JumpE(JumpE),
-        .false_prediction(false_prediction)
+        .false_prediction(false_prediction),
+        .csr_typeD(csr_typeD),
+        .csr_typeE(csr_typeE),
+        .csr_typeM(csr_typeM),
+        .csr_typeW(csr_typeW),
+        .csr_addrD(csr_addrD),
+        .csr_addrE(csr_addrE),
+        .csr_addrM(csr_addrM),
+        .csr_addrW(csr_addrW)
+        
     );
 
 
@@ -217,6 +247,10 @@ logic false_prediction;
       .Rs2E(Rs2E),
       .Rs1D(Rs1D),
       .Rs2D(Rs2D),
+      .csr_addrD(csr_addrD),
+      .csr_addrE(csr_addrE),
+
+ 
 
     // control logic
      .RegWrite_d(RegWriteD),
@@ -245,6 +279,10 @@ logic false_prediction;
      .JumpE(JumpE),
      .funct3D(funct3D),
      .funct3E(funct3E),
+     .ALUSrc3D(ALUSrc3D),
+     .ALUSrc3E(ALUSrc3E),
+     .csr_typeD(csr_typeD),
+     .csr_typeE(csr_typeE),
 
 //branch prediction logic propagating
     .pred_takenD(pred_takenD),
@@ -278,7 +316,9 @@ logic false_prediction;
         .SizeWrite(SizeWriteD),
         .ALUsrc2(ALUSrc2D),
         .LoadSize(LoadSizeD),
-        .LoadUnsigned(LoadUnsignedD)
+        .LoadUnsigned(LoadUnsignedD),
+        .ALUSrc3(ALUSrc3D),
+        .csr_type(csr_typeD)
     );
 
 
@@ -415,47 +455,59 @@ mux4 forwardingRS2(
     alu alu(
         .ALUop1(ALUop1),
         .ALUop2(SrcBE),
-        .ALUout(ALUResultE),
+        .ALUout(ALUResultE_internal),
         .EQ(EQ),
         .LT(LT),
         .LTU(LTU),
         .ALUCtrl(ALUCtrlE)
     );
 
- 
+    assign ALUResultE = (|csr_typeE) ? CSR_read : ALUResultE_internal; // if csr instruction then output should be from the csr unit instead
+    assign CSR_write = (ALUSrc3E) ? ExtImmE : SrcAE; // decide if we are doing csr with imm or register
 
+    csr csr ( // belongs in the execute stage
+        .clk(clk),
+        .CSR_OP(csr_typeE),
+        .addr(csr_addrE),
+        .en(|csr_typeE), // as all csr_type instructions have write in them and none correspond to 00
+        .wd(CSR_write),
+        .dout(CSR_read)
+    );
 
-
-em_pipeline em_pipeline(
-    //control inputs coming from the previous pipeline register
-    .rst(rst),
-    .clk(clk),
-    .RegWrite_e(RegWriteE),
-    .ResultSrc_e(ResultSrcE),
-    .MemWrite_e(MemWriteE),
-    .SizeWrite_e(SizeWriteE),
-    .LoadSize_e(LoadSizeE), 
-    .LoadUnsigned_e(LoadUnsignedE),
+    em_pipeline em_pipeline(
+    //control inputs coming from the previous pipeline regis    r
+        .rst(rst),
+        .clk(clk),
+        .RegWrite_e(RegWriteE),
+        .ResultSrc_e(ResultSrcE),
+        .MemWrite_e(MemWriteE),
+        .SizeWrite_e(SizeWriteE),
+        .LoadSize_e(LoadSizeE), 
+        .LoadUnsigned_e(LoadUnsignedE),
+        .csr_typeE(csr_typeE),
     
-    //control outputs:
-    .RegWrite_m(RegWriteM),
-    .ResultSrc_m(ResultSrcM),
-    .MemWrite_m(MemWriteM),
-    .SizeWrite_m(SizeWriteM),
-    .LoadSize_m(LoadSizeM), 
-    .LoadUnsigned_m(LoadUnsignedM),
+        //control outputs:
+        .RegWrite_m(RegWriteM),
+        .ResultSrc_m(ResultSrcM),
+        .MemWrite_m(MemWriteM),
+        .SizeWrite_m(SizeWriteM),
+        .LoadSize_m(LoadSizeM), 
+        .LoadUnsigned_m(LoadUnsignedM),
+        .csr_typeM(csr_typeM),
 
-    //inputs to the register processed in the execute stage
-    .pc_save_e(PCPlus4E),
-    .Rd_e(RdE),
-    .ALU_Result_e(ALUResultE),
-    .Write_Data_e(WriteDataE),
+        //inputs to the register processed in the execute stage
+        .pc_save_e(PCPlus4E),
+        .Rd_e(RdE),
+        .ALU_Result_e(ALUResultE),
+        .Write_Data_e(WriteDataE),
+        .csr_addrE(csr_addrE),
 
-    //corresponding data outputs
-    .pc_save_m(PCPlus4M),
-    .Rd_m(RdM),
-    .ALU_Result_m(ALUResultM),
-    .Write_Data_m(WriteDataM)
+        //corresponding data outputs
+        .pc_save_m(PCPlus4M),
+        .Rd_m(RdM),
+        .ALU_Result_m(ALUResultM),
+        .Write_Data_m(WriteDataM),
+        .csr_addrM(csr_addrM)
 );
 
 //data memory (Asynchronous input) :
@@ -472,30 +524,33 @@ em_pipeline em_pipeline(
     );
 
 
-
 mw_pipeline mw_pipeline(
     //inputs from the previous pipeline register: (control inputs)
     .RegWrite_m(RegWriteM),
     .ResultSrc_m(ResultSrcM),
+    .csr_typeM(csr_typeM),
 
     //corresponding outputs
     .RegWrite_w(RegWriteW),
     .ResultSrc_w(ResultSrcW),
     .rst(rst),
     .clk(clk),
+    .csr_typeW(csr_typeW),
 
 //inputs to the register processed in the memory stage
     .pc_save_m(PCPlus4M),
     .Rd_m(RdM),
     .ALU_Result_m(ALUResultM),
     .dout_m(ReadDataM), 
+    .csr_addrM(csr_addrM),
 
 //corresponding outputs:
 
     .pc_save_w(PCPlus4W),
     .Rd_w(RdW),
     .ALU_Result_w(ALUResultW),
-    .dout_w(ReadDataW)
+    .dout_w(ReadDataW),
+    .csr_addrW(csr_addrW)
 );
 
     always_comb begin

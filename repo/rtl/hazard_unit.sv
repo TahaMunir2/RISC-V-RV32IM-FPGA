@@ -11,15 +11,26 @@ module hazard_unit#(
     input logic [reg_addressing_width-1:0] rdWB,
     input logic regWriteM,
     input logic [1:0] resultSrCE,
-    input logic WriteBack_Regfile,    
+    input logic JumpE,
+    input logic false_prediction,
+    input logic WriteBack_Regfile,
+    input logic [1:0] csr_typeD,
+    input logic [1:0] csr_typeE,
+    input logic [1:0] csr_typeM,
+    input logic [1:0] csr_typeW,
+    input logic [11:0] csr_addrD,
+    input logic [11:0] csr_addrE,
+    input logic [11:0] csr_addrM,
+    input logic [11:0] csr_addrW,
     output logic [1:0] selectline1,
     output logic [1:0] selectline2,
     output logic flush_d_exec,
     output logic flush_f_d,
     output logic F_Write,
-    output logic PCWrite,
-    input logic JumpE,
-    input logic false_prediction 
+    output logic PCWrite
+
+
+
     //we replace the input PCSrcE with false prediction because we don't want to flush everytime a jump/branch is taken, we want to flush everytime the branch predictor makes an incorrect guess
 );
     
@@ -49,16 +60,19 @@ always_comb begin
 end
     
 logic wStall;
-//logic lw_write_back;
+logic csrStall;
+
 
 assign wStall = (resultSrCE == 2'b01) &&
                  ( (rdE != 0) &&
                    ( (rdE == rs1D) || (rdE == rs2D) ) );
 
+assign csrStall = (|csr_typeD) && ( // check if the current instruction is csr type
+                    ( (|csr_typeE) && (csr_addrE == csr_addrD)) || // check if the one before was csr and had data dependancies
+                        ( (|csr_typeM) && (csr_addrM == csr_addrD)) ||  // check if the one in memory stage was csr and had data dependancies
+                            ( (|csr_typeW) && (csr_addrW == csr_addrD)) // check the one in writeback
+                    );
 
-// assign lw_write_back = (resultSrCM == 2'b01) &&
-//                  ( (rdM != 0) &&
-//                    ( (rdM == rs1D) || (rdM == rs2D) ) );
 
 always_comb begin
 
@@ -73,18 +87,13 @@ always_comb begin
         flush_d_exec = 1;
     end
 
-    if(wStall == 1) begin
+    if(wStall || csrStall) begin
         PCWrite     = 0;
         F_Write = 0;
         flush_d_exec = 1;
     end
 
-    // if(lw_write_back == 1) begin
-    //     if((rdM == rs1D)) begin
 
-    //     end
-
-    //     ;
 
 end
 

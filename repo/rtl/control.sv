@@ -44,7 +44,7 @@ assign imm_11_5 = instr[31:25];
         OPC_LOAD   = 7'b0000011,
         OPC_STORE  = 7'b0100011,
         OPC_OPIMM  = 7'b0010011,
-        OPC_OP     = 7'b0110011;
+        OPC_OP     = 7'b0110011,
         OPC_CSR    = 7'b1110011;
 
     always_comb begin
@@ -64,6 +64,7 @@ assign imm_11_5 = instr[31:25];
         LoadUnsigned = 1'b0;  // signed by default
         ALUSrc3 = 1'b0;
         csr_type = 2'b00;
+
 
         case(op)
 
@@ -594,6 +595,10 @@ assign imm_11_5 = instr[31:25];
                         ALUsrc2   = 0;
                         
                     end
+                    else if (funct7 == 7'b0010000)begin // sh1add
+                        RegWrite = 1;
+                        ALUCtrl = 5'b10100;
+                    end
                     else begin
                         RegWrite = 0;
                     end
@@ -658,6 +663,10 @@ assign imm_11_5 = instr[31:25];
                         ALUsrc2   = 0;
                         
                     end 
+                    else if (funct7 == 7'b0010000)begin // sh2add
+                        RegWrite = 1;
+                        ALUCtrl = 5'b10101;
+                    end
                     else begin
                         RegWrite = 0;
                     end
@@ -736,8 +745,12 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        
                     end 
+
+                    else if (funct7 == 7'b0010000)begin // sh3add
+                        RegWrite = 1;
+                        ALUCtrl = 5'b10110;
+                    end
 
                     else begin
                         RegWrite = 0;
@@ -788,6 +801,7 @@ assign imm_11_5 = instr[31:25];
             OPC_CSR: begin
                 csr_type = funct3[1:0];
                 ALUSrc3 = funct3[2];
+
 
                 if(funct3 == 3'b001) RegWrite = 1'b1; // CSSRW
                 if(funct3 == 3'b010) RegWrite = 1'b1; // CSSRS

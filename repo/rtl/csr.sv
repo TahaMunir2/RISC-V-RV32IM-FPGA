@@ -25,7 +25,7 @@ module csr #(
         endcase
     end
     
-    always_ff (@negedge clk) begin
+    always_ff @(negedge clk) begin
         if(en) regfile_array[addr] <= temp;
 
     end

@@ -92,10 +92,10 @@ module alu#(
                 ALUout = $unsigned(ALUop1) % $unsigned(ALUop2);
             end
         end
-        
 
-
-
+        5'b10100: ALUout = (ALUop1 << 1) + ALUop2; // sh1add
+        5'b10101: ALUout = (ALUop1 << 2) + ALUop2; // sh2add
+        5'b10110: ALUout = (ALUop1 << 3) + ALUop2; // sh3add
 
         default: ALUout = 32'b0;
         endcase
