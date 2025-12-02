@@ -100,6 +100,26 @@ TEST_F(CpuTestbench, TestPdf2)
     EXPECT_EQ(top_->a0, 155);
 }
 
+TEST_F(CpuTestbench, Zba)
+{
+    setupTest("shadd");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(6);
+    EXPECT_EQ(top_->a0, 135); // does sh1add
+    runSimulation(1);
+    EXPECT_EQ(top_->a0, 263); // does sh2add
+    runSimulation(1);
+    EXPECT_EQ(top_->a0, 519); // does sh3add
+}
+
+TEST_F(CpuTestbench, TestCSR)
+{
+    setupTest("csr");     
+    initSimulation();
+    runSimulation(CYCLES);         
+    EXPECT_EQ(top_->a0, 305463040); // Expect 0x1234FF00
+}
 
 int main(int argc, char **argv)
 {
