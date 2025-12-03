@@ -13,6 +13,7 @@ module l1d_cache #(
     input  logic [1:0] LoadSize,
     input  logic LoadUnsigned,
     input  logic ready,
+    input  logic wb_ready,
     output logic [DATA_WIDTH-1 : 0] data_out,
     output logic [DATA_WIDTH*BLOCK_SIZE-1:0] write_back,
     output logic write_back_en,
@@ -111,17 +112,32 @@ module l1d_cache #(
 
                     way = ~cache[set].used;  //both bits are valid, we take into account which way was least recently used (LRU logic)
                     if (!way) begin
-                        if (fetch && !ready && cache[set].block0.dirty) begin 
-                            write_back_en = 1;
-                            write_back = cache[set].block0[127:0];
-                            write_back_addr = {cache[set].block0.tag, set, 4'b0000};    
+                        if (fetch && !ready && cache[set].block0.dirty) begin
+                            if (wb_ready) begin
+                                write_back_en = 0;
+                                cache[set].block0.dirty = 0;
+                            end 
+
+                            else begin
+                                write_back_en = 1;
+                                write_back = cache[set].block0[127:0];
+                                write_back_addr = {cache[set].block0.tag, set, 4'b0000};    
+                            end
+
                         end             
                     end
                     else begin
                         if (fetch && !ready && cache[set].block1.dirty) begin 
-                            write_back_en = 1;
-                            write_back = cache[set].block1[127:0];
-                            write_back_addr = {cache[set].block1.tag, set, 4'b0000};    
+                            if (wb_ready) begin
+                                write_back_en = 0;
+                                cache[set].block1.dirty = 0;
+                            end 
+
+                            else begin
+                                write_back_en = 1;
+                                write_back = cache[set].block1[127:0];
+                                write_back_addr = {cache[set].block1.tag, set, 4'b0000};    
+                            end  
                         end
                     end
                 end
