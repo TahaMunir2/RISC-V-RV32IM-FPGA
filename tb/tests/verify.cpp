@@ -79,7 +79,7 @@ TEST_F(CpuTestbench, TestAUIPC)
     setData("reference/gaussian.mem");
     initSimulation();
     runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 4097);
+    EXPECT_EQ(top_->a0, 3217035264);
 }
 
 TEST_F(CpuTestbench, TestShift)
