@@ -22,10 +22,13 @@ module hazard_unit#(
     input logic [11:0] csr_addrE,
     input logic [11:0] csr_addrM,
     input logic [11:0] csr_addrW,
+    input logic trap_en,
+    input logic mret_en,
     output logic [1:0] selectline1,
     output logic [1:0] selectline2,
     output logic flush_d_exec,
     output logic flush_f_d,
+    output logic flush_e_m,
     output logic F_Write,
     output logic PCWrite
 
@@ -81,10 +84,17 @@ always_comb begin
     F_Write = 1;
     flush_d_exec = 0;
     flush_f_d = 0;
+    flush_e_m = 0;
 
     if(false_prediction || JumpE) begin
         flush_f_d = 1;
         flush_d_exec = 1;
+    end
+
+    if (trap_en || mret_en) begin // flush everything for trap handler
+        flush_f_d = 1'b1;
+        flush_d_exec = 1'b1;
+        flush_e_m = 1'b1;
     end
 
     if(wStall || csrStall) begin

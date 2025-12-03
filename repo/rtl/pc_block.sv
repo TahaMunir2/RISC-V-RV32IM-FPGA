@@ -8,6 +8,9 @@ module pc_block #(
     input logic [WIDTH-1:0] ALU,
     input logic rst,
     input logic [1:0] pc_src,
+    input logic trap_en,
+    input logic mret_en,
+    input logic [WIDTH-1:0] handler_address,
     input logic [WIDTH-1:0] pc_saved,
     output logic [WIDTH-1:0] pc,
     output logic [WIDTH-1:0] pc_save
@@ -21,8 +24,9 @@ assign pc_save = inc_pc;
 
 
 always_ff @(posedge clk)
-    if (!enable) internal_pc <=pc;
-    else if (rst) internal_pc <={WIDTH{1'b0}};
+    if (rst) internal_pc <={WIDTH{1'b0}}; 
+    else if(trap_en || mret_en) internal_pc <= handler_address;
+    else if (!enable) internal_pc <=pc;
     else begin
         case (pc_src)
             2'b00: internal_pc <= inc_pc;    // PC + 4

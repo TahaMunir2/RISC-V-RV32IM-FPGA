@@ -3,7 +3,6 @@ module regfile#(
     REG_FILE_WIDTH=32
     )(
     input logic clk,
-    input logic trigger,
     input logic [DATA_WIDTH-1:0] WD3,
     input logic WE3,
     input logic [4:0] AD3,
@@ -16,10 +15,12 @@ module regfile#(
 
     logic [DATA_WIDTH-1: 0] regfile_array [REG_FILE_WIDTH-1: 0];
 
-    assign regfile_array[25] = {31'b0, trigger} ;//s9 is a saved register type (it represents the value of trigger: the signal that starts the program)
 
     always_ff @(negedge clk) begin
-        if(WE3) regfile_array[AD3] <= WD3;
+        if(WE3) begin
+            if(AD3 == 0) regfile_array[0] <= '0; // X0 is always 0
+            else regfile_array[AD3] <= WD3;
+        end
     end
     
     always_comb begin

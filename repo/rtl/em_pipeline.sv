@@ -24,6 +24,7 @@ module em_pipeline #(
     input logic [1:0]LoadSize_e, 
     input logic LoadUnsigned_e,
     input logic [1:0] csr_typeE,
+    input logic flush,
     output logic RegWrite_m,
     output logic [1:0] ResultSrc_m,
     output logic MemWrite_m,
@@ -36,7 +37,7 @@ module em_pipeline #(
     always @(posedge clk) begin
       
 
-        if (rst) begin
+        if (rst || flush) begin
             //data
             pc_save_m <= 0;
             Rd_m <= 0;

@@ -19,7 +19,6 @@ initial begin
     $readmemh("reference/gaussian.mem", ram_array, 32'h10000);
 end
 
-
 //Asynchronized reading from memory
 always_comb begin
     logic [31:0] data;

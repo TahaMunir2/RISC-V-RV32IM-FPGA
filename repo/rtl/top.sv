@@ -3,7 +3,7 @@ module top #(
 ) (
     input   logic clk,
     input   logic rst,
-    input logic trigger,
+    input   logic trigger,
     output  logic [DATA_WIDTH-1:0] a0    
 );
     
@@ -171,6 +171,7 @@ module top #(
         .false_prediction(false_prediction)
     );
 
+    logic flush_e_m;
 
     hazard_unit hazard_unit (
         .rs1D(Rs1D), 
@@ -198,8 +199,10 @@ module top #(
         .csr_addrD(csr_addrD),
         .csr_addrE(csr_addrE),
         .csr_addrM(csr_addrM),
-        .csr_addrW(csr_addrW)
-        
+        .csr_addrW(csr_addrW),
+        .mret_en(mret_en),
+        .trap_en(trap_en),
+        .flush_e_m(flush_e_m)
     );
 
 
@@ -364,7 +367,7 @@ output logic [1:0] PCSrcF,
 output logic [31:0] FinalTarget
 */
 
-logic [31:0] target;
+logic [DATA_WIDTH-1:0] target;
 
     PCSrcF_assertion PCSourceF(
         .JumpE(JumpE),
@@ -388,6 +391,9 @@ logic [31:0] target;
         .Imm_op(target), //very important line 
         .pc_src(PCSrcF),
         .pc(PCF),
+        .handler_address(handler_address),
+        .mret_en(mret_en),
+        .trap_en(trap_en),
         .pc_saved(PCPlus4E), //in the case the predictor forecasted a jump and made a false guess
         .pc_save(PCPlus4F),
         .ALU(ALUResultE)
@@ -398,7 +404,6 @@ logic [31:0] target;
 
     regfile regfile(
         .clk(clk),
-        .trigger(trigger),
         .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
         .AD3(RdW),
         .AD2(AD2),
@@ -462,11 +467,35 @@ mux4 forwardingRS2(
         .ALUCtrl(ALUCtrlE)
     );
 
-    assign ALUResultE = (|csr_typeE) ? CSR_read : ALUResultE_internal; // if csr instruction then output should be from the csr unit instead
+    timer timer (
+        .clk(clk),
+        .rst(rst),
+        .we(timer_write_en),
+        .addr(ALUResultM),
+        .data(WriteDataM),
+        .timer_interrupt(timer_interrupt)
+    );
+
+    assign ALUResultE = (|csr_typeE) ? CSR_read : ALUResultE_internal; // if csr instruction then output should be from the csr unit instead of alu
     assign CSR_write = (ALUSrc3E) ? ExtImmE : SrcAE; // decide if we are doing csr with imm or register
+    assign timer_write_en = MemWriteM && (ALUResultM[31:12] == 20'h80001); // we are writing to the timer for these addresses
+
+
+    logic mret_en;
+    logic trap_en;
+    logic [DATA_WIDTH-1:0] handler_address;
+    logic timer_interrupt;
+    logic timer_write_en;
 
     csr csr ( // belongs in the execute stage
         .clk(clk),
+        .rst(rst),
+        .PCE(PCE),
+        .mret_en(mret_en),
+        .trap_en(trap_en),
+        .external_interrupt(trigger),
+        .timer_interrupt(timer_interrupt),
+        .handler_address(handler_address),
         .CSR_OP(csr_typeE),
         .addr(csr_addrE),
         .en(|csr_typeE), // as all csr_type instructions have write in them and none correspond to 00
@@ -478,6 +507,7 @@ mux4 forwardingRS2(
     //control inputs coming from the previous pipeline regis    r
         .rst(rst),
         .clk(clk),
+        .flush(flush_e_m),
         .RegWrite_e(RegWriteE),
         .ResultSrc_e(ResultSrcE),
         .MemWrite_e(MemWriteE),
@@ -512,11 +542,14 @@ mux4 forwardingRS2(
 
 //data memory (Asynchronous input) :
 
+    logic MemWrite_allowed;
+    assign MemWrite_allowed = MemWriteM && (ALUResultM[31:28] != 4'h8); // Don't write if address starts with 8 (used for the timer)
+
     datamem datamem(
         .clk(clk),
         .A(ALUResultM),
         .dout(ReadDataM),
-        .MemWrite(MemWriteM),
+        .MemWrite(MemWrite_allowed),
         .WD(WriteDataM),
         .SizeWrite(SizeWriteM),
         .LoadSize(LoadSizeM), //additional output signal
