@@ -67,6 +67,7 @@ module l1d_cache #(
     logic hit0, hit1;
     logic valid0, valid1;
     logic miss;
+    logic wb_valid;
     logic [6:0] bottom_bit;
 
     initial begin
@@ -95,6 +96,7 @@ module l1d_cache #(
         write_data = '0;
         data_out = '0;
         write_back_en = 0;
+        wb_valid = 1;
         l2_fetch = 1'b0;
         l2_addr = {addr[31:4], 4'b0000};
 
@@ -131,26 +133,28 @@ module l1d_cache #(
                             if (wb_ready) begin
                                 write_back_en = 0;
                                 cache[set].block1.dirty = 0;
+                                wb_valid = 1;
                             end 
 
                             else begin
                                 write_back_en = 1;
                                 write_back = cache[set].block1[127:0];
-                                write_back_addr = {cache[set].block1.tag, set, 4'b0000};    
+                                write_back_addr = {cache[set].block1.tag, set, 4'b0000};
+                                wb_valid = 0;  
                             end  
                         end
                     end
                 end
 
                 // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
-                if (!ready) begin
+                if (!ready || !wb_valid) begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b0;
                     stall      = 1'b1;
                     l2_fetch   = 1'b1;             
                 end
 
-                // When L2 cache asserts ready: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
+                // When L2 cache asserts ready, and dirty value has successfully been written back: fill the line (as L2 cache has retrieved the data), but don't read from cache this cycle
                 else begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b1;
