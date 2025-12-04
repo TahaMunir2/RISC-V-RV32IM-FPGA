@@ -1,6 +1,7 @@
 module new_datamem #(
     parameter ADDRESS_WIDTH = 32,
               MEM_BYTES     = 16384,  // 16KB default
+                BASE_ADDR     = 32'h0002_0000,
               DATA_WIDTH    = 32
 )(//removed the clock from the input because we are designing the datamem output to be asynchronous (when implementing store we might have to add the clock back in order to make the input to the data memory synchronous)
     input  logic                     MemWrite,
@@ -18,6 +19,9 @@ module new_datamem #(
 
     logic [$clog2(MEM_BYTES)-1:0] A_reg;
     logic [31:0] data;
+     logic  [$clog2(MEM_BYTES)-1:0] A_offset;
+
+     assign A_offset = (A - BASE_ADDR)[$clog2(MEM_BYTES)-1:0];
 
     initial begin
         $display("Loading ram");
@@ -26,7 +30,7 @@ module new_datamem #(
 
     //Synchronous read
     always_ff @(posedge clk) begin
-        A_reg <= A[$clog2(MEM_BYTES)-1:0];
+        A_reg <= A_offset;
 
         // Read 4 bytes (little endian)
         data[7:0]   <= mem[A_reg];
@@ -68,17 +72,17 @@ module new_datamem #(
 always_ff @(posedge clk) begin
     if (MemWrite) begin
         if (SizeWrite == 2'b00) begin
-        mem[A] <= WD[7:0];
+            mem[A_offset] <= WD[7:0];
         end
         else if (SizeWrite == 2'b01) begin
-            mem[A]   <= WD[7:0];
-            mem[A+1] <= WD[15:8];
+            mem[A_offset]   <= WD[7:0];
+            mem[A_offset+1] <= WD[15:8];
         end
         else if (SizeWrite == 2'b10) begin
-            mem[A]   <= WD[7:0];
-            mem[A+1] <= WD[15:8];
-            mem[A+2] <= WD[23:16];
-            mem[A+3] <= WD[31:24];
+            mem[A_offset]   <= WD[7:0];
+            mem[A_offset+1] <= WD[15:8];
+            mem[A_offset+2] <= WD[23:16];
+            mem[A_offset+3] <= WD[31:24];
         end
     end
 end
