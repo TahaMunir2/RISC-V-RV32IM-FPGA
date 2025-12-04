@@ -47,9 +47,9 @@ module l2_cache #(
         logic u01;
         logic u02;
         logic u03;
-        logic u04;
-        logic u05;
-        logic u06;
+        logic u12;
+        logic u13;
+        logic u23;
         block_store block3;
         block_store block2;
         block_store block1;
@@ -242,7 +242,7 @@ module l2_cache #(
             hit1_wb <= (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
             hit2_wb <= (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
             hit3_wb <= (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
-            miss_wb <= ~(hit0 | hit1 | hit2 | hit3);
+            miss_wb <= ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
         end
 
 
@@ -269,7 +269,9 @@ module l2_cache #(
 
         // wr and rd en logic
         if (fetch) begin
+
             if (miss) begin
+                
                 if (ready) begin
                     //way_rd determination
                     if (!valid0)      way_rd <= 2'b00;
@@ -449,61 +451,86 @@ module l2_cache #(
         end
 
         if (!rd_en && !wr_en && !miss_wb) begin
-            
+            wr_en <= 1;
+            wr_wb <= 1;
+            write_data <= 2{l1write_back_data_buffer};
+
+            if (hit0_wb) way <= 2'b00;
+            else if (hit1_wb) way <= 2'b01;
+            else if (hit2_wb) way <= 2'b10;
+            else if (hit3_wb) way <= 2'b11;
+            tag_bits <= tag_bits_wb;
+            set <= set_wb;
+            block_offset <= block_offset_wb;
+            byte_offset <= byte_offset_wb;
+
+            if (block_offset_wb == 3'b000) begin
+                wmask <= {128{1'b0}, 128{1'b1}};
+            end
+
+            else if (block_offset_wb == 3'b100) begin
+                wmask <= {128{1'b1}, 128{1'b0}};
+            end
+
         end
 
         //write logic
         if (wr_en) begin
-            
-            if (way == 2'b00) begin
 
+            if (way == 2'b00) begin
                 if (wr_wb) begin
-                    cache[set_rd].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
+                    cache[set].block0.dirty <= 1'b1; // if we are writing over it from L1 then it is dirty
                 end
                 else begin
-                    cache[set_rd].block0.dirty <= 1'b0; // if first time then clean
+                    cache[set].block0.dirty <= 1'b0; // if writing from main mem then clean
                 end
-                cache[set_rd].block0[255:0] <= (cache[set_rd].block0[255:0] & ~wmask) | (write_data & wmask);
+
+                cache[set_rd].block0[255:0] <= (cache[set].block0[255:0] & ~wmask) | (write_data & wmask);
                 cache[set_rd].block0.tag <= tag_bits;
                 cache[set_rd].block0.valid <= 1'b1;
             end
 
-            else if (way_rd == 2'b01) begin
+            
+            else if (way == 2'b01) begin
 
-                if (l1write && !miss_wb) begin
-                    cache[set_rd].block1.dirty <= 1'b1; // if we are writing over it then it is dirty
+                if (wr_wb) begin
+                    cache[set].block1.dirty <= 1'b1; // if we are writing over it from L1 then it is dirty
                 end
                 else begin
-                    cache[set_rd].block1.dirty <= 1'b0; // if first time then clean
+                    cache[set].block1.dirty <= 1'b0; // if writing from main mem then clean
                 end
-                cache[set_rd].block1[255:0] <= (cache[set_rd].block0[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block1.tag <= tag_bits_rd;
+
+                cache[set_rd].block1[255:0] <= (cache[set].block1[255:0] & ~wmask) | (write_data & wmask);
+                cache[set_rd].block1.tag <= tag_bits;
                 cache[set_rd].block1.valid <= 1'b1;
             end
 
-            else if (way_rd == 2'b10) begin
+            else if (way == 2'b10) begin
 
-                if (l1write && !miss_wb) begin
-                    cache[set_rd].block2.dirty <= 1'b1; // if we are writing over it then it is dirty
+                if (wr_wb) begin
+                    cache[set].block2.dirty <= 1'b1; // if we are writing over it from L1 then it is dirty
                 end
                 else begin
-                    cache[set_rd].block2.dirty <= 1'b0; // if first time then clean
+                    cache[set].block2.dirty <= 1'b0; // if writing from main mem then clean
                 end
-                cache[set_rd].block2[255:0] <= (cache[set_rd].block2[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block2.tag <= tag_bits_rd;
+
+                cache[set_rd].block2[255:0] <= (cache[set].block2[255:0] & ~wmask) | (write_data & wmask);
+                cache[set_rd].block2.tag <= tag_bits;
                 cache[set_rd].block2.valid <= 1'b1;
             end
 
-            if (way_rd == 2'b11) begin
+            
+            else if (way == 2'b11) begin
 
-                if (l1write && !miss_wb) begin
-                    cache[set_rd].block3.dirty <= 1'b1; // if we are writing over it then it is dirty
+                if (wr_wb) begin
+                    cache[set].block3.dirty <= 1'b1; // if we are writing over it from L1 then it is dirty
                 end
                 else begin
-                    cache[set_rd].block3.dirty <= 1'b0; // if first time then clean
+                    cache[set].block3.dirty <= 1'b0; // if writing from main mem then clean
                 end
-                cache[set_rd].block3[255:0] <= (cache[set_rd].block0[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block3.tag <= tag_bits_rd;
+
+                cache[set_rd].block3[255:0] <= (cache[set].block3[255:0] & ~wmask) | (write_data & wmask);
+                cache[set_rd].block3.tag <= tag_bits;
                 cache[set_rd].block3.valid <= 1'b1;
             end
         end
