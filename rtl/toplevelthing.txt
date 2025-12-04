@@ -1,0 +1,22 @@
+new_insmem #(
+    .MEM_BYTES (8192),
+    .BASE_ADDR (32'hBFC0_0000)
+) imem (
+    .clk  (clk),
+    .addr (PC),          // your fetch PC
+    .instr(instrF)       // IF-stage instruction bus
+);
+
+new_datamem #(
+    .MEM_BYTES (16384),
+    .BASE_ADDR (32'h0002_0000)
+) dmem (
+    .MemWrite     (MemWriteM),
+    .WD           (WriteDataM),
+    .SizeWrite    (SizeWriteM),
+    .A            (ALUResultM),
+    .LoadSize     (LoadSizeM),
+    .LoadUnsigned (LoadUnsignedM),
+    .clk          (clk),
+    .dout         (ReadDataM)
+);
