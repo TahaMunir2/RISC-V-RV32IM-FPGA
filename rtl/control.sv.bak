@@ -16,8 +16,7 @@ module control #(
     output logic Branch,
     output logic [2:0] funct3OUT,
     output logic [1:0] csr_type,
-    output logic ALUSrc3, // if high then pick immext instead of RS1
-	 output logic mret_en
+    output logic ALUSrc3 // if high then pick immext instead of RS1
 
 );
 
@@ -65,7 +64,6 @@ assign imm_11_5 = instr[31:25];
         LoadUnsigned = 1'b0;  // signed by default
         ALUSrc3 = 1'b0;
         csr_type = 2'b00;
-		  mret_en   = 1'b0;
 
 
         case(op)
@@ -826,16 +824,7 @@ assign imm_11_5 = instr[31:25];
                     ALUSrc3 = 1'b1;
                     ImmSrc = 3'b101; 
                 end
-					 
-					 if (funct3 == 3'b000 && funct7 == 7'b0011000) begin // mret
-                    mret_en = 1'b1;
-                end
-					 
             end
-				
-				default: begin
-					RegWrite = 0;
-				end
         endcase
     end
 endmodule

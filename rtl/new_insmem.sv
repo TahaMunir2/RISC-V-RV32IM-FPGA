@@ -1,32 +1,39 @@
 module new_insmem #(
-    parameter ADDRESS_WIDTH     = 32,
-    parameter MEM_BYTES         = 4096,  
-    parameter DATA_WIDTH        = 8,
-    parameter BASE_ADDR         = 32'hBFC00000
-
+    parameter ADDRESS_WIDTH = 32,
+    parameter DATA_WIDTH    = 32
 )(
     input  logic                     clk,
     input  logic [ADDRESS_WIDTH-1:0] addr,
-    output logic [31:0]              instr      
+    output logic [DATA_WIDTH-1:0]    instr
 );
 
-    logic [DATA_WIDTH-1:0] romArray[0:MEM_BYTES-1];
+    // 1024 words = 4096 bytes
+    localparam MEM_DEPTH = 1024;
 
-    logic [ADDRESS_WIDTH-1:0] full_local_addr;
-    logic [$clog2(MEM_BYTES)-1:0] valid_index;
+    // Use a clean array
+    logic [31:0] romArray [0:MEM_DEPTH-1];
 
-    assign full_local_addr = addr - BASE_ADDR;
-    assign valid_index = full_local_addr[$clog2(MEM_BYTES)-1:0];
-
+    // --- LOAD THE FILE ---
+    // Use the absolute path like before
     initial begin
-        $display("Loading Instruction Memory");
-        $readmemh("program.hex", romArray);
+        $readmemh("C:/riscv_de10/program.hex", romArray);
     end
 
-    //Fetch instruction
-    always_ff @(posedge clk) begin // check to make sure we aren't accessing memory we aren't allowed to
-        if (addr > BASE_ADDR - 1 && full_local_addr < MEM_BYTES - 3) instr <= {romArray[valid_index+3], romArray[valid_index+2], romArray[valid_index+1], romArray[valid_index]};
-        else instr <= 32'h00000000; // no-op for invalid pc
-        end
+    // --- MAPPING ---
+    logic [9:0] word_index;
+    assign word_index = addr[11:2];
+
+    logic [31:0] raw_data;
+
+    // --- STEP 1: PURE RAM READ (The Hardware Part) ---
+    // This is simple enough for Quartus to recognize as Block RAM
+    always_ff @(posedge clk) begin
+        raw_data <= romArray[word_index];
+    end
+
+    // --- STEP 2: ADDRESS CHECK (The Logic Part) ---
+    // We do the safety check *outside* the memory block
+    // 0xBFC00... is the valid range
+    assign instr = (addr[31:12] == 20'hBFC00) ? raw_data : 32'h00000000;
 
 endmodule

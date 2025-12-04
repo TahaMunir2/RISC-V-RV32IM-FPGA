@@ -1,4 +1,4 @@
-module sevensegment (
+module sevensegment #(
     input  logic [3:0] hex_in,
     output logic [7:0] hex_out 
 );

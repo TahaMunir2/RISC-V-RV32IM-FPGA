@@ -1,370 +1,365 @@
 module top #(
     DATA_WIDTH = 32
 ) (
-    input   logic                   clk,
-    input   logic                   rst,
-    input   logic                   trigger,
-    output  logic [DATA_WIDTH-1:0]  a0,    
-    output  logic [9:0]             leds
+    input  logic                   clk,
+    input  logic                   rst,
+    input  logic                   trigger,
+    output logic [DATA_WIDTH-1:0]  a0,
+    output logic [9:0]             leds
 );
-    
-//extra logic added when debugging (to map correctly for better presentation) :
-    logic [4:0] Rs1D = InstrD[19:15];
-    logic [4:0] Rs2D = InstrD[24:20];
-    logic [4:0] RdD = InstrD[11:7];
-    logic [4:0] Rs1E;
-    logic [4:0] Rs2E;
-    logic [4:0] RdE;
-    logic [DATA_WIDTH-1 : 0] RD1E;
-    logic [DATA_WIDTH-1 : 0] RD2E;
-    logic [DATA_WIDTH-1 : 0] RD1D;
-    logic [DATA_WIDTH-1 : 0] RD2D;
-    logic [DATA_WIDTH-1 : 0]  ExtImmE;
-    logic [DATA_WIDTH-1 : 0] ExtImmD;
-    logic [1 : 0] ResultSrcD;
-    logic [1 : 0] ResultSrcM;
-    logic [DATA_WIDTH-1 : 0] InstrF;
-    logic RegWriteD;
-    logic [DATA_WIDTH-1 : 0] ReadDataM;
-    logic [DATA_WIDTH-1 : 0] WriteDataE;
-    logic [DATA_WIDTH-1:0] InstrD;
-    logic EQ;
-    
-    //adding the wires to propagate the PC value from the fetch stage to the execute stage 
-    //(where it is added to the value of ExtImm (which is ExtImmE in the execution stage and brought back as the input ImmOp for the PCblock))
-    logic [DATA_WIDTH-1:0] PCF;
-    logic [DATA_WIDTH-1:0] PCD;
-    logic [DATA_WIDTH-1:0] PCE;
 
-    logic [DATA_WIDTH-1 : 0] PCPlus4F;
-    logic [DATA_WIDTH-1 : 0] PCPlus4D;
-    logic [DATA_WIDTH-1 : 0] PCPlus4E;
+
+logic [4:0] Rs1D;
+logic [4:0] Rs2D;
+logic [4:0] RdD;
+logic [4:0] Rs1E;
+logic [4:0] Rs2E;
+logic [4:0] RdE;
+logic [DATA_WIDTH-1 : 0] RD1E;
+logic [DATA_WIDTH-1 : 0] RD2E;
+logic [DATA_WIDTH-1 : 0] RD1D;
+logic [DATA_WIDTH-1 : 0] RD2D;
+logic [DATA_WIDTH-1 : 0] ExtImmE;
+logic [DATA_WIDTH-1 : 0] ExtImmD;
+logic [1 : 0] ResultSrcD;
+logic [1 : 0] ResultSrcM;
+logic [DATA_WIDTH-1 : 0] InstrF;
+logic RegWriteD;
+logic [DATA_WIDTH-1 : 0] ReadDataM;
+logic [DATA_WIDTH-1 : 0] WriteDataE;
+logic [DATA_WIDTH-1:0] InstrD;
+logic EQ;
+
+//adding the wires to propagate the PC value from the fetch stage to the execute stage 
+//(where it is added to the value of ExtImm (which is ExtImmE in the execution stage and brought back as the input ImmOp for the PCblock))
+logic [DATA_WIDTH-1:0] PCF;
+logic [DATA_WIDTH-1:0] PCD;
+logic [DATA_WIDTH-1:0] PCE;
+
+logic [DATA_WIDTH-1 : 0] PCPlus4F;
+logic [DATA_WIDTH-1 : 0] PCPlus4D;
+logic [DATA_WIDTH-1 : 0] PCPlus4E;
 
 //logic for branch and jump
-    logic BranchD;
-    logic BranchE;
-    logic JumpD;
-    logic JumpE;
-    logic [2:0] funct3D;
-    logic [2:0] funct3E;
+logic BranchD;
+logic BranchE;
+logic JumpD;
+logic JumpE;
+logic [2:0] funct3D;
+logic [2:0] funct3E;
 
-    logic [2:0] ImmSrcD;
+logic [2:0] ImmSrcD;
 
 
 //extra logic added because we splitted the register file , alu and data memory block
-    logic [DATA_WIDTH-1: 0] ALUResultE;
-    logic [DATA_WIDTH-1: 0] ALUop1;
+logic [DATA_WIDTH-1: 0] ALUResultE;
+logic [DATA_WIDTH-1: 0] ALUop1;
 
-    //logic [DATA_WIDTH-1: 0] write_to_reg; Not used here : the namings come from the pipeline stage
+//logic [DATA_WIDTH-1: 0] write_to_reg; Not used here : the namings come from the pipeline stage
 
-    logic                   LT;
-    logic                   LTU;
-    //logic [1:0] ResultSrc; Not used here : the namings come from the pipeline stage
-     logic MemWriteD;
-     logic [1:0]SizeWriteD; //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
-     //logic ALUsrc2; //additional output signal
-     logic [1:0]LoadSizeD; //additional output signal
-     logic LoadUnsignedD; //additional output signal
+logic                   LT;
+logic                   LTU;
+//logic [1:0] ResultSrc; Not used here : the namings come from the pipeline stage
+logic MemWriteD;
+logic [1:0]SizeWriteD; //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
+//logic ALUsrc2; //additional output signal
+logic [1:0]LoadSizeD; //additional output signal
+logic LoadUnsignedD; //additional output signal
 
 
 ///extra logic for hazard unit
-     //logic [1:0] selectline1;
-     //logic [1:0] selectline2;
-     logic flush_d_exec;
-     logic flush_f_d;
-     logic F_Write;
-     logic PCWrite;
-    
+//logic [1:0] selectline1;
+//logic [1:0] selectline2;
+logic flush_d_exec;
+logic flush_f_d;
+logic F_Write;
+logic PCWrite;
+
 // d-e pipeline buses
-    // data logic
-     //logic [DATA_WIDTH-1:0] RD1_d;
-     //logic [DATA_WIDTH-1:0] RD2_d;
-     //logic [DATA_WIDTH-1:0] pc_d;
-     //logic [4:0] Rd_d;
-     //logic [DATA_WIDTH-1:0] PCPlus4dE;
-     //logic [DATA_WIDTH-1:0] RD1_e;
-     //logic [DATA_WIDTH-1:0] RD2_e;
-     //logic [DATA_WIDTH-1:0] pc_e;
-     //logic [DATA_WIDTH-1:0] ImmExt_e;
+// data logic
+//logic [DATA_WIDTH-1:0] RD1_d;
+//logic [DATA_WIDTH-1:0] RD2_d;
+//logic [DATA_WIDTH-1:0] pc_d;
+//logic [4:0] Rd_d;
+//logic [DATA_WIDTH-1:0] PCPlus4dE;
+//logic [DATA_WIDTH-1:0] RD1_e;
+//logic [DATA_WIDTH-1:0] RD2_e;
+//logic [DATA_WIDTH-1:0] pc_e;
+//logic [DATA_WIDTH-1:0] ImmExt_e;
 
-    // control logic
-     //logic RegWrite_d;
-     //logic [1:0] ResultSrc_d;
-     //logic MemWrite_d;
-     //logic Branch_d;
-     logic [4:0] ALUCtrlD;
-     logic ALUSrcD;
-     //logic [1:0] SizeWrite_d;
-     //logic [1:0]LoadSize_d; 
-     //logic LoadUnsigned_d;
-     logic ALUSrc2D;
-     logic RegWriteE;
-     logic [1:0] ResultSrcE;
-     logic MemWriteE;
-     //logic Branch_e;
-     logic [4:0] ALUCtrlE;
-     logic ALUSrcE;
-     logic [1:0] SizeWriteE;
-     logic [1:0]LoadSizeE; 
-     logic LoadUnsignedE;
-     logic ALUSrc2E;
-     logic enable_de;
-     assign enable_de = 1;
-     logic [1:0] PCSrcE;
-
-
-
-
-     
+// control logic
+//logic RegWrite_d;
+//logic [1:0] ResultSrc_d;
+//logic MemWrite_d;
+//logic Branch_d;
+logic [4:0] ALUCtrlD;
+logic ALUSrcD;
+//logic [1:0] SizeWrite_d;
+//logic [1:0]LoadSize_d; 
+//logic LoadUnsigned_d;
+logic ALUSrc2D;
+logic RegWriteE;
+logic [1:0] ResultSrcE;
+logic MemWriteE;
+//logic Branch_e;
+logic [4:0] ALUCtrlE;
+logic ALUSrcE;
+logic [1:0] SizeWriteE;
+logic [1:0]LoadSizeE; 
+logic LoadUnsignedE;
+logic ALUSrc2E;
+logic enable_de = 1;
+logic [1:0] PCSrcE;
 
 //extra wires added for the pipeline register:
-    logic [DATA_WIDTH-1:0] PCPlus4M;
-    logic [4:0] RdM;
-    logic [DATA_WIDTH-1:0] ALUResultM;
-    logic [DATA_WIDTH-1:0] WriteDataM;
-     logic RegWriteM;
-     logic MemWriteM;
-     logic [1:0] SizeWriteM;
-     logic [1:0]LoadSizeM; 
-     logic LoadUnsignedM;
+logic [DATA_WIDTH-1:0] PCPlus4M;
+logic [4:0] RdM;
+logic [DATA_WIDTH-1:0] ALUResultM;
+logic [DATA_WIDTH-1:0] WriteDataM;
+logic RegWriteM;
+logic MemWriteM;
+logic [1:0] SizeWriteM;
+logic [1:0]LoadSizeM; 
+logic LoadUnsignedM;
 
 //extra wires for the output of the memory-writeback pipeline register:
-    logic RegWriteW;
-    logic [1:0] ResultSrcW;
-    logic [DATA_WIDTH-1 :0] ALUResultW;
-    logic [DATA_WIDTH-1 :0] ReadDataW;
-    logic [4:0] RdW;
-    logic [DATA_WIDTH-1:0] PCPlus4W;
-    logic [DATA_WIDTH-1:0] ResultW;
+logic RegWriteW;
+logic [1:0] ResultSrcW;
+logic [DATA_WIDTH-1 :0] ALUResultW;
+logic [DATA_WIDTH-1 :0] ReadDataW;
+logic [4:0] RdW;
+logic [DATA_WIDTH-1:0] PCPlus4W;
+logic [DATA_WIDTH-1:0] ResultW;
 
-    logic pred_takenF;
-    logic pred_takenD;
-    logic pred_takenE;
+logic pred_takenF;
+logic pred_takenD;
+logic pred_takenE;
 
-    logic false_prediction;
+logic false_prediction;
 
-    // CSR signals and hazards
+// CSR signals and hazards
 
-    logic [11:0] csr_addrD;
-    logic [11:0] csr_addrE;
-    logic [11:0] csr_addrM;
-    logic [11:0] csr_addrW;
+logic [11:0] csr_addrD;
+logic [11:0] csr_addrE;
+logic [11:0] csr_addrM;
+logic [11:0] csr_addrW;
 
-    logic [1:0] csr_typeD;
-    logic [1:0] csr_typeE;
-    logic [1:0] csr_typeM;
-    logic [1:0] csr_typeW;
+logic [1:0] csr_typeD;
+logic [1:0] csr_typeE;
+logic [1:0] csr_typeM;
+logic [1:0] csr_typeW;
 
-    logic ALUSrc3D;
-    logic ALUSrc3E;
+logic ALUSrc3D;
+logic ALUSrc3E;
 
-    logic [31:0] CSR_read;
-    logic [31:0] CSR_write;
-    logic [31:0] ALUResultE_internal; 
-    logic [31:0] ResultE_Final;
+logic [31:0] CSR_read;
+logic [31:0] CSR_write;
+logic [31:0] ALUResultE_internal; 
+logic [31:0] ResultE_Final;
 
-    assign csr_addrD = InstrD[31:20];
+assign csr_addrD = InstrD[31:20];
 
-    evalprediction evalprediction(
-        .PCSrcE(PCSrcE),
-        .BranchE(BranchE),
-        .pred_taken(pred_takenE),
-        .false_prediction(false_prediction)
-    );
+evalprediction evalprediction(
+    .PCSrcE(PCSrcE),
+    .BranchE(BranchE),
+    .pred_taken(pred_takenE),
+    .false_prediction(false_prediction)
+);
 
-    logic flush_e_m;
+logic flush_e_m;
 
-    logic gpio_wen;
-    assign gpio_wen = MemWriteM && (ALUResultM[DATA_WIDTH-1:0] == 32'h80002000); // we use 80002xxx addresses for LEDS
+logic gpio_wen;
+assign gpio_wen = MemWriteM && (ALUResultM[DATA_WIDTH-1:0] == 32'h80002000); // we use 80002xxx addresses for LEDS
 
-    gpio gpio(
-        .clk(clk),
-        .rst(rst),
-        .we(gpio_wen),
-        .data(WriteDataM),
-        .leds(leds)
-    );
-
-    hazard_unit hazard_unit (
-        .rs1D(Rs1D), 
-        .rs2D(Rs2D),
-        .rs1E(Rs1E), 
-        .rs2E(Rs2E),
-        .rdM(RdM),
-        .rdE(RdE), 
-        .rdWB(RdW),
-        .regWriteM(RegWriteM),
-        .resultSrCE(ResultSrcE),
-        .WriteBack_Regfile(RegWriteW),    
-        .selectline1(ForwardAE),
-        .selectline2(ForwardBE),
-        .flush_d_exec(flush_d_exec),
-        .flush_f_d(flush_f_d),
-        .F_Write(F_Write),
-        .PCWrite(PCWrite),
-        .JumpE(JumpE),
-        .false_prediction(false_prediction),
-        .csr_typeD(csr_typeD),
-        .csr_typeE(csr_typeE),
-        .csr_typeM(csr_typeM),
-        .csr_typeW(csr_typeW),
-        .csr_addrD(csr_addrD),
-        .csr_addrE(csr_addrE),
-        .csr_addrM(csr_addrM),
-        .csr_addrW(csr_addrW),
-        .mret_en(mret_en),
-        .trap_en(trap_en),
-        .flush_e_m(flush_e_m)
-    );
-
-
-    fd_pipeline fd_pip(
-        .clk(clk),
-        .rst(rst),
-        .flush(flush_f_d),/////////SEE WHAT TO PUT HERE
-        .enable(F_Write),/////////SEE WHAT TO PUT HERE
-        .instr_f(InstrF),
-        .pc_f(PCF),
-        .pc_save_f(PCPlus4F),
-        .instr_d(InstrD),
-        .pc_d(PCD),
-        .pc_save_d(PCPlus4D),
-        .pred_takenF(pred_takenF),
-        .pred_takenD(pred_takenD)
-    );
-
-    signext sign_extension (
-        .instr(InstrD),
-        .ImmSrc(ImmSrcD),
-        .immext(ExtImmD)
-    );
-
-
-    de_pipeline de_pip(
+gpio gpio(
     .clk(clk),
     .rst(rst),
-     .flush(flush_d_exec),
-     .enable(enable_de),
-    // data logic
-      .pc_save_d (PCPlus4D),
-      .RD1_d (RD1D),
-      .RD2_d(RD2D),
-      .pc_d(PCD),
-      .pc_e(PCE), //added signal 
-      .Rd_d(RdD),
-      .ImmExt_d(ExtImmD),
-      .pc_save_e(PCPlus4E),
-      .RD1_e(RD1E),
-      .RD2_e(RD2E),
-      .Rd_e(RdE),
-      .ImmExt_e(ExtImmE),
-      .Rs1E(Rs1E),
-      .Rs2E(Rs2E),
-      .Rs1D(Rs1D),
-      .Rs2D(Rs2D),
-      .csr_addrD(csr_addrD),
-      .csr_addrE(csr_addrE),
+    .we(gpio_wen),
+    .data(WriteDataM),
+    .leds(leds)
+);
 
- 
+hazard_unit hazard_unit (
+    .rs1D(Rs1D), 
+    .rs2D(Rs2D),
+    .rs1E(Rs1E), 
+    .rs2E(Rs2E),
+    .rdM(RdM),
+    .rdE(RdE), 
+    .rdWB(RdW),
+    .regWriteM(RegWriteM),
+    .resultSrCE(ResultSrcE),
+    .WriteBack_Regfile(RegWriteW),    
+    .selectline1(ForwardAE),
+    .selectline2(ForwardBE),
+    .flush_d_exec(flush_d_exec),
+    .flush_f_d(flush_f_d),
+    .F_Write(F_Write),
+    .PCWrite(PCWrite),
+    .JumpE(JumpE),
+    .false_prediction(false_prediction),
+    .csr_typeD(csr_typeD),
+    .csr_typeE(csr_typeE),
+    .csr_typeM(csr_typeM),
+    .csr_typeW(csr_typeW),
+    .csr_addrD(csr_addrD),
+    .csr_addrE(csr_addrE),
+    .csr_addrM(csr_addrM),
+    .csr_addrW(csr_addrW),
+    .mret_en(mret_en),
+    .trap_en(trap_en),
+    .flush_e_m(flush_e_m)
+);
+
+
+fd_pipeline fd_pip(
+    .clk(clk),
+    .rst(rst),
+    .flush(flush_f_d),/////////SEE WHAT TO PUT HERE
+    .enable(F_Write),/////////SEE WHAT TO PUT HERE
+    .instr_f(InstrF),
+    .pc_f(PCF),
+    .pc_save_f(PCPlus4F),
+    .instr_d(InstrD),
+    .pc_d(PCD),
+    .pc_save_d(PCPlus4D),
+    .pred_takenF(pred_takenF),
+    .pred_takenD(pred_takenD)
+);
+
+signext sign_extension (
+    .instr(InstrD),
+    .ImmSrc(ImmSrcD),
+    .immext(ExtImmD)
+);
+
+
+de_pipeline de_pip(
+    .clk(clk),
+    .rst(rst),
+    .flush(flush_d_exec),
+    .enable(enable_de),
+    // data logic
+    .pc_save_d (PCPlus4D),
+    .RD1_d (RD1D),
+    .RD2_d(RD2D),
+    .pc_d(PCD),
+    .pc_e(PCE), //added signal 
+    .Rd_d(RdD),
+    .ImmExt_d(ExtImmD),
+    .pc_save_e(PCPlus4E),
+    .RD1_e(RD1E),
+    .RD2_e(RD2E),
+    .Rd_e(RdE),
+    .ImmExt_e(ExtImmE),
+    .Rs1E(Rs1E),
+    .Rs2E(Rs2E),
+    .Rs1D(Rs1D),
+    .Rs2D(Rs2D),
+    .csr_addrD(csr_addrD),
+    .csr_addrE(csr_addrE),
+
 
     // control logic
-     .RegWrite_d(RegWriteD),
-     .ResultSrc_d(ResultSrcD),
-     .MemWrite_d(MemWriteD),
-     //.Branch_d(Branch_d),
-     .ALUCtrl_d(ALUCtrlD),
-     .ALUSrc_d(ALUSrcD),
-     .SizeWrite_d(SizeWriteD),
-     .LoadSize_d(LoadSizeD), 
-     .LoadUnsigned_d(LoadUnsignedD),
-     .ALUSrc2_d(ALUSrc2D),
-     .RegWrite_e(RegWriteE),
-     .ResultSrc_e(ResultSrcE),
-     .MemWrite_e(MemWriteE),
-     //.Branch_e(Branch_e),
-     .ALUCtrl_e(ALUCtrlE),
-     .ALUSrc_e(ALUSrcE),
-     .SizeWrite_e(SizeWriteE),
-     .LoadSize_e(LoadSizeE), 
-     .LoadUnsigned_e(LoadUnsignedE),
-     .ALUSrc2_e(ALUSrc2E),//ALUSrc2 not ou
-     .BranchD(BranchD),
-     .JumpD(JumpD),
-     .BranchE(BranchE),
-     .JumpE(JumpE),
-     .funct3D(funct3D),
-     .funct3E(funct3E),
-     .ALUSrc3D(ALUSrc3D),
-     .ALUSrc3E(ALUSrc3E),
-     .csr_typeD(csr_typeD),
-     .csr_typeE(csr_typeE),
+    .RegWrite_d(RegWriteD),
+    .ResultSrc_d(ResultSrcD),
+    .MemWrite_d(MemWriteD),
+    //.Branch_d(Branch_d),
+    .ALUCtrl_d(ALUCtrlD),
+    .ALUSrc_d(ALUSrcD),
+    .SizeWrite_d(SizeWriteD),
+    .LoadSize_d(LoadSizeD), 
+    .LoadUnsigned_d(LoadUnsignedD),
+    .ALUSrc2_d(ALUSrc2D),
+    .RegWrite_e(RegWriteE),
+    .ResultSrc_e(ResultSrcE),
+    .MemWrite_e(MemWriteE),
+    //.Branch_e(Branch_e),
+    .ALUCtrl_e(ALUCtrlE),
+    .ALUSrc_e(ALUSrcE),
+    .SizeWrite_e(SizeWriteE),
+    .LoadSize_e(LoadSizeE), 
+    .LoadUnsigned_e(LoadUnsignedE),
+    .ALUSrc2_e(ALUSrc2E),//ALUSrc2 not ou
+    .BranchD(BranchD),
+    .JumpD(JumpD),
+    .BranchE(BranchE),
+    .JumpE(JumpE),
+    .funct3D(funct3D),
+    .funct3E(funct3E),
+    .ALUSrc3D(ALUSrc3D),
+    .ALUSrc3E(ALUSrc3E),
+    .csr_typeD(csr_typeD),
+    .csr_typeE(csr_typeE),
 
-//branch prediction logic propagating
+    //branch prediction logic propagating
     .pred_takenD(pred_takenD),
     .pred_takenE(pred_takenE)
-    );
+);
 
 
-    PCSrcE_assertion PCSourceE(
-        .EQ(EQ),
-        .LT(LT),
-        .LTU(LTU),
-        .Branch_e(BranchE),
-        .Jump_e(JumpE),
-        .funct3(funct3E),
-        .PCSrcE(PCSrcE),
-        .ALUSrcE(ALUSrcE)
-    );
+PCSrcE_assertion PCSourceE(
+    .EQ(EQ),
+    .LT(LT),
+    .LTU(LTU),
+    .Branch_e(BranchE),
+    .Jump_e(JumpE),
+    .funct3(funct3E),
+    .PCSrcE(PCSrcE),
+    .ALUSrcE(ALUSrcE)
+);
 
 
-    control control (
-        .instr(InstrD),
-        .RegWrite(RegWriteD),
-        .ALUCtrl(ALUCtrlD),
-        .ALUSrc(ALUSrcD),
-        .ImmSrc(ImmSrcD),
-        .Branch(BranchD),
-        .Jump(JumpD),
-        .funct3OUT(funct3D),
-        .ResultSrc(ResultSrcD),
-        .MemWrite(MemWriteD),
-        .SizeWrite(SizeWriteD),
-        .ALUsrc2(ALUSrc2D),
-        .LoadSize(LoadSizeD),
-        .LoadUnsigned(LoadUnsignedD),
-        .ALUSrc3(ALUSrc3D),
-        .csr_type(csr_typeD)
-    );
+control control (
+    .instr(InstrD),
+    .RegWrite(RegWriteD),
+    .ALUCtrl(ALUCtrlD),
+    .ALUSrc(ALUSrcD),
+    .ImmSrc(ImmSrcD),
+    .Branch(BranchD),
+    .Jump(JumpD),
+    .funct3OUT(funct3D),
+    .ResultSrc(ResultSrcD),
+    .MemWrite(MemWriteD),
+    .SizeWrite(SizeWriteD),
+    .ALUsrc2(ALUSrc2D),
+    .LoadSize(LoadSizeD),
+    .LoadUnsigned(LoadUnsignedD),
+    .ALUSrc3(ALUSrc3D),
+    .csr_type(csr_typeD),
+	 .mret_en(mret_en)
+);
 
 
-    new_insmem Instr_Mem (
-        .instr(InstrF),
-        .addr(PCF)
-    );
+new_insmem Instr_Mem (
+	 .clk(clk),
+    .instr(InstrF),
+    .addr(PCF)
+);
 
 logic actual_taken;
 logic [1:0] PCSrcF;
 
 //demultiplexer to know if the branch is taken or not
-    always_comb begin
-        case (PCSrcE)
-
+always_comb begin
+    case (PCSrcE)
         2'b00 : actual_taken = 0;
         2'b01 : actual_taken = 1;
-        default: actual_taken =0;//by default it is not taken (but in the case where PCSrcE is different from the values listed above we can consider this signal as a don't care because BranchE will be equal to 0)
-        endcase
-    end
+        default: actual_taken =0; //by default it is not taken
+    endcase
+end
 
 
-    branchpredictor2bit branchpredictor (
-        .clk(clk),
-        .rst(rst),
-        .enable(BranchE),//enable signal for the FSM: we write in the FSM only when the instruction in the execute stage is a branch instruction
-        .update_index(PCE[7:2]), //index of that branch PC
-        .actual_taken(actual_taken), //real outcome
-        .predict_index(PCF[7:2]),//index from PC (we take the bus [7:2] corresponding to 6 bits from PC to identify the specific jump we are dealing with)
-        .pred_taken(pred_takenF)//prediction output 
-    );
+branchpredictor2bit branchpredictor (
+    .clk(clk),
+    .rst(rst),
+    .enable(BranchE),//enable signal for the FSM: we write in the FSM only when the instruction in the execute stage is a branch instruction
+    .update_index(PCE[7:2]), //index of that branch PC
+    .actual_taken(actual_taken), //real outcome
+    .predict_index(PCF[7:2]),//index from PC (we take the bus [7:2] corresponding to 6 bits from PC to identify the specific jump we are dealing with)
+    .pred_taken(pred_takenF)//prediction output 
+);
+
 /*
 input logic JumpE,
 input logic BranchE,
@@ -381,52 +376,51 @@ output logic [31:0] FinalTarget
 
 logic [DATA_WIDTH-1:0] target;
 
-    PCSrcF_assertion PCSourceF(
-        .JumpE(JumpE),
-        .BranchE(BranchE),
-        .opcodeF(InstrF[6:0]),
-        .PCSrcE(PCSrcE),
-        .predictionF(pred_takenF),
-        .predictionE(pred_takenE),
-        .false_prediction(false_prediction),
-        .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
-        .targetE(PCE + ExtImmE),
-        .FinalTarget(target),
-        .PCSrcF(PCSrcF)
-    );
+PCSrcF_assertion PCSourceF(
+    .JumpE(JumpE),
+    .BranchE(BranchE),
+    .opcodeF(InstrF[6:0]),
+    .PCSrcE(PCSrcE),
+    .predictionF(pred_takenF),
+    .predictionE(pred_takenE),
+    .false_prediction(false_prediction),
+    .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
+    .targetE(PCE + ExtImmE),
+    .FinalTarget(target),
+    .PCSrcF(PCSrcF)
+);
 
 
-    pc_block pc_block (
-        .clk(clk),
-        .rst(rst),
-        .enable(PCWrite),
-        .Imm_op(target), //very important line 
-        .pc_src(PCSrcF),
-        .pc(PCF),
-        .handler_address(handler_address),
-        .mret_en(mret_en),
-        .trap_en(trap_en),
-        .pc_saved(PCPlus4E), //in the case the predictor forecasted a jump and made a false guess
-        .pc_save(PCPlus4F),
-        .ALU(ALUResultE)
-    );
+pc_block pc_block (
+    .clk(clk),
+    .rst(rst),
+    .enable(PCWrite),
+    .Imm_op(target), //very important line 
+    .pc_src(PCSrcF),
+    .pc(PCF),
+    .handler_address(handler_address),
+    .mret_en(mret_en),
+    .trap_en(trap_en),
+    .pc_saved(PCPlus4E), //in the case the predictor forecasted a jump and made a false guess
+    .pc_save(PCPlus4F),
+    .ALU(ALUResultE)
+);
 
-     logic [4:0] AD2 = InstrD[24:20];
-     logic [4:0] AD1 = InstrD[19:15];
+logic [4:0] AD2;
+logic [4:0] AD1;
 
-    regfile regfile(
-        .clk(clk),
-        .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
-        .AD3(RdW),
-        .AD2(AD2),
-        .AD1(AD1),
-        .WE3(RegWriteW),
-        .RD1(RD1D),
-        .RD2(RD2D),
-        .A0(a0)
-    );
+regfile regfile(
+    .clk(clk),
+    .WD3(ResultW), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
+    .AD3(RdW),
+    .AD2(AD2),
+    .AD1(AD1),
+    .WE3(RegWriteW),
+    .RD1(RD1D),
+    .RD2(RD2D),
+    .A0(a0)
+);
 
-  
 //select lines of the muxes for forwarding (outputs of the hazard unit):
 logic [1:0] ForwardAE;
 logic [1:0] ForwardBE;
@@ -454,119 +448,118 @@ mux4 forwardingRS2(
     .out(WriteDataE)    
 );
 
-    mux mux_immVSreg( 
-        .in0(WriteDataE),
-        .in1(ExtImmE),
-        .sel(ALUSrcE),
-        .out(SrcBE)
-    );
+mux mux_immVSreg( 
+    .in0(WriteDataE),
+    .in1(ExtImmE),
+    .sel(ALUSrcE),
+    .out(SrcBE)
+);
 
-    mux mux_pcVSreg( //additional mux, because we never use data from a register and from pc_save in any instructiom
-        .in0(SrcAE),
-        .in1(PCPlus4E),
-        .sel(ALUSrc2E),
-        .out(ALUop1)
-    );
-
-
-    alu alu(
-        .ALUop1(ALUop1),
-        .ALUop2(SrcBE),
-        .ALUout(ALUResultE_internal),
-        .EQ(EQ),
-        .LT(LT),
-        .LTU(LTU),
-        .ALUCtrl(ALUCtrlE)
-    );
-
-    timer timer (
-        .clk(clk),
-        .rst(rst),
-        .we(timer_write_en),
-        .addr(ALUResultM),
-        .data(WriteDataM),
-        .timer_interrupt(timer_interrupt)
-    );
-
-    assign ALUResultE = (|csr_typeE) ? CSR_read : ALUResultE_internal; // if csr instruction then output should be from the csr unit instead of alu
-    assign CSR_write = (ALUSrc3E) ? ExtImmE : SrcAE; // decide if we are doing csr with imm or register
-    assign timer_write_en = MemWriteM && (ALUResultM[DATA_WIDTH-1:0] == 32'h80001000); // we use 80001xxx addresses for the timer as these are unused in our memory map
+mux mux_pcVSreg( //additional mux, because we never use data from a register and from pc_save in any instructiom
+    .in0(SrcAE),
+    .in1(PCPlus4E),
+    .sel(ALUSrc2E),
+    .out(ALUop1)
+);
 
 
-    logic mret_en;
-    logic trap_en;
-    logic [DATA_WIDTH-1:0] handler_address;
-    logic timer_interrupt;
-    logic timer_write_en;
+alu alu(
+    .ALUop1(ALUop1),
+    .ALUop2(SrcBE),
+    .ALUout(ALUResultE_internal),
+    .EQ(EQ),
+    .LT(LT),
+    .LTU(LTU),
+    .ALUCtrl(ALUCtrlE)
+);
 
-    csr csr ( // belongs in the execute stage
-        .clk(clk),
-        .rst(rst),
-        .PCE(PCE),
-        .mret_en(mret_en),
-        .trap_en(trap_en),
-        .external_interrupt(trigger),
-        .timer_interrupt(timer_interrupt),
-        .handler_address(handler_address),
-        .CSR_OP(csr_typeE),
-        .addr(csr_addrE),
-        .en(|csr_typeE), // as all csr_type instructions have write in them and none correspond to 00
-        .wd(CSR_write),
-        .dout(CSR_read)
-    );
+timer timer (
+    .clk(clk),
+    .rst(rst),
+    .we(timer_write_en),
+    .addr(ALUResultM),
+    .data(WriteDataM),
+    .timer_interrupt(timer_interrupt)
+);
 
-    em_pipeline em_pipeline(
+assign ALUResultE = (|csr_typeE) ? CSR_read : ALUResultE_internal; // if csr instruction then output should be from the csr unit instead of alu
+assign CSR_write = (ALUSrc3E) ? ExtImmE : SrcAE; // decide if we are doing csr with imm or register
+assign timer_write_en = MemWriteM && (ALUResultM[DATA_WIDTH-1:0] == 32'h80001000); // we use 80001xxx addresses for the timer as these are unused in our memory map
+
+logic mret_en;
+logic trap_en;
+logic [DATA_WIDTH-1:0] handler_address;
+logic timer_interrupt;
+logic timer_write_en;
+
+csr csr ( // belongs in the execute stage
+    .clk(clk),
+    .rst(rst),
+    .PCE(PCE),
+    .mret_en(mret_en),
+    .trap_en(trap_en),
+    .external_interrupt(trigger),
+    .timer_interrupt(timer_interrupt),
+    .handler_address(handler_address),
+    .CSR_OP(csr_typeE),
+    .addr(csr_addrE),
+    .en(|csr_typeE), // as all csr_type instructions have write in them and none correspond to 00
+    .wd(CSR_write),
+    .dout(CSR_read)
+);
+
+em_pipeline em_pipeline(
     //control inputs coming from the previous pipeline regis    r
-        .rst(rst),
-        .clk(clk),
-        .flush(flush_e_m),
-        .RegWrite_e(RegWriteE),
-        .ResultSrc_e(ResultSrcE),
-        .MemWrite_e(MemWriteE),
-        .SizeWrite_e(SizeWriteE),
-        .LoadSize_e(LoadSizeE), 
-        .LoadUnsigned_e(LoadUnsignedE),
-        .csr_typeE(csr_typeE),
-    
-        //control outputs:
-        .RegWrite_m(RegWriteM),
-        .ResultSrc_m(ResultSrcM),
-        .MemWrite_m(MemWriteM),
-        .SizeWrite_m(SizeWriteM),
-        .LoadSize_m(LoadSizeM), 
-        .LoadUnsigned_m(LoadUnsignedM),
-        .csr_typeM(csr_typeM),
+    .rst(rst),
+    .clk(clk),
+    .flush(flush_e_m),
+    .RegWrite_e(RegWriteE),
+    .ResultSrc_e(ResultSrcE),
+    .MemWrite_e(MemWriteE),
+    .SizeWrite_e(SizeWriteE),
+    .LoadSize_e(LoadSizeE), 
+    .LoadUnsigned_e(LoadUnsignedE),
+    .csr_typeE(csr_typeE),
 
-        //inputs to the register processed in the execute stage
-        .pc_save_e(PCPlus4E),
-        .Rd_e(RdE),
-        .ALU_Result_e(ALUResultE),
-        .Write_Data_e(WriteDataE),
-        .csr_addrE(csr_addrE),
+    //control outputs:
+    .RegWrite_m(RegWriteM),
+    .ResultSrc_m(ResultSrcM),
+    .MemWrite_m(MemWriteM),
+    .SizeWrite_m(SizeWriteM),
+    .LoadSize_m(LoadSizeM), 
+    .LoadUnsigned_m(LoadUnsignedM),
+    .csr_typeM(csr_typeM),
 
-        //corresponding data outputs
-        .pc_save_m(PCPlus4M),
-        .Rd_m(RdM),
-        .ALU_Result_m(ALUResultM),
-        .Write_Data_m(WriteDataM),
-        .csr_addrM(csr_addrM)
+    //inputs to the register processed in the execute stage
+    .pc_save_e(PCPlus4E),
+    .Rd_e(RdE),
+    .ALU_Result_e(ALUResultE),
+    .Write_Data_e(WriteDataE),
+    .csr_addrE(csr_addrE),
+
+    //corresponding data outputs
+    .pc_save_m(PCPlus4M),
+    .Rd_m(RdM),
+    .ALU_Result_m(ALUResultM),
+    .Write_Data_m(WriteDataM),
+    .csr_addrM(csr_addrM)
 );
 
 //data memory (Asynchronous input) :
 
-    logic MemWrite_allowed;
-    assign MemWrite_allowed = MemWriteM && (ALUResultM[31:28] != 4'h8); // Don't write if address starts with 8 (used for the timer)
+logic MemWrite_allowed;
+assign MemWrite_allowed = MemWriteM && (ALUResultM[31:28] != 4'h8); // Don't write if address starts with 8 (used for the timer)
 
-    new_datamem datamem(
-        .clk(clk),
-        .A(ALUResultM),
-        .dout(ReadDataM),
-        .MemWrite(MemWrite_allowed),
-        .WD(WriteDataM),
-        .SizeWrite(SizeWriteM),
-        .LoadSize(LoadSizeM), //additional output signal
-        .LoadUnsigned(LoadUnsignedM) //additional output signal        
-    );
+new_datamem datamem(
+    .clk(clk),
+    .A(ALUResultM),
+    .dout(ReadDataM),
+    .MemWrite(MemWrite_allowed),
+    .WD(WriteDataM),
+    .SizeWrite(SizeWriteM),
+    .LoadSize(LoadSizeM), //additional output signal
+    .LoadUnsigned(LoadUnsignedM) //additional output signal        
+);
 
 
 mw_pipeline mw_pipeline(
@@ -582,15 +575,14 @@ mw_pipeline mw_pipeline(
     .clk(clk),
     .csr_typeW(csr_typeW),
 
-//inputs to the register processed in the memory stage
+    //inputs to the register processed in the memory stage
     .pc_save_m(PCPlus4M),
     .Rd_m(RdM),
     .ALU_Result_m(ALUResultM),
     .dout_m(ReadDataM), 
     .csr_addrM(csr_addrM),
 
-//corresponding outputs:
-
+    //corresponding outputs:
     .pc_save_w(PCPlus4W),
     .Rd_w(RdW),
     .ALU_Result_w(ALUResultW),
@@ -598,17 +590,25 @@ mw_pipeline mw_pipeline(
     .csr_addrW(csr_addrW)
 );
 
-    always_comb begin
-        case (ResultSrcW)
-            2'b00: ResultW = ALUResultW;     // ALU
-            2'b01: ResultW = ReadDataW; // Memory
-            2'b10: ResultW = PCPlus4W;        // for jump instructions
-            default: ResultW = 32'b0;
-        endcase
-    end
+always_comb begin
+    case (ResultSrcW)
+        2'b00: ResultW = ALUResultW;     // ALU
+        2'b01: ResultW = ReadDataW;      // Memory
+        2'b10: ResultW = PCPlus4W;       // for jump instructions
+        default: ResultW = 32'b0;
+    endcase
+end
 
+// -------------------------------------------------------------
+// Runtime-derived single-bit / small fields from InstrD
+// (moved here from inline declaration -> always_comb)
+// -------------------------------------------------------------
+always_comb begin
+    Rs1D = InstrD[19:15];
+    Rs2D = InstrD[24:20];
+    RdD  = InstrD[11:7];
+    AD2  = InstrD[24:20];
+    AD1  = InstrD[19:15];
+end
 
 endmodule
-
-
-
