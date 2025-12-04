@@ -337,7 +337,7 @@ module top #(
     );
 
 
-    insmem Instr_Mem (
+    new_insmem Instr_Mem (
         .instr(InstrF),
         .addr(PCF)
     );
@@ -557,7 +557,7 @@ mux4 forwardingRS2(
     logic MemWrite_allowed;
     assign MemWrite_allowed = MemWriteM && (ALUResultM[31:28] != 4'h8); // Don't write if address starts with 8 (used for the timer)
 
-    datamem datamem(
+    new_datamem datamem(
         .clk(clk),
         .A(ALUResultM),
         .dout(ReadDataM),
