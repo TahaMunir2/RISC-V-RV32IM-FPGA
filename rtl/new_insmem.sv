@@ -1,45 +1,32 @@
 module new_insmem #(
-    parameter ADDRESS_WIDTH = 32,
-              MEM_BYTES     = 8192,  //8KB default
-              DATA_WIDTH = 8
+    parameter ADDRESS_WIDTH     = 32,
+    parameter MEM_BYTES         = 4096,  
+    parameter DATA_WIDTH        = 8,
+    parameter BASE_ADDR         = 32'hBFC00000
+
 )(
     input  logic                     clk,
-    input  logic                     write_en,  //enable for UART/program loader
     input  logic [ADDRESS_WIDTH-1:0] addr,
-    input  logic [31:0]              write_data,//loader writes whole words
-    output logic [31:0]              instr      //fetched instruction
+    output logic [31:0]              instr      
 );
 
-    //Byte-addressable memory (going to be BRAM)
-    logic [DATA_WIDTH-1:0] mem [0:MEM_BYTES-1];
+    logic [DATA_WIDTH-1:0] romArray[0:MEM_BYTES-1];
 
-    //Registered address for synchronous read
-    logic [$clog2(MEM_BYTES)-1:0] addr_reg;
+    logic [ADDRESS_WIDTH-1:0] full_local_addr;
+    logic [$clog2(MEM_BYTES)-1:0] valid_index;
 
-    //Initil program load (from .hex file)
+    assign full_local_addr = addr - BASE_ADDR;
+    assign valid_index = full_local_addr[$clog2(MEM_BYTES)-1:0];
+
     initial begin
         $display("Loading Instruction Memory");
-        $readmemh("program.hex", mem);
+        $readmemh("program.hex", romArray);
     end
 
     //Fetch instruction
-    always_ff @(posedge clk) begin
-        addr_reg <= addr[$clog2(MEM_BYTES)-1:0];
-        instr <= { mem[addr_reg+3],
-                   mem[addr_reg+2],
-                   mem[addr_reg+1],
-                   mem[addr_reg+0] };
-    end
-
-    //Synchronous WRITE for dynamic loading
-    //Writes entire 32-bit words into memory, byte by byte
-    always_ff @(posedge clk) begin
-        if (write_en) begin
-            mem[addr[$clog2(MEM_BYTES)-1:0]] <= write_data[7:0];
-            mem[addr[$clog2(MEM_BYTES)-1:0]+1] <= write_data[15:8];
-            mem[addr[$clog2(MEM_BYTES)-1:0]+2] <= write_data[23:16];
-            mem[addr[$clog2(MEM_BYTES)-1:0]+3] <= write_data[31:24];
+    always_ff @(posedge clk) begin // check to make sure we aren't accessing memory we aren't allowed to
+        if (addr > BASE_ADDR - 1 && full_local_addr < MEM_BYTES - 3) instr <= {romArray[valid_index+3], romArray[valid_index+2], romArray[valid_index+1], romArray[valid_index]};
+        else instr <= 32'h00000000; // no-op for invalid pc
         end
-    end
 
 endmodule
