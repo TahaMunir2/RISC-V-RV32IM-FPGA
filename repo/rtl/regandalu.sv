@@ -9,6 +9,7 @@ module regandalu#(
     input logic [2:0]             ALUctrl,
     input logic                   ALUsrc,
     input logic [DATA_WIDTH-1: 0] ImmOp,
+    input logic reg_entry, //additional input (select line of the additional multiplexer)
     output logic                   EQ,
     output logic [DATA_WIDTH-1: 0] A0
     );
@@ -18,9 +19,14 @@ module regandalu#(
     logic [DATA_WIDTH-1: 0] ALUop2;
     logic [DATA_WIDTH-1: 0] regOp2;
 
+//additional logic to implement to additional multiplexer block
+    logic [DATA_WIDTH-1: 0] output_DataMem;
+    logic [DATA_WIDTH-1: 0] write_to_reg;
+
+
     regfile regfile(
         .clk(clk),
-        .WD3(output_ALU),
+        .WD3(write_to_reg), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
         .AD3(AD3),
         .AD2(AD2),
         .AD1(AD1),
@@ -45,8 +51,21 @@ module regandalu#(
         .EQ(EQ)
     );
 
+//additional blocks to the initial top module:
+
+//1) data memory (Asynchronous input) :
+
+    datamem datamem(
+        .A(output_ALU),
+        .dout(output_DataMem)
+    );
+
+//2) multiplexer to select where to write in the regfile from
+    mux mux_entry_regfile(
+        .in0(output_ALU),
+        .in1(output_DataMem),
+        .sel(reg_entry), //input taken from the control block
+        .out(write_to_reg)
+    );
 
 endmodule
-
-
-
