@@ -11,3 +11,5 @@ main:
     addi    s0, zero, 2         # s0 = 2
     srl     s1, s2, s0          # s1 = 16 >> 2 = 4     (RAW on s2, s0)
     add     a0, t4, s1          # a0 = 40 + 4 = 44
+
+    
