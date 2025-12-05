@@ -330,13 +330,6 @@ control control (
 	 .mret_en(mret_en)
 );
 
-
-new_insmem Instr_Mem (
-	 .clk(clk),
-    .instr(InstrF),
-    .addr(PCF)
-);
-
 logic actual_taken;
 logic [1:0] PCSrcF;
 
@@ -550,15 +543,27 @@ em_pipeline em_pipeline(
 logic MemWrite_allowed;
 assign MemWrite_allowed = MemWriteM && (ALUResultM[31:28] != 4'h8); // Don't write if address starts with 8 (used for the timer)
 
-new_datamem datamem(
-    .clk(clk),
-    .A(ALUResultM),
-    .dout(ReadDataM),
-    .MemWrite(MemWrite_allowed),
-    .WD(WriteDataM),
-    .SizeWrite(SizeWriteM),
-    .LoadSize(LoadSizeM), //additional output signal
-    .LoadUnsigned(LoadUnsignedM) //additional output signal        
+new_insmem #(
+    .MEM_BYTES (8192),
+    .BASE_ADDR (32'hBFC0_0000)
+) imem (
+    .clk  (clk),
+    .addr (PC),          // your fetch PC
+    .instr(instrF)       // IF-stage instruction bus
+);
+
+new_datamem #(
+    .MEM_BYTES (16384),
+    .BASE_ADDR (32'h0002_0000)
+) dmem (
+    .MemWrite     (MemWrite_allowed),
+    .WD           (WriteDataM),
+    .SizeWrite    (SizeWriteM),
+    .A            (ALUResultM),
+    .LoadSize     (LoadSizeM),
+    .LoadUnsigned (LoadUnsignedM),
+    .clk          (clk),
+    .dout         (ReadDataM)
 );
 
 
@@ -612,3 +617,4 @@ always_comb begin
 end
 
 endmodule
+
