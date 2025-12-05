@@ -54,7 +54,21 @@ module di_pipeline #(
     output logic [PROD_BITS-1 :0] tag_source1I,
     output logic [PROD_BITS-1 :0] tag_source2I,
     output logic [PROD_BITS-1 :0] tag_source3I,
-    output logic [PROD_BITS-1 :0] tag_source4I
+    output logic [PROD_BITS-1 :0] tag_source4I,
+
+    input logic [1:0] ResultSrc1D,
+    input logic [1:0] LoadSize1D,
+    input logic LoadUnsigned1D,
+    input logic [1:0] ResultSrc2D,
+    input logic [1:0] LoadSize2D,
+    input logic LoadUnsigned2D,
+
+    output logic [1:0] ResultSrc1I,
+    output logic [1:0] LoadSize1I,
+    output logic LoadUnsigned1I,
+    output logic [1:0] ResultSrc2I,
+    output logic [1:0] LoadSize2I,
+    output logic LoadUnsigned2I
 );
 
     always_ff @(posedge clk) begin
@@ -85,6 +99,13 @@ module di_pipeline #(
                 tag_source3I <= '0;
                 tag_source4I <= '0;
 
+                ResultSrc1I <= '0;
+                LoadSize1I <= '0;
+                LoadUnsigned1I <= '0;
+                ResultSrc2I <= '0;
+                LoadSize2I <= '0;
+                LoadUnsigned2I <= '0;
+
             end
             
             else if (enable) begin
@@ -113,6 +134,13 @@ module di_pipeline #(
                 tag_source2I <= tag_source2;
                 tag_source3I <= tag_source3;
                 tag_source4I <= tag_source4;
+
+                ResultSrc1I <= ResultSrc1D;
+                LoadSize1I <= LoadSize1D;
+                LoadUnsigned1I <= LoadUnsigned1D;
+                ResultSrc2I <= ResultSrc2D;
+                LoadSize2I <= LoadSize2D;
+                LoadUnsigned2I <= LoadUnsigned2D;
                 
             end
         end

@@ -14,6 +14,7 @@ module topsupoooarith #(
 -Rename/Decode (D)
 -Issuing stage (Register Update Unit) (Iss)
 -Execute stage (2 ALUs working in parrallel) and writing to the Re-Order Buffer (Ex)
+-Memory stage (added for load instructions)
 -Commit stage: we write back to the Register file from the Re-Order Buffer (Comm)
 */
 
@@ -79,8 +80,10 @@ logic ALU1Src1, ALU1Src2, ALU2Src1, ALU2Src2;
 
 
 
+    logic [PROD_BITS-1 :0] mem1_tag, mem2_tag;
 
-
+    logic LoadUnsigned1I, LoadUnsigned2I;
+    logic [1:0] LoadSize1I, LoadSize2I, ResultSrc1I,ResultSrc2I ;
 //we define 3 very important parameters assigned for each register source operand at the rename/decode stage:
 
 logic [DATA_WIDTH-1: 0] value_source1;
@@ -164,9 +167,8 @@ assign value_source2 = source2_selectline ? q2_value : RS2_val;
 logic is_rs3_dependent_onRD1;
 logic is_rs4_dependent_onRD1;
 
-logic [4:0] RD1, RD2;
+logic [4:0] RD1;
 assign RD1 =Instr1D[11:7];
-assign RD2 =Instr2D[11:7];
 
 
 assign is_rs3_dependent_onRD1 = (RD1 == RS3);
@@ -192,9 +194,6 @@ logic instr1_alloc_rob, instr2_alloc_rob;
  //and we also use the same logic for inserting an instruction in the Register Update Unit (we don't want to insert no ops in the issuer)
 assign instr1_alloc_rob = (Instr1D != 0); //high if and only if the instruction fetched is not a no-op
 assign instr2_alloc_rob = (Instr2D != 0); //high if and only if the instruction fetched is not a no-op
-
-logic write_back_rob ;
-assign write_back_rob = 1'b1;
 
 logic commit_en ;
 assign commit_en = 1'b1;
@@ -230,14 +229,21 @@ assign tag_source2 = q2_tag;
         .alloc2_tag(Instr2_tagD), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
 
         //write back from the common data bus at the execute stage:
-        //at this stage we keep the enable signal constantly 1: 
         
-        .wb1_en(write_back_rob),
+        .wb1_en( (ResultSrc1E == 2'b00) ),
         .wb1_tag(ALU1_tagE),
         .wb1_value(ALU1ResultE),       
-        .wb2_en(write_back_rob),
+        .wb2_en((ResultSrc2E == 2'b00)),
         .wb2_tag(ALU2_tagE),
         .wb2_value(ALU2ResultE),  
+
+        //write back from the common data bus at the memory stage:
+        .wb3_en((ResultSrc1M == 2'b01)),
+        .wb3_tag(mem1_tag),
+        .wb3_value(MemoryOut1),       
+        .wb4_en((ResultSrc2M == 2'b01)),
+        .wb4_tag(mem2_tag),
+        .wb4_value(MemoryOut2),  
 
         //commit stage: commiting to the register file :
          //at this stage we keep the enable signal constantly 1: 
@@ -276,9 +282,6 @@ logic [PROD_BITS-1 : 0] latest_tag;
     );
 
 
-logic wb_ruu;
-assign wb_ruu = 1'b1;
-
 
 //Register Update Unit which serves as a queue for the instructions to be issued in the execute stage where they are executed in parrallel with the 2 ALUs
     ruu Register_Update_Unit(
@@ -298,6 +301,9 @@ assign wb_ruu = 1'b1;
         .dispatch1_src2_value(ALU1_op2I),
 
         .dispatch1_ctrl(ALUCtrl1I),
+        .dispatch1_ResultSrc(ResultSrc1I),
+        .dispatch1_LoadSize(LoadSize1I),
+        .dispatch1_LoadUnsigned(LoadUnsigned1I),
 
 //DEPENDING ON THE CIRCUIT FILL OUT THESE TWO OUTPUTS
         //.dispatch1_ok,
@@ -316,18 +322,29 @@ assign wb_ruu = 1'b1;
         .dispatch2_src2_value(ALU2_op2I),
 
         .dispatch2_ctrl(ALUCtrl2I),
+        .dispatch2_ResultSrc(ResultSrc2I),
+        .dispatch2_LoadSize(LoadSize2I),
+        .dispatch2_LoadUnsigned(LoadUnsigned2I),
 
 //DEPENDING ON THE CIRCUIT FILL OUT THESE TWO OUTPUTS
         //.dispatch1_ok,
         //.dispatch1_idx,
 
     //common data bus:
-        .wb1_en(wb_ruu), //since we already made sure that this instruction will not be a no-op we can set it constantly to 1
+        .wb1_en( (ResultSrc1E == 2'b00) ), //if the instruction is a load instruction we don't want to write back
         .wb1_tag(ALU1_tagE),
         .wb1_value(ALU1ResultE),
-        .wb2_en(wb_ruu),
+        .wb2_en( (ResultSrc2E == 2'b00) ),
         .wb2_tag(ALU2_tagE),
         .wb2_value(ALU2ResultE),
+    
+    //we double the number of write back ports because we can also write from memory now:
+        .wb3_en( (ResultSrc1M == 2'b01) ), //if the instruction is an arithmetic instruction we don't want to write back
+        .wb3_tag(mem1_tag),
+        .wb3_value(MemoryOut1),
+        .wb4_en( (ResultSrc2M == 2'b01) ),
+        .wb4_tag(mem2_tag),
+        .wb4_value(MemoryOut2),
 
     //freeing enries when we commit to the register file:
         .free1_en(RegWrite1W),
@@ -340,11 +357,17 @@ assign wb_ruu = 1'b1;
         .exec0_ctrl(ALU1CtrlIss),
         .exec0_src1_value(ALU1_op1Iss),
         .exec0_src2_value(ALU1_op2Iss),
+        .exec0_LoadSize(LoadSize1Iss),
+        .exec0_LoadUnsigned(LoadUnsigned1Iss),
+        .exec0_ResultSrc(ResultSrc1Iss),
 
         .exec1_dest_tag(ALU2_dest_tagIss),
         .exec1_ctrl(ALU2CtrlIss),
         .exec1_src1_value(ALU2_op1Iss),
-        .exec1_src2_value(ALU2_op2Iss)
+        .exec1_src2_value(ALU2_op2Iss),
+        .exec1_LoadSize(LoadSize2Iss),
+        .exec1_LoadUnsigned(LoadUnsigned2Iss),
+        .exec1_ResultSrc(ResultSrc2Iss)
     );
 
 
@@ -442,8 +465,38 @@ assign wb_ruu = 1'b1;
     .tag_source1I(tag_source1I),
     .tag_source2I(tag_source2I),
     .tag_source3I(tag_source3I),
-    .tag_source4I(tag_source4I)
+    .tag_source4I(tag_source4I),
+
+    .ResultSrc1D(ResultSrc1D),
+    .LoadSize1D(LoadSize1D),
+    .LoadUnsigned1D(LoadUnsigned1D),
+    .ResultSrc2D(ResultSrc2D),
+    .LoadSize2D(LoadSize2D),
+    .LoadUnsigned2D(LoadUnsigned2D),
+
+    .ResultSrc1I(ResultSrc1I),
+    .LoadSize1I(LoadSize1I),
+    .LoadUnsigned1I(LoadUnsigned1I),
+    .ResultSrc2I(ResultSrc2I),
+    .LoadSize2I(LoadSize2I),
+    .LoadUnsigned2I(LoadUnsigned2I)
+
     );
+
+
+    logic [1:0] ResultSrc1D;
+    logic [1:0] LoadSize1D;
+    logic LoadUnsigned1D;
+    logic [1:0] ResultSrc2D;
+    logic [1:0] LoadSize2D;
+    logic LoadUnsigned2D;
+
+    logic [1:0] ResultSrc1Iss;
+    logic [1:0] LoadSize1Iss;
+    logic LoadUnsigned1Iss;
+    logic [1:0] ResultSrc2Iss;
+    logic [1:0] LoadSize2Iss;
+    logic LoadUnsigned2Iss;
 
 //2 control blocks:
     sup_control control1 (
@@ -451,7 +504,10 @@ assign wb_ruu = 1'b1;
         .ALUCtrl(ALUCtrl1D), //THIS IS THE ONLY THING THAT IS STORED FROM CONTROL IN THE RUU (SET THE CONTROL LOGIC SEGMENT OF EACH ENTRY TO BE 4BITS)
         .ALUSrc(ALU1Src1),
         .ImmSrc(ImmSrc1D),
-        .ALUsrc2(ALU1Src2)
+        .ALUsrc2(ALU1Src2),
+        .ResultSrc(ResultSrc1D),
+        .LoadSize(LoadSize1D),
+        .LoadUnsigned(LoadUnsigned1D)
     );
 
     sup_control control2 (
@@ -459,7 +515,10 @@ assign wb_ruu = 1'b1;
         .ALUCtrl(ALUCtrl2D), //THIS IS THE ONLY THING THAT IS STORED FROM CONTROL IN THE RUU (SET THE CONTROL LOGIC SEGMENT OF EACH ENTRY TO BE 4BITS)
         .ALUSrc(ALU2Src1),
         .ImmSrc(ImmSrc2D),
-        .ALUsrc2(ALU2Src2)
+        .ALUsrc2(ALU2Src2),
+        .ResultSrc(ResultSrc2D),
+        .LoadSize(LoadSize2D),
+        .LoadUnsigned(LoadUnsigned2D)
     );
 
 
@@ -534,6 +593,8 @@ assign final_validity_source2 = ALU1Src1 ? 1'b1: validity_source2;
 assign final_validity_source3 = ALU2Src2 ? 1'b1 : validity_source3;
 assign final_validity_source4 = ALU2Src1 ? 1'b1 : validity_source4;
 
+logic [DATA_WIDTH-1 :0] tmp_ALU1_op1D;
+logic [DATA_WIDTH-1 :0] tmp_ALU2_op1D;
 
 //Source 1 drives the second operand of the alu and source 2 drives the first operand of the ALU
 
@@ -541,8 +602,11 @@ assign final_validity_source4 = ALU2Src1 ? 1'b1 : validity_source4;
         .in0(value_source1),
         .in1(PCPlus8D -8 ), //we substract by 8 to get the exact value of pc
         .sel(ALU1Src2),
-        .out(ALU1_op1D)
+        .out(tmp_ALU1_op1D)
     );
+
+//if the instruction is a load instruction we want the offset to be added to rs1 before it is stored:
+assign ALU1_op1D = (ResultSrc1D == 2'b00) ? tmp_ALU1_op1D : tmp_ALU1_op1D + ExtImm1D;
 
     mux mux_ALU1_immVSreg( 
         .in0(value_source2),
@@ -556,8 +620,10 @@ assign final_validity_source4 = ALU2Src1 ? 1'b1 : validity_source4;
         .in0(value_source3),
         .in1(PCPlus8D -4),
         .sel(ALU2Src2),
-        .out(ALU2_op1D)
+        .out(tmp_ALU2_op1D)
     );
+
+assign ALU2_op1D = (ResultSrc2D == 2'b00) ? tmp_ALU2_op1D : tmp_ALU2_op1D + ExtImm2D;
 
     mux mux_ALU2_immVSreg( 
         .in0(value_source4),
@@ -592,7 +658,21 @@ ie_pipeline ie_pipeline(
     .ALU1_dest_tagIss(ALU1_dest_tagIss),
     .ALU2_dest_tagIss(ALU2_dest_tagIss),
     .ALU1_dest_tagE(ALU1_tagE),
-    .ALU2_dest_tagE(ALU2_tagE)    
+    .ALU2_dest_tagE(ALU2_tagE),
+
+    .ResultSrc1I(ResultSrc1Iss),
+    .LoadSize1I(LoadSize1Iss),
+    .LoadUnsigned1I(LoadUnsigned1Iss),    
+    .ResultSrc2I(ResultSrc2Iss),
+    .LoadSize2I(LoadSize2Iss),
+    .LoadUnsigned2I(LoadUnsigned2Iss), 
+
+    .ResultSrc1E(ResultSrc1E),
+    .LoadSize1E(LoadSize1E),
+    .LoadUnsigned1E(LoadUnsigned1E),    
+    .ResultSrc2E(ResultSrc2E),
+    .LoadSize2E(LoadSize2E),
+    .LoadUnsigned2E(LoadUnsigned2E)      
 );
 
     sup_alu alu1(
@@ -608,7 +688,72 @@ ie_pipeline ie_pipeline(
         .ALUCtrl(ALU2CtrlE)
     );
 
+logic [DATA_WIDTH-1 :0 ] A1, A2;
+logic [1:0] ResultSrc1E;
+logic [1:0] LoadSize1E;
+logic       LoadUnsigned1E;
 
+logic [1:0] ResultSrc2E;
+logic [1:0] LoadSize2E;
+logic       LoadUnsigned2E;
+
+logic [1:0] ResultSrc1M;
+logic [1:0] LoadSize1M;
+logic       LoadUnsigned1M;
+
+logic [1:0] ResultSrc2M;
+logic [1:0] LoadSize2M;
+logic       LoadUnsigned2M;
+
+logic [DATA_WIDTH-1:0] MemoryOut1, MemoryOut2;
+
+
+//we add the pipeline register seperating the execute and memory stage:
+em_sup_pipeline em_pipeline(
+    //control inputs coming from the previous pipeline register
+    .rst(rst),
+    .clk(clk),
+
+    .ResultSrc1_e(ResultSrc1E),
+    .LoadSize1_e(LoadSize1E), 
+    .LoadUnsigned1_e(LoadUnsigned1E),
+    
+    //control outputs:
+    .ResultSrc1_m(ResultSrc1M),
+    .LoadSize1_m(LoadSize1M), 
+    .LoadUnsigned1_m(LoadUnsigned1M),
+
+    .ResultSrc2_e(ResultSrc2E),
+    .LoadSize2_e(LoadSize2E), 
+    .LoadUnsigned2_e(LoadUnsigned2E),
+    
+    //control outputs:
+    .ResultSrc2_m(ResultSrc2M),
+    .LoadSize2_m(LoadSize2M), 
+    .LoadUnsigned2_m(LoadUnsigned2M),
+
+    .address1_e(ALU1_op1E), //value of RS1
+    .address1_m(A1),
+    .address2_e(ALU2_op1E),
+    .address2_m(A2),
+
+    .ALU1_tagE(ALU1_tagE),
+    .ALU2_tagE(ALU2_tagE),
+    .ALU1_tagM(mem1_tag),
+    .ALU2_tagM(mem2_tag)
+);
+
+sup_datamem datamem(
+    .A1(A1), 
+    .LoadSize1(LoadSize1M), //additional output signal
+    .LoadUnsigned1(LoadUnsigned1M), //additional output signal
+    .dout1(MemoryOut1),
+
+    .A2(A2),
+    .LoadSize2(LoadSize2M), //additional output signal
+    .LoadUnsigned2(LoadUnsigned2M), //additional output signal
+    .dout2(MemoryOut2)
+);
 
 endmodule
 

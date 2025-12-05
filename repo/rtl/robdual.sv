@@ -33,14 +33,23 @@ module robdual #(
   input  logic [4:0]            alloc2_rd,       // destination architectural reg
   input logic [TAG_BITS-1:0]   alloc2_tag,      // ROB index for this instr
 
-  // Writeback interface (2 FUs completion → 2 CDB sources)
+  // Writeback interface from the execute stage
   input  logic                  wb1_en,
-  input  logic [TAG_BITS-1:0]   wb1_tag,        // ROB index of finished instr
-  input  logic [31:0]           wb1_value,      // computed result
+  input  logic [TAG_BITS-1:0]   wb1_tag,      
+  input  logic [31:0]           wb1_value,     
 
   input  logic                  wb2_en,
-  input  logic [TAG_BITS-1:0]   wb2_tag,        // second FU
+  input  logic [TAG_BITS-1:0]   wb2_tag,       
   input  logic [31:0]           wb2_value,
+
+// Writeback interface from the memory stage
+  input  logic                  wb3_en,
+  input  logic [TAG_BITS-1:0]   wb3_tag,        
+  input  logic [31:0]           wb3_value,      
+
+  input  logic                  wb4_en,
+  input  logic [TAG_BITS-1:0]   wb4_tag,        
+  input  logic [31:0]           wb4_value,
 
   // Commit interface (to regfile) up to 2 commits per cycle
   output logic                  commit1_valid,  // head entry ready to commit
@@ -162,16 +171,25 @@ module robdual #(
           full_flag <= 1'b1;
       end
 
-      //Writeback: mark entries ready & store results (2 ports)
+      //Writeback:
       if (wb1_en) begin
         value[wb1_tag] <= wb1_value;
         ready[wb1_tag] <= 1'b1;
       end
 
       if (wb2_en) begin
-        // if wb2_tag == wb1_tag and both enabled, last write wins (values should match)
         value[wb2_tag] <= wb2_value;
         ready[wb2_tag] <= 1'b1;
+      end
+
+      if (wb3_en) begin
+        value[wb3_tag] <= wb3_value;
+        ready[wb3_tag] <= 1'b1;
+      end
+
+      if (wb4_en) begin
+        value[wb4_tag] <= wb4_value;
+        ready[wb4_tag] <= 1'b1;
       end
 
       //Commit: retire up to 2 head entries in-order
