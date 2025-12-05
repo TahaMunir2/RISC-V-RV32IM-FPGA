@@ -85,6 +85,69 @@ TEST_F(CpuTestbench, complexshifts)
     EXPECT_EQ(top_->a0, 44);
 }
 
+TEST_F(CpuTestbench, loadword)
+{
+    setupTest("loadword");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 67305985);
+}
+
+TEST_F(CpuTestbench, multidependency)
+{
+    setupTest("multidependency");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 201984006);
+}
+
+TEST_F(CpuTestbench, loadwaw)
+{
+    setupTest("loadwaw");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 134678022);
+}
+
+TEST_F(CpuTestbench, doubleindependentchains)
+{
+    setupTest("independentchains");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 202050059);
+}
+
+TEST_F(CpuTestbench, loadbyte)
+{
+    setupTest("loadbytes");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 0);
+}
+
+TEST_F(CpuTestbench, loadhalf)
+{
+    setupTest("loadhalf");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 1026);
+}
+
+TEST_F(CpuTestbench, mixedloads)
+{
+    setupTest("mixedloads");
+    setData("reference/testing.mem");
+    initSimulation();
+    runSimulation(CYCLES);
+    EXPECT_EQ(top_->a0, 130);
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
