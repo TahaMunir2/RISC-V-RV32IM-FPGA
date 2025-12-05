@@ -140,7 +140,7 @@ module ruu #(
 
 
     // First ALU: oldest ready, not issued
-    for (int i = 0; i < DEPTH; i++) begin
+    for (int i = 2; i < DEPTH; i++) begin
       if (!issue0_valid &&
           entries[i].valid &&
          !entries[i].issued &&
@@ -152,7 +152,7 @@ module ruu #(
     end
 
     //Second ALU:next oldest ready, different index
-    for (int i = 0; i < DEPTH; i++) begin
+    for (int i = 2; i < DEPTH; i++) begin
       if (!issue1_valid &&
           entries[i].valid &&
          !entries[i].issued &&
@@ -250,39 +250,7 @@ module ruu #(
 
         entries[slot2_idx] <= e2; //we append it to the array
       end
-
-      //Broadcast from the Common Broadcast Bus: 
-      if (wb1_en) begin
-        for (int i = 0; i < DEPTH; i++) begin
-          if (entries[i].valid && !entries[i].src1_valid &&
-              (entries[i].src1_tag == wb1_tag)) begin
-            entries[i].src1_valid <= 1'b1;
-            entries[i].src1_value <= wb1_value;
-          end
-          if (entries[i].valid && !entries[i].src2_valid &&
-              (entries[i].src2_tag == wb1_tag)) begin
-            entries[i].src2_valid <= 1'b1;
-            entries[i].src2_value <= wb1_value;
-          end
-        end
-      end
-
-
-     //Broadcast from the Common Broadcast Bus: 
-      if (wb2_en) begin
-        for (int i = 0; i < DEPTH; i++) begin
-          if (entries[i].valid && !entries[i].src1_valid &&
-              (entries[i].src1_tag == wb2_tag)) begin
-            entries[i].src1_valid <= 1'b1;
-            entries[i].src1_value <= wb2_value;
-          end
-          if (entries[i].valid && !entries[i].src2_valid &&
-              (entries[i].src2_tag == wb2_tag)) begin
-            entries[i].src2_valid <= 1'b1;
-            entries[i].src2_value <= wb2_value;
-          end
-        end
-      end
+    end
 
       //we mark issued entries as issued so they are not re-issued later 
 
@@ -316,10 +284,44 @@ module ruu #(
           end
         end
       end
+  end
+
+    //writing back needs to happen on the negative edge so that we don't incur a delay when we have a data dependency
+    always_ff @(negedge clk) begin
+      //Broadcast from the Common Broadcast Bus: 
+      if (wb1_en) begin
+        for (int i = 0; i < DEPTH; i++) begin
+          if (entries[i].valid && !entries[i].src1_valid &&
+              (entries[i].src1_tag == wb1_tag)) begin
+            entries[i].src1_valid <= 1'b1;
+            entries[i].src1_value <= wb1_value;
+          end
+          if (entries[i].valid && !entries[i].src2_valid &&
+              (entries[i].src2_tag == wb1_tag)) begin
+            entries[i].src2_valid <= 1'b1;
+            entries[i].src2_value <= wb1_value;
+          end
+        end
+      end
+
+
+     //Broadcast from the Common Broadcast Bus: 
+      if (wb2_en) begin
+        for (int i = 0; i < DEPTH; i++) begin
+          if (entries[i].valid && !entries[i].src1_valid &&
+              (entries[i].src1_tag == wb2_tag)) begin
+            entries[i].src1_valid <= 1'b1;
+            entries[i].src1_value <= wb2_value;
+          end
+          if (entries[i].valid && !entries[i].src2_valid &&
+              (entries[i].src2_tag == wb2_tag)) begin
+            entries[i].src2_valid <= 1'b1;
+            entries[i].src2_value <= wb2_value;
+          end
+        end
+      end
 
     end
-
-  end
 
 endmodule
 

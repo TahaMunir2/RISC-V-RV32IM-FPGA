@@ -26,14 +26,12 @@ module robdual #(
   // Allocate interface (rename stage) : INSTRUCTION 1
   input  logic                  alloc1_en,       // request a new ROB entry
   input  logic [4:0]            alloc1_rd,       // destination architectural reg
-  output logic                  alloc1_ok,       // 1 if allocation succeeded
-  output logic [TAG_BITS-1:0]   alloc1_tag,      // ROB index for this instr
+  input logic [TAG_BITS-1:0]   alloc1_tag,      // ROB index for this instr
 
   // Allocate interface (rename stage):INSTRUCTION 2
   input  logic                  alloc2_en,       // request a new ROB entry
   input  logic [4:0]            alloc2_rd,       // destination architectural reg
-  output logic                  alloc2_ok,       // 1 if allocation succeeded
-  output logic [TAG_BITS-1:0]   alloc2_tag,      // ROB index for this instr
+  input logic [TAG_BITS-1:0]   alloc2_tag,      // ROB index for this instr
 
   // Writeback interface (2 FUs completion → 2 CDB sources)
   input  logic                  wb1_en,
@@ -60,9 +58,9 @@ module robdual #(
 );
 
   // ROB storage: exactly 3 fields per entry
-  logic [4:0]   dest_reg   [DEPTH];   // destination architectural register
-  logic [31:0]  value      [DEPTH];   // result value
-  logic         ready      [DEPTH];   // 1 = finished, ready to commit
+   logic [4:0]   dest_reg   [DEPTH] /* verilator public_flat_rw */ ;    // destination architectural register
+    logic [31:0]  value      [DEPTH] /* verilator public_flat_rw */ ;   // result value
+   logic         ready      [DEPTH] /* verilator public_flat_rw */ ;    // 1 = finished, ready to commit
 
   // pointers
   logic [TAG_BITS-1:0] head;  // oldest in-flight instruction
@@ -89,10 +87,6 @@ module robdual #(
   // basic empty/full
   assign rob_empty = (!full_flag) && (head == tail);
   assign rob_full  = full_flag;
-
-  //assign alloc_ok  = !rob_full;
-  assign alloc1_tag = tail;
-  assign alloc2_tag = (alloc1_en && alloc1_ok) ? (tail + 1'b1) : tail;
 
   //Commit combinational: head and head+1
   logic [TAG_BITS-1:0] head_next;
@@ -122,8 +116,8 @@ module robdual #(
   //Sequential logic
   always_ff @(posedge clk) begin
     if (rst) begin
-      head      <= '0;
-      tail      <= '0;
+      head      <= 6'b000001;
+      tail      <= 6'b000001;
       full_flag <= 1'b0;
 
       for (int i = 0; i < DEPTH; i++) begin
@@ -134,14 +128,14 @@ module robdual #(
 
     end else begin
       //Allocation at tail - supports 0, 1, or 2 allocations per cycle
-      if (alloc1_en && alloc1_ok) begin
-        dest_reg[tail] <= alloc1_rd;   // store destination register
-        ready[tail]    <= 1'b0;        // not finished yet
+      if (alloc1_en) begin
+        dest_reg[alloc1_tag] <= alloc1_rd;   // store destination register
+        ready[alloc1_tag ]    <= 1'b0;        // not finished yet
 
-        if (alloc2_en && alloc2_ok) begin
+        if (alloc2_en) begin
           // Allocate two entries: tail and tail+1
-          dest_reg[tail + 1'b1] <= alloc2_rd;
-          ready[tail + 1'b1]    <= 1'b0;
+          dest_reg[alloc2_tag] <= alloc2_rd;
+          ready[alloc2_tag]    <= 1'b0;
 
           // advance tail by 2
           tail <= tail + 2;
@@ -157,10 +151,10 @@ module robdual #(
           if ((tail + 1'b1) == head)
             full_flag <= 1'b1;
         end
-      end else if (alloc2_en && alloc2_ok) begin
+      end else if (alloc2_en) begin
         // Only second allocation (first not enabled but second is)
-        dest_reg[tail] <= alloc2_rd;
-        ready[tail]    <= 1'b0;
+        dest_reg[alloc2_tag] <= alloc2_rd;
+        ready[alloc2_tag ]    <= 1'b0;
 
         tail <= tail + 1'b1;
 

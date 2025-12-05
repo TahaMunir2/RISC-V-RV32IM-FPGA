@@ -23,7 +23,6 @@ logic [PROD_BITS-1:0] tmp_q3_tag, tmp_q4_tag;
 logic q1_ready, q2_ready, q3_ready, q4_ready;
 logic [31:0] q1_value, q2_value, q3_value, q4_value;
 logic tmp_validity_source3, tmp_validity_source4;
-logic successful_alloc1, successful_alloc2;
 logic [PROD_BITS-1:0] Instr1_tagD, Instr2_tagD,Instr1_tagI, Instr2_tagI;
 logic [PROD_BITS-1:0] commit1_tag, commit2_tag;
 logic [PROD_BITS-1:0] ALU1_tagE, ALU2_tagE;
@@ -171,15 +170,15 @@ assign RD2 =Instr2D[11:7];
 
 
 assign is_rs3_dependent_onRD1 = (RD1 == RS3);
-assign is_rs4_dependent_onRD1 = (RD2 == RS4);
+assign is_rs4_dependent_onRD1 = (RD1 == RS4);
 
-assign value_source3 = is_rs3_dependent_onRD1 ? (source3_selectline ? q3_value : RS3_val) : 32'b0; //If it is dependent we don't care about the value but we care about the tag of instr1
-assign validity_source3 = is_rs3_dependent_onRD1 ? tmp_validity_source3 : 1'b0;
-assign tag_source3 = is_rs3_dependent_onRD1 ? tmp_q3_tag : latest_tag; //In the case it is dependent I assign the latest tag which is the tag that is going to be assigned to instr1
+assign value_source3 = is_rs3_dependent_onRD1 ?  32'b0 : (source3_selectline ? q3_value : RS3_val); //If it is dependent we don't care about the value but we care about the tag of instr1
+assign validity_source3 = is_rs3_dependent_onRD1 ? 1'b0 : tmp_validity_source3 ;
+assign tag_source3 = is_rs3_dependent_onRD1 ? (latest_tag - 1) : tmp_q3_tag; //In the case it is dependent I assign the latest tag which is the tag that is going to be assigned to instr1
 
-assign value_source4 = is_rs4_dependent_onRD1 ? (source4_selectline ? q4_value : RS4_val) : 32'b0; //If it is dependent we don't care about the value but we care about the tag of instr1
-assign validity_source4 = is_rs4_dependent_onRD1 ? tmp_validity_source4 : 1'b0;
-assign tag_source4 = is_rs4_dependent_onRD1 ? tmp_q4_tag : latest_tag; //In the case it is dependent I assign the latest tag which is the tag that is going to be assigned to instr1
+assign value_source4 = is_rs4_dependent_onRD1 ?  32'b0 : (source4_selectline ? q4_value : RS4_val); //If it is dependent we don't care about the value but we care about the tag of instr1
+assign validity_source4 = is_rs4_dependent_onRD1 ?  1'b0 : tmp_validity_source4;
+assign tag_source4 = is_rs4_dependent_onRD1 ? (latest_tag - 1) : tmp_q4_tag ; //In the case it is dependent I assign the latest tag which is the tag that is going to be assigned to instr1
 
 
 assign q3_tag = tag_source3;
@@ -203,7 +202,6 @@ assign commit_en = 1'b1;
 assign tag_source1 = q1_tag;
 assign tag_source2 = q2_tag;
 
-logic [PROD_BITS-1:0] alloc1_tag, alloc2_tag;
 
     robdual robdual(
         .clk(clk),
@@ -226,12 +224,10 @@ logic [PROD_BITS-1:0] alloc1_tag, alloc2_tag;
         //destination registers and allocation of their specific order in the re-order buffer
         .alloc1_en(instr1_alloc_rob),
         .alloc1_rd(Instr1D[11:7]),
-        .alloc1_ok(successful_alloc1),
-        .alloc1_tag(alloc1_tag), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
+        .alloc1_tag(Instr1_tagD), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
         .alloc2_en(instr2_alloc_rob),
         .alloc2_rd(Instr2D[11:7]),
-        .alloc2_ok(successful_alloc2),
-        .alloc2_tag(alloc2_tag), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
+        .alloc2_tag(Instr2_tagD), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
 
         //write back from the common data bus at the execute stage:
         //at this stage we keep the enable signal constantly 1: 
@@ -327,10 +323,10 @@ assign wb_ruu = 1'b1;
 
     //common data bus:
         .wb1_en(wb_ruu), //since we already made sure that this instruction will not be a no-op we can set it constantly to 1
-        .wb1_tag(ALU1_dest_tagIss),
+        .wb1_tag(ALU1_tagE),
         .wb1_value(ALU1ResultE),
         .wb2_en(wb_ruu),
-        .wb2_tag(ALU1_dest_tagIss),
+        .wb2_tag(ALU2_tagE),
         .wb2_value(ALU2ResultE),
 
     //freeing enries when we commit to the register file:
@@ -427,10 +423,10 @@ assign wb_ruu = 1'b1;
     .instr2_tag_i(Instr2_tagI),
 
     //propagating the validity of the sources:
-    .validity_source1(validity_source1),
-    .validity_source2(validity_source2),
-    .validity_source3(validity_source3),
-    .validity_source4(validity_source4),
+    .validity_source1(final_validity_source1),
+    .validity_source2(final_validity_source2),
+    .validity_source3(final_validity_source3),
+    .validity_source4(final_validity_source4),
 
     .validity_source1I(validity_source1I),
     .validity_source2I(validity_source2I),
@@ -531,6 +527,13 @@ sup_regfile regfile(
         .A0(a0)
     );
 
+logic final_validity_source1, final_validity_source2, final_validity_source3, final_validity_source4;
+
+assign final_validity_source1 = ALU1Src2 ? 1'b1: validity_source1;
+assign final_validity_source2 = ALU1Src1 ? 1'b1: validity_source2;
+assign final_validity_source3 = ALU2Src2 ? 1'b1 : validity_source3;
+assign final_validity_source4 = ALU2Src1 ? 1'b1 : validity_source4;
+
 
 //Source 1 drives the second operand of the alu and source 2 drives the first operand of the ALU
 
@@ -563,37 +566,6 @@ sup_regfile regfile(
         .out(ALU2_op2D)
     );
 
-
-/*
-//Decode-Issuing pipeline
-di_pipeline Dec_Iss_pipeline(
-    .clk(clk),
-    .rst(rst),
-    .enable(cons_en_pip),
-    .pc_save_d(pc_save_d),
-    .pc_d(pc_d),
-    .ALU1_op1D(ALU1_op1D),
-    .ALU1_op2D(ALU1_op2D),
-    .ALU2_op1D(ALU2_op1D),
-    .ALU2_op2D(ALU2_op2D),
-    .ALU1_op1I(ALU1_op1I),
-    .ALU1_op2I(ALU1_op2I),
-    .ALU2_op1I(ALU2_op1I),
-    .ALU2_op2I(ALU2_op2I),
-    .pc_save_d(PCPlus8D),
-    .pc_d(PCD),
-    .pc_save_i(PCPlus8I),
-    .pc_i(PCI),
-    .ALUCtrl1_d(ALUCtrl1D),
-    .ALUCtrl2_d(ALUCtrl2D),
-    .ALUCtrl1_i(ALUCtrl1I),
-    .ALUCtrl2_i(ALUCtrl2I), 
-    .instr1_tag_d(dest1_tagD),
-    .instr2_tag_d(dest2_tagD),
-    .instr1_tag_i(dest1_tagI),
-    .instr2_tag_i(dest2_tagI)
-);
-*/
 
 
 ie_pipeline ie_pipeline(

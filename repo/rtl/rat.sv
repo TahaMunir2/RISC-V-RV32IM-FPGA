@@ -5,14 +5,12 @@ module rat #(
   input  logic                 clk,
   input  logic                 rst,
 
-  // Destination registers of 2 fetched instructions (in-order)
   input  logic [4:0] inst1_rd,
   output logic [PROD_BITS-1:0] inst1_prod_id,
 
   input  logic [4:0]           inst2_rd,
   output logic [PROD_BITS-1:0] inst2_prod_id,
 
-  // Query source producer for operands
   input  logic [4:0]           rs1,
   output logic [PROD_BITS-1:0] rs1_prod_id,
   input  logic [4:0]           rs2,
@@ -22,21 +20,18 @@ module rat #(
   input  logic [4:0]           rs4,
   output logic [PROD_BITS-1:0] rs4_prod_id,
 
-  //latest tag
   output logic [PROD_BITS-1:0] latest_tag
 );
 
-  // Each RAT entry = last producer ID for that architectural register
   logic [PROD_BITS-1:0] rat_table [NREGS];
-
-
-  // global producer counter
   logic [PROD_BITS-1:0] producer_counter;
 
-    assign latest_tag = producer_counter -1;
+  // Combinational: compute the two tags for this cycle
+  assign inst1_prod_id = producer_counter - 6'b000001;
+  assign inst2_prod_id = producer_counter;
+  assign latest_tag = producer_counter;  // or producer_counter + 1 depending on your needs
 
-
-  // read sources
+  // Read sources (combinational)
   assign rs1_prod_id = rat_table[rs1];
   assign rs2_prod_id = rat_table[rs2];
   assign rs3_prod_id = rat_table[rs3];
@@ -44,27 +39,24 @@ module rat #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      producer_counter <= '0;
+      producer_counter <= 6'b000000;
       for (int i = 0; i < NREGS; i++) begin
         rat_table[i] <= '0;
       end
-      inst1_prod_id <= '0;
-      inst2_prod_id <= '0;
 
     end else begin
-      // instruction 1 uses current counter
-      inst1_prod_id <= producer_counter;
-      if (inst1_rd != 5'd0) begin  // never rename x0
-        rat_table[inst1_rd] <= producer_counter;
+      // Update RAT for instruction 1
+      if (inst1_rd != 5'd0) begin
+        rat_table[inst1_rd] <= producer_counter - 6'b000001;
       end
-      producer_counter <= producer_counter + 1;
 
-      // instruction 2 uses next value
-      inst2_prod_id <= producer_counter;
+      // Update RAT for instruction 2
       if (inst2_rd != 5'd0) begin
         rat_table[inst2_rd] <= producer_counter;
       end
-      producer_counter <= producer_counter + 1;
+
+      // Increment counter by 2 (for 2 instructions)
+      producer_counter <= producer_counter + 2;
     end
   end
 
