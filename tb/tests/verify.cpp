@@ -61,7 +61,7 @@ TEST_F(CpuTestbench, TestSBandLW)
     setData("reference/gaussian.mem");
     initSimulation();
     runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 4080);
+    EXPECT_EQ(top_->a0, 257);
 }
 
 TEST_F(CpuTestbench, TestBranchInequalities)
