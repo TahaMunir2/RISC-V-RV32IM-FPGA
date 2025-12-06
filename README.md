@@ -34,79 +34,46 @@ The initial control unit supported the following 9 instructions:
 
 The extended control unit now covers **all 37 base RV32I instructions**, grouped by type.
 
-#### U-Type Instructions
+# | Mnemonic | Type | Opcode (binary) | funct3 | funct7   | Brief description                            |
+|---|----------|------|-----------------|--------|----------|----------------------------------------------|
+| 1 | `LUI`    | U    | `0110111`       | –      | –        | Load upper 20 bits of immediate into `rd`.   |
+| 2 | `AUIPC`  | U    | `0010111`       | –      | –        | `rd = PC + (imm << 12)`.                     |
+| 3 | `JAL`    | J    | `1101111`       | –      | –        | PC-relative jump, write return PC to `rd`.   |
+| 4 | `JALR`   | I/J* | `1100111`       | `000`* | –        | Jump to `rs1 + imm`, write return PC to `rd`.|
+| 5 | `BEQ`    | B    | `1100011`       | `000`  | –        | Branch if `rs1 == rs2`.                      |
+| 6 | `BNE`    | B    | `1100011`       | `001`  | –        | Branch if `rs1 != rs2`.                      |
+| 7 | `BLT`    | B    | `1100011`       | `100`  | –        | Branch if `rs1 < rs2` (signed).              |
+| 8 | `BGE`    | B    | `1100011`       | `101`  | –        | Branch if `rs1 >= rs2` (signed).             |
+| 9 | `BLTU`   | B    | `1100011`       | `110`  | –        | Branch if `rs1 < rs2` (unsigned).            |
+|10 | `BGEU`   | B    | `1100011`       | `111`  | –        | Branch if `rs1 >= rs2` (unsigned).           |
+|11 | `LB`     | I    | `0000011`       | `000`  | –        | Load sign-extended byte from memory.         |
+|12 | `LH`     | I    | `0000011`       | `001`  | –        | Load sign-extended half-word from memory.    |
+|13 | `LW`     | I    | `0000011`       | `010`  | –        | Load 32-bit word from memory.                |
+|14 | `LBU`    | I    | `0000011`       | `100`  | –        | Load zero-extended byte from memory.         |
+|15 | `LHU`    | I    | `0000011`       | `101`  | –        | Load zero-extended half-word from memory.    |
+|16 | `SB`     | S    | `0100011`       | `000`  | –        | Store byte to memory.                        |
+|17 | `SH`     | S    | `0100011`       | `001`  | –        | Store half-word to memory.                   |
+|18 | `SW`     | S    | `0100011`       | `010`  | –        | Store 32-bit word to memory.                 |
+|19 | `ADDI`   | I    | `0010011`       | `000`  | –        | Add sign-extended immediate to `rs1`.        |
+|20 | `SLTI`   | I    | `0010011`       | `010`  | –        | Set `rd = 1` if `rs1 < imm` (signed).        |
+|21 | `SLTIU`  | I    | `0010011`       | `011`  | –        | Set `rd = 1` if `rs1 < imm` (unsigned).      |
+|22 | `XORI`   | I    | `0010011`       | `100`  | –        | Bitwise XOR of `rs1` and immediate.          |
+|23 | `ORI`    | I    | `0010011`       | `110`  | –        | Bitwise OR of `rs1` and immediate.           |
+|24 | `ANDI`   | I    | `0010011`       | `111`  | –        | Bitwise AND of `rs1` and immediate.          |
+|25 | `SLLI`   | I    | `0010011`       | `001`  | –        | Logical left shift by immediate shamt.       |
+|26 | `SRLI`   | I    | `0010011`       | `101`  | –        | Logical right shift by immediate shamt.      |
+|27 | `SRAI`   | I    | `0010011`       | `101`  | –        | Arithmetic right shift by immediate shamt.   |
+|28 | `ADD`    | R    | `0110011`       | `000`  | `0000000`| Register-register add.                       |
+|29 | `SUB`    | R    | `0110011`       | `000`  | `0100000`| Register-register subtract.                  |
+|30 | `SLL`    | R    | `0110011`       | `001`  | `0000000`| Logical left shift by `rs2[4:0]`.           |
+|31 | `SLT`    | R    | `0110011`       | `010`  | `0000000`| Set `rd = 1` if `rs1 < rs2` (signed).        |
+|32 | `SLTU`   | R    | `0110011`       | `011`  | `0000000`| Set `rd = 1` if `rs1 < rs2` (unsigned).      |
+|33 | `XOR`    | R    | `0110011`       | `100`  | `0000000`| Bitwise XOR of `rs1` and `rs2`.              |
+|34 | `SRL`    | R    | `0110011`       | `101`  | `0000000`| Logical right shift by `rs2[4:0]`.          |
+|35 | `SRA`    | R    | `0110011`       | `101`  | `0100000`| Arithmetic right shift by `rs2[4:0]`.       |
+|36 | `OR`     | R    | `0110011`       | `110`  | `0000000`| Bitwise OR of `rs1` and `rs2`.               |
+|37 | `AND`    | R    | `0110011`       | `111`  | `0000000`| Bitwise AND of `rs1` and `rs2`.              |
 
-| # | Mnemonic | Type | Opcode   | funct3 | funct7/imm[11:5] | Brief description                                    |
-|---|----------|------|----------|--------|-------------------|------------------------------------------------------|
-| 1 | `LUI`    | U    | `0110111`| –      | –                 | Load upper 20 bits of immediate into `rd`.           |
-| 2 | `AUIPC`  | U    | `0010111`| –      | –                 | `rd = PC + (imm << 12)` (PC-relative address).       |
-
-#### J-Type Instructions
-
-| # | Mnemonic | Type | Opcode   | funct3 | funct7 | Brief description                                      |
-|---|----------|------|----------|--------|--------|--------------------------------------------------------|
-| 3 | `JAL`    | J    | `1101111`| –      | –      | PC-relative jump, `rd = PC + 4`.                       |
-| 4 | `JALR`   | I/J  | `1100111`| `000`  | –      | Jump to `rs1 + imm`, `rd = PC + 4` (LSB of target = 0).|
-
-#### B-Type (Branch) Instructions
-
-| # | Mnemonic | Type | Opcode   | funct3 | Condition used      | Brief description                              |
-|---|----------|------|----------|--------|---------------------|-----------------------------------------------|
-| 5 | `BEQ`    | B    | `1100011`| `000`  | `EQ`                | Branch if `rs1 == rs2`.                       |
-| 6 | `BNE`    | B    | `1100011`| `001`  | `!EQ`               | Branch if `rs1 != rs2`.                       |
-| 7 | `BLT`    | B    | `1100011`| `100`  | `LT` (signed)       | Branch if `rs1 < rs2` (signed).               |
-| 8 | `BGE`    | B    | `1100011`| `101`  | `!LT` (signed)      | Branch if `rs1 >= rs2` (signed).              |
-| 9 | `BLTU`   | B    | `1100011`| `110`  | `LTU` (unsigned)    | Branch if `rs1 < rs2` (unsigned).             |
-| 10| `BGEU`   | B    | `1100011`| `111`  | `!LTU` (unsigned)   | Branch if `rs1 >= rs2` (unsigned).            |
-
-#### I-Type Load Instructions
-
-| #  | Mnemonic | Type | Opcode   | funct3 | Brief description                                   |
-|----|----------|------|----------|--------|-----------------------------------------------------|
-| 11 | `LB`     | I    | `0000011`| `000`  | Load sign-extended byte from memory.               |
-| 12 | `LH`     | I    | `0000011`| `001`  | Load sign-extended half-word from memory.          |
-| 13 | `LW`     | I    | `0000011`| `010`  | Load 32-bit word from memory.                      |
-| 14 | `LBU`    | I    | `0000011`| `100`  | Load zero-extended byte from memory.               |
-| 15 | `LHU`    | I    | `0000011`| `101`  | Load zero-extended half-word from memory.          |
-
-#### S-Type Store Instructions
-
-| #  | Mnemonic | Type | Opcode   | funct3 | Brief description                  |
-|----|----------|------|----------|--------|------------------------------------|
-| 16 | `SB`     | S    | `0100011`| `000`  | Store byte to memory.             |
-| 17 | `SH`     | S    | `0100011`| `001`  | Store half-word to memory.        |
-| 18 | `SW`     | S    | `0100011`| `010`  | Store 32-bit word to memory.      |
-
-#### I-Type ALU / Immediate Instructions (`OP-IMM`)
-
-| #  | Mnemonic | Type | Opcode   | funct3 | imm[11:5] | Brief description                          |
-|----|----------|------|----------|--------|-----------|--------------------------------------------|
-| 19 | `ADDI`   | I    | `0010011`| `000`  | any       | `rd = rs1 + imm`.                          |
-| 20 | `SLTI`   | I    | `0010011`| `010`  | any       | `rd = (rs1 < imm)` (signed).               |
-| 21 | `SLTIU`  | I    | `0010011`| `011`  | any       | `rd = (rs1 < imm)` (unsigned).             |
-| 22 | `XORI`   | I    | `0010011`| `100`  | any       | `rd = rs1 ^ imm`.                          |
-| 23 | `ORI`    | I    | `0010011`| `110`  | any       | `rd = rs1 \| imm`.                         |
-| 24 | `ANDI`   | I    | `0010011`| `111`  | any       | `rd = rs1 & imm`.                          |
-| 25 | `SLLI`   | I    | `0010011`| `001`  | `0000000` | Logical left shift by shamt (imm[4:0]).    |
-| 26 | `SRLI`   | I    | `0010011`| `101`  | `0000000` | Logical right shift by shamt.              |
-| 27 | `SRAI`   | I    | `0010011`| `101`  | `0100000` | Arithmetic right shift by shamt.           |
-
-#### R-Type ALU Instructions (`OP`)
-
-| #  | Mnemonic | Type | Opcode   | funct3 | funct7   | Brief description                            |
-|----|----------|------|----------|--------|----------|----------------------------------------------|
-| 28 | `ADD`    | R    | `0110011`| `000`  | `0000000`| `rd = rs1 + rs2`.                            |
-| 29 | `SUB`    | R    | `0110011`| `000`  | `0100000`| `rd = rs1 - rs2`.                            |
-| 30 | `SLL`    | R    | `0110011`| `001`  | `0000000`| Logical left shift by `rs2[4:0]`.           |
-| 31 | `SLT`    | R    | `0110011`| `010`  | `0000000`| `rd = (rs1 < rs2)` (signed).                 |
-| 32 | `SLTU`   | R    | `0110011`| `011`  | `0000000`| `rd = (rs1 < rs2)` (unsigned).               |
-| 33 | `XOR`    | R    | `0110011`| `100`  | `0000000`| Bitwise XOR.                                  |
-| 34 | `SRL`    | R    | `0110011`| `101`  | `0000000`| Logical right shift by `rs2[4:0]`.          |
-| 35 | `SRA`    | R    | `0110011`| `101`  | `0100000`| Arithmetic right shift by `rs2[4:0]`.       |
-| 36 | `OR`     | R    | `0110011`| `110`  | `0000000`| Bitwise OR.                                   |
-| 37 | `AND`    | R    | `0110011`| `111`  | `0000000`| Bitwise AND.                                  |
-
----
 
 ## Control Unit Evolution: From 9 to 37 Instructions
 
