@@ -98,3 +98,191 @@ To go from the reduced 9-instruction core to the full 37-instruction RV32I imple
   Signals such as `RegWrite`, `ImmSrc`, `PCSrc`, `ResultSrc`, and `MemWrite` retain the same roles as in the 9-instruction version, so the existing datapath modules (register file, sign-extension unit, PC logic, and data memory) can be reused with only minimal, local changes .
 
 Together, these changes transform the original “minimal subset” controller into a complete **RV32I-compliant control unit**, while maintaining the same overall architectural style introduced in the previous section.
+
+# Datapath Modifications: 9 to 37 Instructions
+
+This section describes the changes made to the datapath (`regandalu` module) to extend the RISC-V implementation from 9 instructions to the full RV32I base instruction set (37 instructions).
+
+## Overview of Changes
+
+| Component | 9-Instruction Version | 37-Instruction Version |
+|-----------|----------------------|------------------------|
+| ALU Control Width | 3 bits (`ALUctrl`) | 4 bits (`ALUCtrl`) |
+| ALU Operand 1 Source | Direct from register file | Multiplexer (register or PC) |
+| Memory Write Size | 1 bit (`ByteWrite`) | 2 bits (`SizeWrite`) |
+| Load Size Control | Not present | 2 bits (`LoadSize`) |
+| Load Sign Extension | Not present | 1 bit (`LoadUnsigned`) |
+| Branch Comparison | `EQ` only | `EQ`, `LT`, `LTU` |
+
+---
+
+## New Multiplexer: PC vs Register (`mux_pcVSreg`)
+
+### Design Choice
+
+A key addition is the multiplexer selecting between `rs1` (register source 1) and `pc_save` (program counter) for ALU operand 1.
+This design exploits an important observation about the RISC-V ISA:
+
+**The PC is never paired with a register operand, it is always paired with an immediate.**
+
+Instruction that use PC as an operand in the ALU (JAL uses PC but not as an operand in the ALU) :
+- `AUIPC`: Computes `PC + U-immediate`
+
+Since these instructions always use an immediate for the second operand, we can safely multiplex between:
+- `in0`: Register value (`regOp`) for R-type, I-type, S-type, B-type instructions
+- `in1`: Program counter (`pc_save`) for `AUIPC`
+
+The select signal `ALUsrc2` is set by the control unit:
+- `ALUsrc2 = 0`: Use register (`rs1`)
+- `ALUsrc2 = 1`: Use PC
+
+### Implementation
+
+```systemverilog
+mux mux_pcVSreg(
+    .in0(regOp),      // Register source 1
+    .in1(pc_save),    // Program counter
+    .sel(ALUsrc2),    // Control signal from control unit
+    .out(ALUop1)      // To ALU operand 1
+);
+```
+
+---
+
+## Extended ALU Control
+
+The ALU control signal was expanded from 3 bits to 4 bits to support additional operations.
+
+| Signal | 9-Instruction | 37-Instruction |
+|--------|---------------|----------------|
+| Width | `[2:0] ALUctrl` | `[3:0] ALUCtrl` |
+| Operations | ADD, SUB, AND, OR, SLT | ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU, LUI passthrough, AUIPC |
+
+### ALU Control Encoding (4-bit)
+
+| ALUCtrl | Operation |
+|---------|-----------|
+| `0000` | ADD |
+| `0001` | SUB |
+| `0010` | AND |
+| `0011` | OR |
+| `0100` | XOR |
+| `0101` | SLL (Shift Left Logical) |
+| `0110` | SRL (Shift Right Logical) |
+| `0111` | SRA (Shift Right Arithmetic) |
+| `1000` | SLT (Set Less Than, signed) |
+| `1001` | SLTU (Set Less Than, unsigned) |
+| `1010` | LUI passthrough (output operand 2) |
+| `1011` | AUIPC (ADD with PC) |
+
+---
+
+## Extended Branch Comparison Signals
+
+The 9-instruction version only supported `BEQ` with a single equality flag. The full implementation adds signed and unsigned comparison outputs.
+
+```systemverilog
+// 9-Instruction Version
+output logic EQ
+
+// 37-Instruction Version
+output logic EQ,   // Equal (for BEQ, BNE)
+output logic LT,   // Less Than, signed (for BLT, BGE)
+output logic LTU   // Less Than, unsigned (for BLTU, BGEU)
+```
+
+### Branch Instruction Support
+
+| Branch | Condition |
+|--------|-----------|
+| `BEQ` | `EQ == 1` |
+| `BNE` | `EQ == 0` |
+| `BLT` | `LT == 1` |
+| `BGE` | `LT == 0` |
+| `BLTU` | `LTU == 1` |
+| `BGEU` | `LTU == 0` |
+
+---
+
+## Memory Interface Extensions
+
+### Store Operations
+
+The `ByteWrite` signal was replaced with a 2-bit `SizeWrite` signal to support all store widths.
+
+| SizeWrite | Operation | Bytes Written |
+|-----------|-----------|---------------|
+| `2'b00` | `SB` (Store Byte) | 1 |
+| `2'b01` | `SH` (Store Halfword) | 2 |
+| `2'b10` | `SW` (Store Word) | 4 |
+
+### Load Operations
+
+Two new signals were added to support variable-width loads with sign/zero extension.
+
+| Signal | Purpose |
+|--------|---------|
+| `LoadSize[1:0]` | Specifies load width (byte, halfword, word) |
+| `LoadUnsigned` | Selects zero-extension (1) or sign-extension (0) |
+
+| LoadSize | LoadUnsigned | Operation |
+|----------|--------------|-----------|
+| `2'b00` | `0` | `LB` (Load Byte, sign-extend) |
+| `2'b00` | `1` | `LBU` (Load Byte, zero-extend) |
+| `2'b01` | `0` | `LH` (Load Halfword, sign-extend) |
+| `2'b01` | `1` | `LHU` (Load Halfword, zero-extend) |
+| `2'b10` | `X` | `LW` (Load Word) |
+
+---
+
+## Updated Module Interface
+
+### 9-Instruction Version
+
+```systemverilog
+module regandalu #(DATA_WIDTH=32)(
+    input  logic                    clk,
+    input  logic                    WE3,
+    input  logic                    MemWrite,
+    input  logic                    ByteWrite,
+    input  logic [DATA_WIDTH-1:0]   pc_save,
+    input  logic [4:0]              AD3,
+    input  logic [4:0]              AD2,
+    input  logic [4:0]              AD1,
+    input  logic [2:0]              ALUctrl,
+    input  logic                    ALUsrc,
+    input  logic [DATA_WIDTH-1:0]   ImmOp,
+    input  logic [1:0]              ResultSrc,
+    output logic                    EQ,
+    output logic [DATA_WIDTH-1:0]   A0,
+    output logic [DATA_WIDTH-1:0]   ALU_OUT
+);
+```
+
+### 37-Instruction Version
+
+```systemverilog
+module regandalu #(DATA_WIDTH=32)(
+    input  logic                    clk,
+    input  logic                    trigger,
+    input  logic                    WE3,
+    input  logic                    MemWrite,
+    input  logic [1:0]              SizeWrite,      // Changed from ByteWrite
+    input  logic [1:0]              LoadSize,       //NEW
+    input  logic                    LoadUnsigned,   //NEW
+    input  logic [DATA_WIDTH-1:0]   pc_save,
+    input  logic [4:0]              AD3,
+    input  logic [4:0]              AD2,
+    input  logic [4:0]              AD1,
+    input  logic [3:0]              ALUCtrl,        // Expanded to 4 bits
+    input  logic                    ALUsrc,
+    input  logic [DATA_WIDTH-1:0]   ImmOp,
+    input  logic [1:0]              ResultSrc,
+    input  logic                    ALUsrc2,        // NEW:PC vs Register select
+    output logic                    EQ,
+    output logic                    LT,             //NEW
+    output logic                    LTU,            // NEW
+    output logic [DATA_WIDTH-1:0]   A0,
+    output logic [DATA_WIDTH-1:0]   ALU_OUT
+);
+```
