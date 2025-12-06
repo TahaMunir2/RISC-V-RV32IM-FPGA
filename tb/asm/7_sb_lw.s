@@ -7,6 +7,4 @@ main:
     sb a0, 1(zero)
     sb t1, 2(zero)
     sb t1, 3(zero)
-    lw a0, 0(zero)
-    lb a0, 2(zero)
-#a0 becomes 0x101
+    lw a0, 0(zero) # a0 =0x00000101 = 257
