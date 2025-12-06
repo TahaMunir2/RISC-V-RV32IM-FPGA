@@ -2,6 +2,7 @@ module regandalu#(
     DATA_WIDTH=32
     )(
     input logic clk,
+    input logic trigger,
     input logic WE3,
     input logic MemWrite,
     input logic [1:0] SizeWrite, //changed from ByteWrite to SizeWrite
@@ -47,6 +48,7 @@ module regandalu#(
 
     regfile regfile(
         .clk(clk),
+        .trigger(trigger),
         .WD3(write_to_reg), //it is not anymore always the output of the ALU , it can be both (output of ALU and output of DataMem depending on the instruction)
         .AD3(AD3),
         .AD2(AD2),

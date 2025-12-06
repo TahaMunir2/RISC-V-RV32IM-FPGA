@@ -3,6 +3,7 @@ module top #(
 ) (
     input   logic clk,
     input   logic rst,
+    input logic trigger,
     output  logic [DATA_WIDTH-1:0] a0  
 );
     
@@ -70,6 +71,7 @@ module top #(
 
     regandalu Reg_and_ALU_block (
         .clk(clk),
+        .trigger(trigger),
         .A0(a0),
         .EQ(EQ),
         .LT(LT),
