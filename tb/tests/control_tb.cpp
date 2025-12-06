@@ -22,308 +22,239 @@ protected:
 };
 
 
-
-//UPPER IMMEDIATE INSTRUCTIONS
-
-// LUI: 
-TEST_F(ControlTestbench, LUI) {
+//UPPER IMMEDIATE INSTRUCTIONS (LUI, AUIPC)
+TEST_F(ControlTestbench, UpperImmediate) {
+    // LUI
     loadInstr(0b00000000000000000001000010110111);
-    EXPECT_EQ(top->RegWrite,1);
+    EXPECT_EQ(top->RegWrite, 1);
     EXPECT_EQ(top->ALUCtrl, 0b1010);
-    EXPECT_EQ(top->ALUSrc,1);
+    EXPECT_EQ(top->ALUSrc, 1);
     EXPECT_EQ(top->ImmSrc, 0b100);
-    EXPECT_EQ(top->PCSrc,0b00);
+    EXPECT_EQ(top->PCSrc, 0b00);
     EXPECT_EQ(top->ResultSrc, 0);
-    EXPECT_EQ(top->MemWrite,0);
-    EXPECT_EQ(top->SizeWrite,0);
-}
-// AUIPC
-TEST_F(ControlTestbench, AUIPC) {
+    EXPECT_EQ(top->MemWrite, 0);
+    EXPECT_EQ(top->ALUsrc2, 0);
+
+    // AUIPC
     loadInstr(0b00000000000000000001000010010111);
-    EXPECT_EQ(top->RegWrite,1);
+    EXPECT_EQ(top->RegWrite, 1);
     EXPECT_EQ(top->ALUCtrl, 0b1011);
-    EXPECT_EQ(top->ALUSrc, 1 );
-    EXPECT_EQ(top->ImmSrc,0b100);
-    EXPECT_EQ(top->PCSrc,0b00);
+    EXPECT_EQ(top->ALUSrc, 1);
+    EXPECT_EQ(top->ImmSrc, 0b100);
+    EXPECT_EQ(top->PCSrc, 0b00);
     EXPECT_EQ(top->ALUsrc2, 1);
 }
 
 
-
-//JUMPS
-
-TEST_F(ControlTestbench, JAL) {
+//JUMP INSTRUCTIONS (JAL, JALR)
+TEST_F(ControlTestbench, Jumps) {
+    //JAL
     loadInstr(0b00000000000100000000000011101111);
-    EXPECT_EQ(top->RegWrite,1);
+    EXPECT_EQ(top->RegWrite, 1);
     EXPECT_EQ(top->PCSrc, 0b01);
-    EXPECT_EQ(top->ImmSrc,0b011);
-}
-TEST_F(ControlTestbench,JALR) {
+    EXPECT_EQ(top->ImmSrc, 0b011);
+
+    //JALR
     loadInstr(0b00000000000000001000000011100111);
-    EXPECT_EQ(top->RegWrite,1);
-    EXPECT_EQ(top->PCSrc,  0b10);
-    EXPECT_EQ(top->ImmSrc,  0b000);
+    EXPECT_EQ(top->RegWrite, 1);
+    EXPECT_EQ(top->PCSrc, 0b10);
+    EXPECT_EQ(top->ImmSrc, 0b000);
 }
 
 
-
- //BRANCH INSTRUCTIONS
-
-
-TEST_F(ControlTestbench,BEQ_taken) {
+// BRANCH INSTRUCTIONS (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+TEST_F(ControlTestbench, Branches) {
+    //BEQ taken
     loadInstr(0b00000000000100000000000001100011);
-    top->EQ = 1;
-    top->eval();
+    top->EQ = 1; top->eval();
     EXPECT_EQ(top->PCSrc, 0b01);
-}
-TEST_F(ControlTestbench,BEQ_not_taken) {
-    loadInstr(0b00000000000100000000000001100011);
-    top->EQ = 0;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,0b00);
-}
 
+    //BEQ not taken
+    top->EQ = 0; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b00);
 
-TEST_F(ControlTestbench,BNE_taken) {
+    //BNE taken
     loadInstr(0b00000000000100000001000001100011);
-    top->EQ=0;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,  0b01);
-}
-
-
-TEST_F(ControlTestbench,  BNE_not_taken) {
-    loadInstr(0b00000000000100000001000001100011);
-    top->EQ = 1;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,  0b00);
-}
-
-
-
-TEST_F(ControlTestbench,  BLT_taken) {
-    loadInstr(0b00000000000100000100000001100011);
-    top->LT =1;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,  0b01);
-}
-
-
-
-TEST_F(ControlTestbench,BLT_not_taken) {
-    loadInstr(0b00000000000100000100000001100011);
-    top->LT = 0;
-    top->eval();
-    EXPECT_EQ(top->PCSrc, 0b00);
-}
-TEST_F(ControlTestbench, BGE_taken) {
-    loadInstr(0b00000000000100000101000001100011);
-    top->LT = 0;
-    top->eval();
+    top->EQ = 0; top->eval();
     EXPECT_EQ(top->PCSrc, 0b01);
-}
 
-
-TEST_F(ControlTestbench, BGE_not_taken) {
-    loadInstr(0b00000000000100000101000001100011);
-    top->LT = 1;
-    top->eval();
+    //BNE not taken
+    top->EQ = 1; top->eval();
     EXPECT_EQ(top->PCSrc, 0b00);
-}
-TEST_F(ControlTestbench, BLTU_taken) {
-    loadInstr(0b00000000000100000110000001100011);
-    top->LTU = 1;
-    top->eval();
+
+    //BLT taken
+    loadInstr(0b00000000000100000100000001100011);
+    top->LT = 1; top->eval();
     EXPECT_EQ(top->PCSrc, 0b01);
-}
 
+    //BLT not taken
+    top->LT = 0; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b00);
 
+    //BGE taken
+    loadInstr(0b00000000000100000101000001100011);
+    top->LT = 0; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b01);
 
-TEST_F(ControlTestbench, BLTU_not_taken) {
+    //BGE not taken
+    top->LT = 1; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b00);
+
+    //BLTU taken
     loadInstr(0b00000000000100000110000001100011);
-    top->LTU = 0;
-    top->eval();
+    top->LTU = 1; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b01);
+
+    //BLTU not taken
+    top->LTU = 0; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b00);
+
+    //BGEU taken
+    loadInstr(0b00000000000100000111000001100011);
+    top->LTU = 0; top->eval();
+    EXPECT_EQ(top->PCSrc, 0b01);
+
+    //BGEU not taken
+    top->LTU = 1; top->eval();
     EXPECT_EQ(top->PCSrc, 0b00);
 }
 
 
-
-
-TEST_F(ControlTestbench, BGEU_taken) {
-    loadInstr(0b00000000000100000111000001100011);
-    top->LTU =0;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,  0b01);
-}
-
-
-
-TEST_F(ControlTestbench,BGEU_not_taken) {
-    loadInstr(0b00000000000100000111000001100011);
-    top->LTU =1;
-    top->eval();
-    EXPECT_EQ(top->PCSrc,0b00);
-}
-
-
-
-//LOAD INSTRUCTIONS
-
-TEST_F(ControlTestbench,LB) {
+// LOAD INSTRUCTIONS (LB, LH, LW, LBU, LHU)
+TEST_F(ControlTestbench, Loads) {
+    //LB
     loadInstr(0b00000000000100000000000010000011);
-    EXPECT_EQ(top->RegWrite,1);
-    EXPECT_EQ(top->ResultSrc,0b01);
-    EXPECT_EQ(top->LoadSize,0b00);
-    EXPECT_EQ(top->LoadUnsigned,0);
-}
-TEST_F(ControlTestbench, LH) {
+    EXPECT_EQ(top->RegWrite, 1);
+    EXPECT_EQ(top->ResultSrc, 0b01);
+    EXPECT_EQ(top->LoadSize, 0b00);
+    EXPECT_EQ(top->LoadUnsigned, 0);
+
+    //LH
     loadInstr(0b00000000000100000001000010000011);
-    EXPECT_EQ(top->LoadSize,  0b01);
-    EXPECT_EQ(top->LoadUnsigned,0);
-}
-TEST_F(ControlTestbench, LW) {
+    EXPECT_EQ(top->LoadSize, 0b01);
+    EXPECT_EQ(top->LoadUnsigned, 0);
+
+    //LW
     loadInstr(0b00000000000100000010000010000011);
     EXPECT_EQ(top->LoadSize, 0b10);
     EXPECT_EQ(top->LoadUnsigned, 0);
-}
-TEST_F(ControlTestbench, LBU) {
+
+    //LBU
     loadInstr(0b00000000000100000100000010000011);
-    EXPECT_EQ(top->LoadSize,0b00);
-    EXPECT_EQ(top->LoadUnsigned,  1);
-}
+    EXPECT_EQ(top->LoadSize, 0b00);
+    EXPECT_EQ(top->LoadUnsigned, 1);
 
-
-
-TEST_F(ControlTestbench,LHU) {
+    // LHU
     loadInstr(0b00000000000100000101000010000011);
-    EXPECT_EQ(top->LoadSize,0b01);
-    EXPECT_EQ(top->LoadUnsigned,1);
+    EXPECT_EQ(top->LoadSize, 0b01);
+    EXPECT_EQ(top->LoadUnsigned, 1);
 }
 
 
+//STORE INSTRUCTIONS (SB,SH, SW)
 
-//STORE INSTRUCTIONS
-
-
-TEST_F(ControlTestbench, SB) {
+TEST_F(ControlTestbench, Stores) {
+    //SB
     loadInstr(0b00000000000100000000000010100011);
-    EXPECT_EQ(top->MemWrite,1);
+    EXPECT_EQ(top->MemWrite, 1);
     EXPECT_EQ(top->SizeWrite, 0b00);
-}
-TEST_F(ControlTestbench, SH) {
+
+    //SH
     loadInstr(0b00000000000100000001000010100011);
     EXPECT_EQ(top->MemWrite, 1);
     EXPECT_EQ(top->SizeWrite, 0b01);
-}
-TEST_F(ControlTestbench, SW) {
+
+    //SW
     loadInstr(0b00000000000100000010000010100011);
     EXPECT_EQ(top->MemWrite, 1);
-    EXPECT_EQ(top->SizeWrite,0b10);
+    EXPECT_EQ(top->SizeWrite, 0b10);
 }
 
 
-
-//I-TYPE ALU (OPIMM)
-TEST_F(ControlTestbench,ADDI) {
+// I-TYPE (ADDI,SLTI, SLTIU,XORI,ORI, ANDI, SLLI, SRLI, SRAI)
+TEST_F(ControlTestbench, ITypeALU) {
+    // ADDI
     loadInstr(0b00000000000100000000000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b0000);
-    EXPECT_EQ(top->ALUSrc,1);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b0000);
+    EXPECT_EQ(top->ALUSrc, 1);
 
-TEST_F(ControlTestbench, SLTI) {
+    // SLTI
     loadInstr(0b00000000000100000010000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b1000);
-}
-TEST_F(ControlTestbench,SLTIU) {
+    EXPECT_EQ(top->ALUCtrl, 0b1000);
+
+    // SLTIU
     loadInstr(0b00000000000100000011000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b1001);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b1001);
 
-
-TEST_F(ControlTestbench, XORI) {
+    //XORI
     loadInstr(0b00000000000100000100000010010011);
     EXPECT_EQ(top->ALUCtrl, 0b0100);
-}
 
-
-TEST_F(ControlTestbench, ORI) {
+    //ORI
     loadInstr(0b00000000000100000110000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b0011);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b0011);
 
-TEST_F(ControlTestbench, ANDI) {
+    //ANDI
     loadInstr(0b00000000000100000111000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b0010);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b0010);
 
-
-TEST_F(ControlTestbench,SLLI) {
+    //SLLI
     loadInstr(0b00000000000100000001000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b0101);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b0101);
 
-
-TEST_F(ControlTestbench,SRLI) {
+    //SRLI
     loadInstr(0b00000000000100000101000010010011);
     EXPECT_EQ(top->ALUCtrl, 0b0110);
-}
 
-TEST_F(ControlTestbench, SRAI) {
+    // SRAI
     loadInstr(0b01000000000100000101000010010011);
-    EXPECT_EQ(top->ALUCtrl,0b0111);
+    EXPECT_EQ(top->ALUCtrl, 0b0111);
 }
 
 
-
-//R-TYPE ALU (OP)
-TEST_F(ControlTestbench, ADD) {
+// R-TYPE ALU INSTRUCTIONS (ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND)
+TEST_F(ControlTestbench, RTypeALU) {
+    //ADD
     loadInstr(0b00000000000100000000000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0000);
-}
-TEST_F(ControlTestbench, SUB) {
+    EXPECT_EQ(top->ALUSrc, 0);
+
+    //SUB
     loadInstr(0b01000000000100000000000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0001);
-}
-TEST_F(ControlTestbench,SLL) {
+
+    //SLL
     loadInstr(0b00000000000100000001000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0101);
-}
 
-
-TEST_F(ControlTestbench, SLT) {
+    //SLT
     loadInstr(0b00000000000100000010000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b1000);
-}
 
-
-TEST_F(ControlTestbench, SLTU) {
+    // SLTU
     loadInstr(0b00000000000100000011000010110011);
-    EXPECT_EQ(top->ALUCtrl,0b1001);
-}
+    EXPECT_EQ(top->ALUCtrl, 0b1001);
 
-TEST_F(ControlTestbench,XOR) {
-    loadInstr(0b00000000000100000100000010110011) ;
+    // XOR
+    loadInstr(0b00000000000100000100000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0100);
-}
 
-TEST_F(ControlTestbench, SRL) {
+    // SRL
     loadInstr(0b00000000000100000101000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0110);
-}
-TEST_F(ControlTestbench, SRA) {
-    loadInstr(0b01000000000100000101000010110011);
-    EXPECT_EQ(top->ALUCtrl,0b0111);
-}
 
-TEST_F(ControlTestbench,OR) {
+    // SRA
+    loadInstr(0b01000000000100000101000010110011);
+    EXPECT_EQ(top->ALUCtrl, 0b0111);
+
+    // OR
     loadInstr(0b00000000000100000110000010110011);
     EXPECT_EQ(top->ALUCtrl, 0b0011);
-}
-TEST_F(ControlTestbench, AND) {
-    loadInstr(0b00000000000100000111000010110011);
-    EXPECT_EQ(top->ALUCtrl,0b0010);
-}
 
+    // AND
+    loadInstr(0b00000000000100000111000010110011);
+    EXPECT_EQ(top->ALUCtrl, 0b0010);
+}
 
 
 int main(int argc, char **argv)
