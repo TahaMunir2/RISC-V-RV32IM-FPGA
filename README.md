@@ -34,7 +34,7 @@ The initial control unit supported the following 9 instructions:
 
 The extended control unit now covers **all 37 base RV32I instructions**, grouped by type.
 
-# | Mnemonic | Type | Opcode (binary) | funct3 | funct7   | Brief description                            |
+|# | Mnemonic | Type | Opcode (binary) | funct3 | funct7   | Brief description                            |
 |---|----------|------|-----------------|--------|----------|----------------------------------------------|
 | 1 | `LUI`    | U    | `0110111`       | –      | –        | Load upper 20 bits of immediate into `rd`.   |
 | 2 | `AUIPC`  | U    | `0010111`       | –      | –        | `rd = PC + (imm << 12)`.                     |
