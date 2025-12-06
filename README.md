@@ -1,4 +1,4 @@
-# Full RV32I (37-Instruction) Control Unit – Extension of the Reduced Core
+# Full RV32I (37-Instruction):
 
 ## Overview
 
