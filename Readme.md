@@ -118,7 +118,7 @@ endcase
 | `STRONGLY_TAKEN` | No | `WEAKLY_TAKEN` |
 | `STRONGLY_TAKEN` | Yes | `STRONGLY_TAKEN` |
 
-This implements a **saturating counter**: the state moves toward "strongly taken" when branches are taken, and toward "strongly not taken" when they aren't — but never wraps around.
+This implements a **saturating counter**: the state moves toward "strongly taken" when branches are taken, and toward "strongly not taken" when they aren't, but never wraps around.
 
 #### Prediction Output (Moore Machine)
 
@@ -132,9 +132,9 @@ The prediction is simply the **MSB of the current state**:
 - `WEAKLY_TAKEN (10)` → bit[1] = `1` → predict **taken**
 - `STRONGLY_TAKEN (11)` → bit[1] = `1` → predict **taken**
 
-This is a **Moore machine** — the output depends only on the current state, not the inputs.
+This is a **Moore machine** : the output depends only on the current state, not the inputs.
 
-#### Timing: Why Negative Edge?
+#### Timing: We update at the Negative Edge?
 
 ```systemverilog
 always_ff @(negedge clk)
@@ -144,16 +144,6 @@ The state update occurs on the **falling edge** of the clock. This ensures that:
 1. The prediction is read during the **first half** of the cycle (Fetch stage)
 2. The state update from Execute happens during the **second half**, avoiding read-write conflicts
 
-#### Interface Summary
-
-| Signal | Direction | Description |
-|--------|-----------|-------------|
-| `predict_index` | Input | PC bits `[7:2]` from Fetch stage |
-| `pred_taken` | Output | Prediction for Fetch stage |
-| `update_index` | Input | PC bits `[7:2]` from Execute stage |
-| `actual_taken` | Input | Real branch outcome from Execute |
-| `enable` | Input | Asserted when Execute has a branch instruction |
----
 
 ### 2.2 PCSrcF Assertion
 
