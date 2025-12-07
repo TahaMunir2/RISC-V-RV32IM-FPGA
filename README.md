@@ -156,6 +156,43 @@ This demonstrates the fundamental advantage of pipelining: **higher throughput**
 
 #### forwarding multiplexers
 
+Data hazards occur when an instruction depends on the result of a previous instruction still in the pipeline. Rather than stalling, we can **forward** the required data directly from where it is available to where it is needed.
+
+##### Key Insight
+
+A result computed by the ALU is available at the end of the Execute stage, **before** it is written back to the register file. By adding forwarding paths, we can bypass the pipeline registers and deliver this value directly to dependent instructions.
+
+Two multiplexers are added at the ALU inputs to select between three possible sources: (see schematic below)
+
+```systemverilog
+// Forwarding multiplexers
+mux4 forwardingRS1(
+    .in0(RD1E),           // 00: Normal path from register file
+    .in1(ResultW),        // 01: Forward from Writeback stage
+    .in2(ALUResultM),     // 10: Forward from Memory stage
+    .in3(RD1E),           // 11: Unused (default to register file)
+    .select_line(ForwardAE),
+    .out(SrcAE)    
+);
+
+mux4 forwardingRS2(
+    .in0(RD2E),           // 00: Normal path from register file
+    .in1(ResultW),        // 01: Forward from Writeback stage
+    .in2(ALUResultM),     // 10: Forward from Memory stage
+    .in3(RD2E),           // 11: Unused (default to register file)
+    .select_line(ForwardBE),
+    .out(WriteDataE)    
+);
+```
+
+
+
+##### Hazard Unit Role
+
+The **Hazard Unit** monitors register addresses across pipeline stages (`Rs1E`, `Rs2E`, `RdM`, `RdW`) and generates the forwarding control signals (`ForwardAE`, `ForwardBE`). It determines:
+This allows most data hazards to be resolved **without stalling**, maintaining pipeline throughput. (See more on the hazard unit logic below)
+
+
 #### PCSrc_assertion logic explained
 
 ---
