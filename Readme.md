@@ -15,7 +15,23 @@
 
 ## 1. Overview
 
-<!-- TODO: High-level explanation of branch prediction motivation and approach -->
+In our pipelined processor, instructions are fetched sequentially assuming `PC + 4`. Branch decisions are only resolved in the Execute stage, meaning incorrect instructions may already be in the pipeline. This causes **control hazards** requiring flushes, which waste cycles.
+The baseline approach predicts all branches as **not taken**, but this performs poorly for loops where backward branches are typically taken repeatedly.
+
+### Our Solution: Two-Bit Dynamic Prediction
+
+- A **one-bit predictor** remembers only the last outcome
+- Problem: it **mispredicts twice per loop** (first and last iteration)
+
+- A **two-bit predictor** requires two consecutive mispredictions before changing its prediction
+- Four states: *Strongly Taken → Weakly Taken → Weakly Not Taken → Strongly Not Taken*
+- Result: **mispredicts only once per loop** instead of twice
+
+### Branch Target Buffer (BTB)
+
+We maintain a table indexed by the branch PC containing:
+- The **2-bit prediction state**
+- The **target address** for fast redirection when predicting "taken"
 
 ---
 
