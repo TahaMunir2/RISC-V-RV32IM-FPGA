@@ -195,7 +195,7 @@ The **Hazard Unit** monitors register addresses across pipeline stages (`Rs1E`, 
 This allows most data hazards to be resolved **without stalling**, maintaining pipeline throughput. (See more on the hazard unit logic below)
 
 
-### PCSrc_assertion logic explained
+### PCSrc_assertion (labeled as PCSource in the diagram below) logic explained
 
 In the single-cycle design, branch resolution happens within the control unit. In the pipelined design, however:
 1. **Control signals are generated in Decode** which is before comparison flags are available
