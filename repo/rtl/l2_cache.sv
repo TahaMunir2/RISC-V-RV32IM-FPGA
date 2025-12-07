@@ -25,6 +25,7 @@ module l2_cache #(
     output logic main_mem_fetch
 );
     /* verilator lint_off UNUSED */
+    /* verilator lint_off ALWCOMBORDER */
     typedef struct packed {
         logic [7:0] byte3;  
         logic [7:0] byte2;  
@@ -65,6 +66,7 @@ module l2_cache #(
     logic rd_en;
     logic wr_wb;
     logic [(DATA_WIDTH * BLOCK_SIZE)-1 : 0] write_data;
+    logic clean;
     logic [1:0] way_rd;
     logic [ADDRESS_WIDTH-1:13] tag_bits_rd;
     logic [7:0] set_rd;
@@ -80,6 +82,7 @@ module l2_cache #(
     logic miss;
     logic evict;
     logic wb_ready_d_next;
+    logic write_back_en_next;
 
     assign tag_bits_rd = addr[ADDRESS_WIDTH-1:13];
     assign set_rd = addr[12:5];
@@ -87,9 +90,11 @@ module l2_cache #(
 
     //l1 write back request logic
     logic [DATA_WIDTH*4-1:0] l1write_back_data_buffer;
+    logic [DATA_WIDTH*4-1:0] l1write_back_data_buffer_next;
     logic l1write_buffer;
     logic l1write_buffer_next;
     logic [ADDRESS_WIDTH-1:0] l1write_back_addr_buffer;
+    logic [ADDRESS_WIDTH-1:0] l1write_back_addr_buffer_next;
     logic [ADDRESS_WIDTH-1:13] tag_bits_wb;
     logic [7:0] set_wb;
     logic [2:0] block_offset_wb;
@@ -107,9 +112,11 @@ module l2_cache #(
 
     //l2 write back request logic
     logic [DATA_WIDTH*8-1:0] l2write_back_data_buffer;
+    logic [DATA_WIDTH*8-1:0] l2write_back_data_buffer_next;
     logic [1:0] l2write_buffer; //indicates number of 4 word blocks needed to be written back to main mem
     logic [1:0] l2write_buffer_next;
     logic [ADDRESS_WIDTH-1:0] l2write_back_addr_buffer;
+    logic [ADDRESS_WIDTH-1:0] l2write_back_addr_buffer_next;
 
     initial begin
         for (int i = 0; i < 128; i++) begin
@@ -122,6 +129,9 @@ module l2_cache #(
             cache[i].block3.valid   = 1'b0;
             cache[i].block3.dirty   = 1'b0;            
         end
+
+        l1write_buffer = 1'b0;
+        l2write_buffer = 2'b0;
     end
 
 
@@ -139,17 +149,25 @@ module l2_cache #(
         rd_en = 1'b0;
         wr_wb = 1'b0;
         write_data = '0;
-        data_out = '0;
-        write_back_en = 0;
-        ready_i = 0;
-        ready_d = 0;
-        wb_ready_d = 0;
         evict = 0;
         main_mem_addr = '0;
         main_mem_fetch = 0;
-        wb_ready_d_next = wb_ready_d;
+        wb_ready_d_next = 0;
         l1write_buffer_next = l1write_buffer;
+        l1write_back_data_buffer_next = l1write_back_data_buffer;
+        l1write_back_addr_buffer_next = l1write_back_addr_buffer;
         l2write_buffer_next = l2write_buffer;
+        l2write_back_data_buffer_next = l2write_back_data_buffer;
+        l2write_back_addr_buffer_next = l2write_back_addr_buffer;
+        write_back_en_next = 0;
+        write_back_addr = '0;
+        write_back_data = '0;
+        way = '0;
+        way_rd = '0;
+        clean = 1;
+        tag_bits = '0;
+        set = '0;
+        block_offset = '0;
 
         //arbiter logic
         if (!fetch_i && !fetch_d) begin
@@ -190,20 +208,18 @@ module l2_cache #(
         valid2 = cache[set_rd].block2.valid;
         valid3 = cache[set_rd].block3.valid;
 
-        if (l1write_buffer) begin
-            hit0_wb = (cache[set_wb].block0.tag == tag_bits_rd && cache[set_wb].block0.valid && fetch);
-            hit1_wb = (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
-            hit2_wb = (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
-            hit3_wb = (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
-            miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
-        end
+        hit0_wb = (cache[set_wb].block0.tag == tag_bits_rd && cache[set_wb].block0.valid && fetch);
+        hit1_wb = (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
+        hit2_wb = (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
+        hit3_wb = (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
+        miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
 
         if (l1write && !l1write_buffer) begin
             wb_ready_d_next = 1;
 
-            l1write_buffer = l1write;
-            l1write_back_data_buffer = l1write_back_data;
-            l1write_back_addr_buffer = l1write_back_addr;
+            l1write_buffer_next = l1write;
+            l1write_back_data_buffer_next = l1write_back_data;
+            l1write_back_addr_buffer_next = l1write_back_addr;
         end
         
         // wr and rd en logic
@@ -251,10 +267,10 @@ module l2_cache #(
                 if (evict) begin
                     if (way_rd == 2'b00) begin
                         if (cache[set_rd].block0.dirty && (l2write_buffer == 0)) begin 
-                            l2write_back_data_buffer = cache[set_rd].block0[255:0];
-                            l2write_back_addr_buffer = {{cache[set_rd].block0.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block0.dirty = 0;
-                            l2write_buffer = 2'b10;
+                            l2write_back_data_buffer_next = cache[set_rd].block0[255:0];
+                            l2write_back_addr_buffer_next = {{cache[set_rd].block0.tag}, {set_rd}, {5'b0}};
+                            clean = 1;
+                            l2write_buffer_next = 2'b10;
                         end
 
                         else if (!cache[set_rd].block0.dirty && ready) begin
@@ -270,10 +286,10 @@ module l2_cache #(
 
                     else if (way_rd == 2'b01) begin
                         if (cache[set_rd].block1.dirty && (l2write_buffer == 2'b00)) begin
-                            l2write_back_data_buffer = cache[set_rd].block1[255:0];
-                            l2write_back_addr_buffer = {{cache[set_rd].block1.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block1.dirty = 0;
-                            l2write_buffer = 2'b10;
+                            l2write_back_data_buffer_next = cache[set_rd].block1[255:0];
+                            l2write_back_addr_buffer_next = {{cache[set_rd].block1.tag}, {set_rd}, {5'b0}};
+                            clean = 1;
+                            l2write_buffer_next = 2'b10;
                         end
 
                         else if (!cache[set_rd].block1.dirty && ready) begin
@@ -289,10 +305,10 @@ module l2_cache #(
 
                     else if (way_rd == 2'b10) begin
                         if (cache[set_rd].block2.dirty && (l2write_buffer == 2'b00)) begin 
-                            l2write_back_data_buffer = cache[set_rd].block2[255:0];
-                            l2write_back_addr_buffer = {{cache[set_rd].block2.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block2.dirty = 0;
-                            l2write_buffer = 2'b10;
+                            l2write_back_data_buffer_next = cache[set_rd].block2[255:0];
+                            l2write_back_addr_buffer_next = {{cache[set_rd].block2.tag}, {set_rd}, {5'b0}};
+                            clean = 1;
+                            l2write_buffer_next = 2'b10;
                         end
 
                         else if (!cache[set_rd].block2.dirty && ready) begin
@@ -308,10 +324,10 @@ module l2_cache #(
 
                     else if (way_rd == 2'b11) begin
                         if (cache[set_rd].block3.dirty && (l2write_buffer == 0)) begin 
-                            l2write_back_data_buffer = cache[set_rd].block3[255:0];
-                            l2write_back_addr_buffer = {{cache[set_rd].block3.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block3.dirty = 0;
-                            l2write_buffer = 2'b10;
+                            l2write_back_data_buffer_next = cache[set_rd].block3[255:0];
+                            l2write_back_addr_buffer_next = {{cache[set_rd].block3.tag}, {set_rd}, {5'b0}};
+                            clean = 1;
+                            l2write_buffer_next = 2'b10;
                         end
 
                         else if (!cache[set_rd].block3.dirty && ready) begin
@@ -334,6 +350,7 @@ module l2_cache #(
                     set = set_rd;
                     block_offset = block_offset_rd;
                     way = way_rd;
+                    main_mem_fetch = 0;
                 end
             end
 
@@ -343,7 +360,7 @@ module l2_cache #(
                 else if (hit2) way = 2;
                 else if (hit3) way = 3;
 
-                if (!l1write || wb_ready_d) begin
+                if (!l1write || wb_ready_d_next) begin
                     rd_en = 1;
                     tag_bits = tag_bits_rd;
                     set = set_rd;
@@ -354,7 +371,7 @@ module l2_cache #(
 
         if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) begin
             wr_wb = 1;
-            l1write_buffer = l1write_buffer - 1;
+            l1write_buffer_next = l1write_buffer - 1;
             if (block_offset_wb == 3'b000) begin
                 write_data[127:0] = l1write_back_data_buffer;
             end
@@ -364,30 +381,31 @@ module l2_cache #(
         end
 
         if ((l2write_buffer == 2'b10) && wb_ready) begin
-            write_back_en = 1;
+            write_back_en_next = 1;
             write_back_data = l2write_back_data_buffer[127:0];
             write_back_addr = l2write_back_addr_buffer;
             l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l2write_buffer == 2'b01) && wb_ready) begin
-            write_back_en = 1;
+            write_back_en_next = 1;
             write_back_data = l2write_back_data_buffer[255:128];
             write_back_addr = {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
             l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l1write_buffer && miss_wb) && wb_ready) begin
-            write_back_en = 1;
+            write_back_en_next = 1;
             write_back_data = l1write_back_data_buffer;
             write_back_addr = l1write_back_addr_buffer;
             l1write_buffer_next = l1write_buffer - 1;
         end
 
-        if (!rd_en && !wr_en && !miss_wb) begin
+        if (l1write_buffer && !rd_en && !wr_en && !miss_wb) begin
             wr_en = 1;
             wr_wb = 1;
             write_data = {2{l1write_back_data_buffer}};
+            l1write_buffer_next = l1write_buffer - 1;
 
             if (hit0_wb) way = 2'b00;
             else if (hit1_wb) way = 2'b01;
@@ -409,10 +427,37 @@ module l2_cache #(
 
 
     always_ff @(posedge clk) begin
+        // assign default values
+        ready_i <= 0;
+        ready_d <= 0;
+        data_out <= '0;
+
         // assign all "next" values
         wb_ready_d <= wb_ready_d_next;
         l1write_buffer <= l1write_buffer_next;
+        l1write_back_data_buffer <= l1write_back_data_buffer_next;
+        l1write_back_addr_buffer <= l1write_back_addr_buffer_next;
         l2write_buffer <= l2write_buffer_next;
+        l2write_back_data_buffer <= l2write_back_data_buffer_next;
+        l2write_back_addr_buffer <= l2write_back_addr_buffer_next;
+        write_back_en <= write_back_en_next;
+
+        if (clean) begin
+
+            if (way_rd == 2'b00) begin
+                cache[set_rd].block0.dirty <= 0;
+            end
+            else if (way_rd == 2'b01) begin
+                cache[set_rd].block1.dirty <= 0;
+            end
+            if (way_rd == 2'b10) begin
+                cache[set_rd].block2.dirty <= 0;
+            end
+            else if (way_rd == 2'b11) begin
+                cache[set_rd].block3.dirty <= 0;
+            end
+    
+        end
 
         //write logic
         if (wr_en) begin

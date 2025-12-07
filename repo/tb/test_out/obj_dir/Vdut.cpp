@@ -14,8 +14,8 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     , clk{vlSymsp->TOP.clk}
     , fetch_i{vlSymsp->TOP.fetch_i}
     , fetch_d{vlSymsp->TOP.fetch_d}
-    , ready{vlSymsp->TOP.ready}
     , l1write_back_en{vlSymsp->TOP.l1write_back_en}
+    , ready{vlSymsp->TOP.ready}
     , wb_ready{vlSymsp->TOP.wb_ready}
     , ready_i{vlSymsp->TOP.ready_i}
     , ready_d{vlSymsp->TOP.ready_d}
@@ -55,6 +55,7 @@ Vdut::~Vdut() {
 void Vdut___024root___eval_initial(Vdut___024root* vlSelf);
 void Vdut___024root___eval_settle(Vdut___024root* vlSelf);
 void Vdut___024root___eval(Vdut___024root* vlSelf);
+QData Vdut___024root___change_request(Vdut___024root* vlSelf);
 #ifdef VL_DEBUG
 void Vdut___024root___eval_debug_assertions(Vdut___024root* vlSelf);
 #endif  // VL_DEBUG
@@ -64,12 +65,27 @@ static void _eval_initial_loop(Vdut__Syms* __restrict vlSymsp) {
     vlSymsp->__Vm_didInit = true;
     Vdut___024root___eval_initial(&(vlSymsp->TOP));
     // Evaluate till stable
+    int __VclockLoop = 0;
+    QData __Vchange = 1;
     vlSymsp->__Vm_activity = true;
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Initial loop\n"););
         Vdut___024root___eval_settle(&(vlSymsp->TOP));
         Vdut___024root___eval(&(vlSymsp->TOP));
-    } while (0);
+        if (VL_UNLIKELY(++__VclockLoop > 100)) {
+            // About to fail, so enable debug to see what's not settling.
+            // Note you must run make with OPT=-DVL_DEBUG for debug prints.
+            int __Vsaved_debug = Verilated::debug();
+            Verilated::debug(1);
+            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
+            Verilated::debug(__Vsaved_debug);
+            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l2_cache.sv", 1, "",
+                "Verilated model didn't DC converge\n"
+                "- See https://verilator.org/warn/DIDNOTCONVERGE");
+        } else {
+            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
+        }
+    } while (VL_UNLIKELY(__Vchange));
 }
 
 void Vdut::eval_step() {
@@ -81,11 +97,26 @@ void Vdut::eval_step() {
     // Initialize
     if (VL_UNLIKELY(!vlSymsp->__Vm_didInit)) _eval_initial_loop(vlSymsp);
     // Evaluate till stable
+    int __VclockLoop = 0;
+    QData __Vchange = 1;
     vlSymsp->__Vm_activity = true;
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Clock loop\n"););
         Vdut___024root___eval(&(vlSymsp->TOP));
-    } while (0);
+        if (VL_UNLIKELY(++__VclockLoop > 100)) {
+            // About to fail, so enable debug to see what's not settling.
+            // Note you must run make with OPT=-DVL_DEBUG for debug prints.
+            int __Vsaved_debug = Verilated::debug();
+            Verilated::debug(1);
+            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
+            Verilated::debug(__Vsaved_debug);
+            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l2_cache.sv", 1, "",
+                "Verilated model didn't converge\n"
+                "- See https://verilator.org/warn/DIDNOTCONVERGE");
+        } else {
+            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
+        }
+    } while (VL_UNLIKELY(__Vchange));
     // Evaluate cleanup
 }
 

@@ -28,8 +28,8 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     VL_IN8(&clk,0,0);
     VL_IN8(&fetch_i,0,0);
     VL_IN8(&fetch_d,0,0);
-    VL_IN8(&ready,0,0);
     VL_IN8(&l1write_back_en,0,0);
+    VL_IN8(&ready,0,0);
     VL_IN8(&wb_ready,0,0);
     VL_OUT8(&ready_i,0,0);
     VL_OUT8(&ready_d,0,0);
