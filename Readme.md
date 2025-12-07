@@ -147,9 +147,99 @@ The state update occurs on the **falling edge** of the clock. This ensures that:
 
 ### 2.2 PCSrcF Assertion
 
-<!-- TODO: PCSrcF assertion module explanation -->
+The `PCSrcF_assertion` module resolves conflicts between the Fetch and Execute stages when determining the next Program Counter. It decides whether to follow a prediction, correct a misprediction, or proceed sequentially.
 
----
+#### The Challenge
+
+Two stages compete to control the PC:
+- **Fetch stage**: Makes speculative predictions for newly fetched branch instructions
+- **Execute stage**: Resolves actual branch outcomes and may need to correct mispredictions
+
+This module arbitrates between them and selects the appropriate next PC.
+
+#### Outputs
+
+| PCSrcF | Next PC Source | Condition |
+|--------|----------------|-----------|
+| `2'b00` | `PC + 4` (Fetch) | Sequential execution (no branch or prediction = not taken) |
+| `2'b01` | `FinalTarget` | Branch predicted/confirmed taken, or jump |
+| `2'b11` | `PCPlus4E` (Execute) | Misprediction recovery: predicted taken but actually not taken |
+
+> **Note**: `2'b00` and `2'b11` both select a `PC + 4` value, but from **different stages**. When recovering from a "predicted taken, actually not taken" misprediction, we must return to the `PC + 4` of the mispredicted branch, which has propagated to the Execute stage as `PCPlus4E`. This distinction is handled in the `pc_block` module (see [Overall Integration](#23-overall-integration)).
+
+#### Branch Detection in Fetch
+
+```systemverilog
+logic BranchF;
+assign BranchF = (opcodeF == 7'b1100011);
+```
+
+We check if the fetched instruction is a branch by examining its opcode (`1100011` = B-type).
+
+#### Priority Logic
+
+The module uses a priority-based tree in order to implement synchronization between the 2 stages (2 different instructions are communicating with this block at the same time):
+
+##### Priority 1: Jump Instructions (Highest)
+
+```systemverilog
+if (JumpE) begin
+    PCSrcF = PCSrcE;
+    FinalTarget = targetE;
+end
+```
+
+Jump instructions (`JAL`/`JALR`) in Execute take precedence. We use the resolved `PCSrcE` and actual target from Execute.
+
+##### Priority 2: Misprediction Recovery
+
+```systemverilog
+else if (BranchE && false_prediction) begin
+    if (predictionE) begin
+        PCSrcF = 2'b11;  // Predicted taken, actually not taken
+    end
+    else begin
+        PCSrcF = 2'b01;  // Predicted not taken, actually taken
+        FinalTarget = targetE;
+    end
+end
+```
+
+When Execute detects a misprediction, we must correct the PC:
+
+| Prediction | Actual | Recovery Action |
+|------------|--------|-----------------|
+| Taken | Not Taken | `PCSrcF = 2'b11` → Resume at `PC + 4` (we went down the wrong path) |
+| Not Taken | Taken | `PCSrcF = 2'b01` → Jump to `targetE` (we should have branched) |
+
+##### Priority 3: New Branch Prediction (Lowest)
+
+```systemverilog
+else begin
+    if (BranchF) begin
+        if (predictionF) begin
+            PCSrcF = 2'b01;
+            FinalTarget = targetF;
+        end
+        else begin
+            PCSrcF = 2'b00;
+        end
+    end
+end
+```
+
+If no Execute-stage corrections are needed and Fetch contains a branch:
+- **Prediction = Taken**: Speculatively jump to `targetF`
+- **Prediction = Not Taken**: Continue with `PC + 4`
+
+#### Default Behavior
+
+```systemverilog
+PCSrcF = 2'b00;
+FinalTarget = targetE;
+```
+
+By default, we proceed sequentially (`PC + 4`). The `FinalTarget` default doesn't matter since it's only used when `PCSrcF = 2'b01`.
 
 ### 2.3 Overall Integration
 
