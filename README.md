@@ -1,5 +1,19 @@
 # Full RV32I (37-Instruction):
 
+## Table of Contents
+- [1. Overview](#1-overview)
+- [2. Implementation](#2-Implementation)
+  - [2.1 Instruction Set Coverage](#21-Instruction-Set-Coverage)
+  - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#Control-Unit-Evolution:-From-9-to-37-Instructions)
+  - [2.3 Datapath Modifications](#Datapath-Modifications)
+  - [2.4 New Multiplexer: PC vs Register (`mux_pcVSreg`)](#New-Multiplexer)
+  - [2.5 Extended ALU Control](#Extended-ALU-Control)
+  - [2.6 Extended Branch Comparison Signals](#Extended-Branch-Comparison-Signals)
+- [3. Schematic](#3-schematic)
+- [4. Testing & Verification](#4-testing--verification)
+  - [4.1 Hazard Unit Testing](#41-hazard-unit-testing)
+  - [4.2 Full Pipeline Testing](#42-full-pipeline-testing)
+
 ## Overview
 
 This section extends the reduced RV32I core from a 9-instruction subset to the full 37-instruction RV32I base integer ISA. The original design already implemented a working single-cycle datapath with a compact control unit targeting a minimal, but functional, subset of instructions. The work presented here **keeps the same overall datapath structure** and **systematically enriches the control logic** so that all arithmetic/logic, load/store, branch, and control-flow instructions defined in RV32I are supported.
@@ -7,10 +21,11 @@ This section extends the reduced RV32I core from a 9-instruction subset to the f
 The key idea is to move from a “special-case” control unit (hard-coding behaviour for a few instructions) to a **fully decoded, opcode-driven controller** that distinguishes instruction *types* (R, I, S, B, U, J) and handles all funct3/funct7 variants, while remaining compatible with the original modules (ALU, PC update logic, register file, sign-extension block, and memory interface).
 
 ---
+## Implementation
 
-## Instruction Set Coverage
+### Instruction Set Coverage
 
-### Reduced 9-Instruction Subset (Previous Section)
+#### Reduced 9-Instruction Subset (Previous Section)
 
 The initial control unit supported the following 9 instructions:
 
@@ -30,7 +45,7 @@ The initial control unit supported the following 9 instructions:
 
 ---
 
-### Full 37-Instruction RV32I Subset (This Section)
+#### Full 37-Instruction RV32I Subset (This Section)
 
 The extended control unit now covers **all 37 base RV32I instructions**, grouped by type.
 
@@ -75,7 +90,7 @@ The extended control unit now covers **all 37 base RV32I instructions**, grouped
 |37 | `AND`    | R    | `0110011`       | `111`  | `0000000`| Bitwise AND of `rs1` and `rs2`.              |
 
 
-## Control Unit Evolution: From 9 to 37 Instructions
+### Control Unit Evolution: From 9 to 37 Instructions
 
 To go from the reduced 9-instruction core to the full 37-instruction RV32I implementation, the control unit was **generalised and extended** while keeping compatibility with the original datapath:
 
@@ -99,26 +114,13 @@ To go from the reduced 9-instruction core to the full 37-instruction RV32I imple
 
 Together, these changes transform the original “minimal subset” controller into a complete **RV32I-compliant control unit**, while maintaining the same overall architectural style introduced in the previous section.
 
-# Datapath Modifications: 9 to 37 Instructions
+### Datapath Modifications: 9 to 37 Instructions
 
 This section describes the changes made to the datapath (`regandalu` module) to extend the RISC-V implementation from 9 instructions to the full RV32I base instruction set (37 instructions).
 
-## Overview of Changes
-
-| Component | 9-Instruction Version | 37-Instruction Version |
-|-----------|----------------------|------------------------|
-| ALU Control Width | 3 bits (`ALUctrl`) | 4 bits (`ALUCtrl`) |
-| ALU Operand 1 Source | Direct from register file | Multiplexer (register or PC) |
-| Memory Write Size | 1 bit (`ByteWrite`) | 2 bits (`SizeWrite`) |
-| Load Size Control | Not present | 2 bits (`LoadSize`) |
-| Load Sign Extension | Not present | 1 bit (`LoadUnsigned`) |
-| Branch Comparison | `EQ` only | `EQ`, `LT`, `LTU` |
-
 ---
 
-## New Multiplexer: PC vs Register (`mux_pcVSreg`)
-
-### Design Choice
+### New Multiplexer: PC vs Register (`mux_pcVSreg`)
 
 A key addition is the multiplexer selecting between `rs1` (register source 1) and `pc_save` (program counter) for ALU operand 1.
 This design exploits an important observation about the RISC-V ISA:
@@ -136,7 +138,7 @@ The select signal `ALUsrc2` is set by the control unit:
 - `ALUsrc2 = 0`: Use register (`rs1`)
 - `ALUsrc2 = 1`: Use PC
 
-### Implementation
+#### Implementation
 
 ```systemverilog
 mux mux_pcVSreg(
@@ -149,7 +151,7 @@ mux mux_pcVSreg(
 
 ---
 
-## Extended ALU Control
+### Extended ALU Control
 
 The ALU control signal was expanded from 3 bits to 4 bits to support additional operations.
 
@@ -158,7 +160,7 @@ The ALU control signal was expanded from 3 bits to 4 bits to support additional 
 | Width | `[2:0] ALUctrl` | `[3:0] ALUCtrl` |
 | Operations | ADD, SUB, AND, OR, SLT | ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU, LUI passthrough, AUIPC |
 
-### ALU Control Encoding (4-bit)
+#### ALU Control Encoding (4-bit)
 
 | ALUCtrl | Operation |
 |---------|-----------|
@@ -177,7 +179,7 @@ The ALU control signal was expanded from 3 bits to 4 bits to support additional 
 
 ---
 
-## Extended Branch Comparison Signals
+### Extended Branch Comparison Signals
 
 The 9-instruction version only supported `BEQ` with a single equality flag. The full implementation adds signed and unsigned comparison outputs.
 
@@ -191,7 +193,7 @@ output logic LT,   // Less Than, signed (for BLT, BGE)
 output logic LTU   // Less Than, unsigned (for BLTU, BGEU)
 ```
 
-### Branch Instruction Support
+#### Branch Instruction Support
 
 | Branch | Condition |
 |--------|-----------|
@@ -204,9 +206,9 @@ output logic LTU   // Less Than, unsigned (for BLTU, BGEU)
 
 ---
 
-## Memory Interface Extensions
+### Memory Interface Extensions
 
-### Store Operations
+#### Store Operations
 
 The `ByteWrite` signal was replaced with a 2-bit `SizeWrite` signal to support all store widths.
 
@@ -216,7 +218,7 @@ The `ByteWrite` signal was replaced with a 2-bit `SizeWrite` signal to support a
 | `2'b01` | `SH` (Store Halfword) | 2 |
 | `2'b10` | `SW` (Store Word) | 4 |
 
-### Load Operations
+#### Load Operations
 
 Two new signals were added to support variable-width loads with sign/zero extension.
 
@@ -233,59 +235,7 @@ Two new signals were added to support variable-width loads with sign/zero extens
 | `2'b01` | `1` | `LHU` (Load Halfword, zero-extend) |
 | `2'b10` | `X` | `LW` (Load Word) |
 
----
 
-## Updated Module Interface
-
-### 9-Instruction Version
-
-```systemverilog
-module regandalu #(DATA_WIDTH=32)(
-    input  logic                    clk,
-    input  logic                    WE3,
-    input  logic                    MemWrite,
-    input  logic                    ByteWrite,
-    input  logic [DATA_WIDTH-1:0]   pc_save,
-    input  logic [4:0]              AD3,
-    input  logic [4:0]              AD2,
-    input  logic [4:0]              AD1,
-    input  logic [2:0]              ALUctrl,
-    input  logic                    ALUsrc,
-    input  logic [DATA_WIDTH-1:0]   ImmOp,
-    input  logic [1:0]              ResultSrc,
-    output logic                    EQ,
-    output logic [DATA_WIDTH-1:0]   A0,
-    output logic [DATA_WIDTH-1:0]   ALU_OUT
-);
-```
-
-### 37-Instruction Version
-
-```systemverilog
-module regandalu #(DATA_WIDTH=32)(
-    input  logic                    clk,
-    input  logic                    trigger,
-    input  logic                    WE3,
-    input  logic                    MemWrite,
-    input  logic [1:0]              SizeWrite,      // Changed from ByteWrite
-    input  logic [1:0]              LoadSize,       //NEW
-    input  logic                    LoadUnsigned,   //NEW
-    input  logic [DATA_WIDTH-1:0]   pc_save,
-    input  logic [4:0]              AD3,
-    input  logic [4:0]              AD2,
-    input  logic [4:0]              AD1,
-    input  logic [3:0]              ALUCtrl,        // Expanded to 4 bits
-    input  logic                    ALUsrc,
-    input  logic [DATA_WIDTH-1:0]   ImmOp,
-    input  logic [1:0]              ResultSrc,
-    input  logic                    ALUsrc2,        // NEW:PC vs Register select
-    output logic                    EQ,
-    output logic                    LT,             //NEW
-    output logic                    LTU,            // NEW
-    output logic [DATA_WIDTH-1:0]   A0,
-    output logic [DATA_WIDTH-1:0]   ALU_OUT
-);
-```
 ---
 ## Final Circuit Schematic:
 
@@ -293,7 +243,7 @@ module regandalu #(DATA_WIDTH=32)(
 
 
 ---
-# Testing:
+## Testing:
 
 We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
 
