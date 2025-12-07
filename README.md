@@ -405,9 +405,9 @@ main:
     addi t2, zero, 2
     li a0, -5
     bltu a0, t2, mloop      # Unsigned: -5 = 0xFFFFFFFB > 2
-    blt a0, t2, iloop       # Signed: -5 < 2 ✓
+    blt a0, t2, iloop       # Signed: -5 < 2
 mloop:
-    bgeu a0, t2, endm       # Unsigned: 0xFFFFFFFB >= 2 ✓
+    bgeu a0, t2, endm       # Unsigned: 0xFFFFFFFB >= 2
 iloop:
     addi a0, a0, 1
     blt a0, t2, iloop       # Loop while a0 < 2 (signed)
@@ -508,7 +508,7 @@ This test specifically verifies the new `mux_pcVSreg` multiplexer:
 ```
         ┌─────────────┐
  regOp ─┤             │
-        │  mux_pcVSreg├──► ALUop1 ──► ALU ──► a0
+        │  mux_pcVSreg├──► ALUop1 ──► ALU 
    PC ──┤             │              (ADD)
         └──────▲──────┘
                │
