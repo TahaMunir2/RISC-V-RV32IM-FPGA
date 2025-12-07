@@ -243,7 +243,156 @@ By default, we proceed sequentially (`PC + 4`). The `FinalTarget` default doesn'
 
 ### 2.3 Overall Integration
 
-<!-- TODO: How components connect together -->
+This section describes how the branch predictor, PC source assertion, and PC block are wired together. All connections described here are illustrated in the schematic below.
+
+#### Modified PC Block
+
+The `pc_block` module was extended to handle four PC sources instead of three:
+
+```systemverilog
+case (pc_src)
+    2'b00: internal_pc <= inc_pc;     // PC + 4 (sequential)
+    2'b01: internal_pc <= branch_pc;  // Branch target (Imm_op)
+    2'b10: internal_pc <= ALU;        // JALR (register-based jump)
+    2'b11: internal_pc <= pc_saved;   // Misprediction recovery
+    default: internal_pc <= inc_pc;  
+endcase
+```
+
+| PCSrcF | Source | Signal | Use Case |
+|--------|--------|--------|----------|
+| `2'b00` | `inc_pc` | `PC + 4` | Sequential execution or prediction = not taken |
+| `2'b01` | `branch_pc` | `Imm_op` (target) | Branch/jump target (predicted or confirmed taken) |
+| `2'b10` | `ALU` | `ALUResultE` | `JALR` instruction |
+| `2'b11` | `pc_saved` | `PCPlus4E` | Recovery from "predicted taken, actually not taken" |
+
+#### Why `pc_saved` is Different from `inc_pc`
+
+Both represent a `PC + 4` value, but from **different instructions**:
+
+- **`inc_pc`** = Current `PCF + 4` (next sequential address from Fetch)
+- **`pc_saved`** = `PCPlus4E` (the `PC + 4` of the branch instruction now in Execute)
+
+When we mispredicted "taken", we speculatively jumped to the target. To recover, we need the sequential address of the **mispredicted branch**, not the current Fetch PC.
+
+
+#### Integration in Top Module
+
+##### 1. Branch Predictor Connections
+
+```systemverilog
+branchpredictor2bit branchpredictor (
+    .clk(clk),
+    .rst(rst),
+    .enable(BranchE),           // Update only when Execute has a branch
+    .update_index(PCE[7:2]),    // Index from Execute stage PC
+    .actual_taken(actual_taken),// Real outcome from PCSrcE
+    .predict_index(PCF[7:2]),   // Index from Fetch stage PC
+    .pred_taken(pred_takenF)    // Prediction output for Fetch
+);
+```
+
+- **Prediction path**: `PCF[7:2]` → predictor → `pred_takenF`
+- **Update path**: `PCE[7:2]` + `actual_taken` → predictor (when `BranchE` is high)
+
+##### 2. Actual Outcome Derivation
+
+```systemverilog
+always_comb begin
+    case (PCSrcE)
+        2'b00:   actual_taken = 0;  // Branch not taken
+        2'b01:   actual_taken = 1;  // Branch taken
+        default: actual_taken = 0;  // Don't care (not a branch)
+    endcase
+end
+```
+
+The `PCSrcE` output from `PCSrcE_assertion` tells us the real branch outcome. We convert this to a single bit for the predictor update.
+
+##### 3. Misprediction Detection
+
+```systemverilog
+evalprediction evalprediction(
+    .PCSrcE(PCSrcE),
+    .BranchE(BranchE),
+    .pred_taken(pred_takenE),       // What we predicted (propagated from Fetch)
+    .false_prediction(false_prediction)
+);
+```
+
+Compares the prediction (`pred_takenE`) against the actual outcome (`PCSrcE`) to generate `false_prediction`.
+
+##### 4. Target Address Computation
+
+```systemverilog
+PCSrcF_assertion PCSourceF(
+    // ...
+    .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
+    .targetE(PCE + ExtImmE),
+    .FinalTarget(target),
+    // ...
+);
+```
+
+Two targets are computed:
+- **`targetF`**: Speculative target from Fetch (B-type immediate extracted directly from `InstrF`)
+- **`targetE`**: Actual target from Execute (`PCE + ExtImmE`)
+
+The `PCSrcF_assertion` module selects which one to use as `FinalTarget`.
+
+##### 5. PC Block Connections
+
+```systemverilog
+pc_block pc_block (
+    .clk(clk),
+    .rst(rst),
+    .enable(PCWrite),
+    .Imm_op(target),        // FinalTarget from PCSrcF_assertion
+    .pc_src(PCSrcF),        // PC source select from PCSrcF_assertion
+    .pc(PCF),               // Current PC output
+    .pc_saved(PCPlus4E),    // For misprediction recovery
+    .pc_save(PCPlus4F),     // PC+4 output for pipeline
+    .ALU(ALUResultE)        // For JALR
+);
+```
+
+##### 6. Prediction Propagation Through Pipeline
+
+The prediction made in Fetch must travel with the instruction to Execute for comparison:
+
+```
+Fetch          Decode         Execute
+─────          ──────         ───────
+pred_takenF ──► pred_takenD ──► pred_takenE
+               (fd_pipeline)   (de_pipeline)
+```
+
+This ensures that when a branch reaches Execute, we still know what prediction was made for it.
+
+#### Complete Data Flow Summary
+
+| Stage | Action |
+|-------|--------|
+| **Fetch** | Read `pred_takenF` from predictor using `PCF[7:2]`. If branch detected and prediction = taken, speculatively fetch from `targetF`. |
+| **Decode** | Propagate `pred_takenD` through pipeline register. |
+| **Execute** | Compare `pred_takenE` with actual outcome (`PCSrcE`). If mismatch, assert `false_prediction` and correct PC via `PCSrcF`. Update predictor state with actual outcome. |
+
+#### Hazard Unit Modifications
+
+The hazard unit now receives `false_prediction` to trigger pipeline flushes:
+
+```systemverilog
+hazard_unit hazard_unit (
+    // ...
+    .JumpE(JumpE),
+    .false_prediction(false_prediction),
+    .flush_d_exec(flush_d_exec),
+    .flush_f_d(flush_f_d),
+    // ...
+);
+```
+
+When a misprediction is detected, both the Fetch-Decode and Decode-Execute pipeline registers are flushed to discard speculatively fetched instructions.
 
 ---
 
