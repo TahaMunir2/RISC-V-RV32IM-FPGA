@@ -1,7 +1,7 @@
 # Full RV32I (37-Instruction):
 
 ## Table of Contents
-- [1. Overview](#1-overview)
+- [1. Overview](#1-Overview)
 - [2. Implementation](#2-Implementation)
   - [2.1 Instruction Set Coverage](#21-Instruction-Set-Coverage)
   - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#Control-Unit-Evolution)
