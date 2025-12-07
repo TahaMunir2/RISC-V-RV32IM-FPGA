@@ -292,8 +292,8 @@ branchpredictor2bit branchpredictor (
 );
 ```
 
-- **Prediction path**: `PCF[7:2]` → predictor → `pred_takenF`
-- **Update path**: `PCE[7:2]` + `actual_taken` → predictor (when `BranchE` is high)
+- **Prediction path**: `PCF[7:2]` : identifying the branch from the buffer and associating a prediction to it
+- **Update path**: `PCE[7:2]` + `actual_taken` : updating the state of this specific entry in the buffer (we update only when `BranchE` is high : used as an enable signal to write to the buffer)
 
 ##### 2. Actual Outcome Derivation
 
