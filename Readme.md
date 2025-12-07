@@ -309,18 +309,43 @@ end
 
 The `PCSrcE` output from `PCSrcE_assertion` tells us the real branch outcome. We convert this to a single bit for the predictor update.
 
-##### 3. Misprediction Detection
+##### 3. Misprediction Detection (`evalprediction`)
 
+This module compares what we **predicted** against what **actually happened** to determine if a flush is needed.
 ```systemverilog
-evalprediction evalprediction(
-    .PCSrcE(PCSrcE),
-    .BranchE(BranchE),
-    .pred_taken(pred_takenE),       // What we predicted (propagated from Fetch)
-    .false_prediction(false_prediction)
+module evalprediction(
+    input logic [1:0] PCSrcE,      // Actual branch outcome
+    input logic BranchE,           // Is this a branch instruction?
+    input logic pred_taken,        // What we predicted in Fetch
+    output logic false_prediction  // Misprediction flag
 );
 ```
 
-Compares the prediction (`pred_takenE`) against the actual outcome (`PCSrcE`) to generate `false_prediction`.
+#### Logic
+
+The module only evaluates predictions when `BranchE == 1` (a branch is in Execute):
+
+```systemverilog
+always_comb begin
+    false_prediction = 0;  // Default: prediction was correct
+    if (BranchE == 1) begin
+        case (PCSrcE)
+            2'b00: if (pred_taken)  false_prediction = 1;  // Predicted taken, actually not taken
+            2'b01: if (!pred_taken) false_prediction = 1;  // Predicted not taken, actually taken
+            default: false_prediction = 0;
+        endcase
+    end
+end
+```
+
+- Defaulting to `0` prevents unnecessary pipeline flushes
+
+#### Output Usage
+
+The `false_prediction` signal feeds into:
+1. **Hazard Unit**: Triggers `flush_f_d` and `flush_d_exec` to clear speculative instructions
+2. **`PCSrcF_assertion`**: Overrides Fetch-stage decisions to correct the PC
+
 
 ##### 4. Target Address Computation
 
