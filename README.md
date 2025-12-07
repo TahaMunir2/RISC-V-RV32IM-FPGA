@@ -106,12 +106,12 @@ Tc_single = t_pcq + 2·t_mem + t_RFread + t_ALU + t_mux + t_RFsetup
           = 750 ps
 ```
 
-**Example**: Program with 100 billion instructions
+**Example**: Program with 300 billion instructions
 
 ```
 Execution Time = (# Instructions) × CPI × Tᶜ
-               = (100 × 10⁹) × (1) × (750 × 10⁻¹² s)
-               = 75 seconds
+               = (300 × 10⁹) × (1) × (750 × 10⁻¹² s)
+               = 225 seconds
 ```
 
 ##### Pipelined Processor Performance
@@ -120,40 +120,33 @@ For a pipelined processor, the clock period is determined by the **slowest pipel
 
 ```
 Tc_pipelined = max of:
-    ├── Fetch:     t_pcq + t_mem + t_setup              = 290 ps
-    ├── Decode:    2(t_RFread + t_setup)                = 300 ps
-    ├── Execute:   t_pcq + 4·t_mux + t_ALU + t_AND-OR + t_setup = 350 ps  ← Critical
-    ├── Memory:    t_pcq + t_mem + t_setup              = 290 ps
-    └── Writeback: 2(t_pcq + t_mux + t_RFwrite)         = 280 ps
+    -Fetch:     t_pcq + t_mem + t_setup              = 290 ps
+     -Decode:    2(t_RFread + t_setup)                = 300 ps
+    -Execute:   t_pcq + 4·t_mux + t_ALU + t_AND-OR + t_setup = 350 ps 
+    -Memory:    t_pcq + t_mem + t_setup              = 290 ps
+    -Writeback: 2(t_pcq + t_mux + t_RFwrite)         = 280 ps
 
-Tc_pipelined = 350 ps
+Tc_pipelined = 350 ps (from the execute stage)
 ```
 
 The Execute stage is the **critical path**, limiting the clock frequency.
 
 However, pipelining introduces **hazards** (data dependencies, control dependencies) that require stalls. This increases the effective CPI above the ideal value of 1.
 
-**Example**: Program with 100 billion instructions (CPI = 1.23)
+**Example**: Program with 300 billion instructions, we assume CPI = 1.23 (idealy 1 but here higher due to stalls)
 
 ```
 Execution Time = (# Instructions) × CPI × Tc
-               = (100 × 10⁹) × (1.23) × (350 × 10⁻¹² s)
-               = 43 seconds
+               = (300 × 10⁹) × (1.23) × (350 × 10⁻¹² s)
+               = 129 seconds
 ```
 
 #### Performance Comparison
 
-| Metric | Single-Cycle | Pipelined |
-|--------|--------------|-----------|
-| Clock Period (Tc) | 750 ps | 350 ps |
-| CPI | 1.0 | 1.23 |
-| Execution Time (100B instructions) | 75 seconds | 43 seconds |
-| **Speedup** | — | **1.74×** |
-
 Despite the increased CPI due to hazard-related stalls, the pipelined processor achieves a **1.74× speedup** over the single-cycle design by significantly reducing the clock period.
 
 ```
-Speedup = 75s / 43s ≈ 1.74×
+Speedup = 300s / 129s ≈ 1.74×
 ```
 
 This demonstrates the fundamental advantage of pipelining: **higher throughput** through instruction-level parallelism, even at the cost of slightly reduced efficiency per instruction.
