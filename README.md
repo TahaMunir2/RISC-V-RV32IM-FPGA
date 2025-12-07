@@ -6,7 +6,7 @@
   - [2.1 Pipeline Architecture](#21-pipeline-architecture)
   - [2.2 Performance Analysis](#performance_analysis)
   - [2.3 Forwarding Multiplexers](#forwarding-multiplexers)
-  - [2.4 PCSrc_assertion logic explained](#pcsrc_assertion-(labeled-as-pcsource-in-the-diagram-below)logic-explained)
+  - [2.4 PCSrc_assertion logic explained](#pcsrc_assertion-labeled-as-pcsource-in-the-diagram-below-logic-explained)
   - [2.5 Hazard Unit](#22-hazard-unit)
 - [3. Schematic](#3-schematic)
 - [4. Testing & Verification](#4-testing--verification)
