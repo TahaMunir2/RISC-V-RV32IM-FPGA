@@ -55,33 +55,3 @@ end
 
 endmodule
 
-
-/*  
-    else if (BranchE) begin
-        if (predictionE) begin
-            if (PCSrcE == 2'b01)begin
-                PCSrcF = 2'b00;
-            end 
-            else begin
-                PCSrcF = 2'b11;
-            end
-        end
-        else begin
-            if(PCSrcE == 2'b01)begin
-                PCSrcF = 2'b01;
-            end
-            else begin
-                PCSrcF = 2'b00;
-            end
-        end
-
-    end
-    else if (BranchF) begin
-        if(predicitionF) begin
-            PCSrcF = 2'b01;
-        end
-    end
-end
-endmodule
-
-*/
