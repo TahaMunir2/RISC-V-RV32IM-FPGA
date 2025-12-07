@@ -503,17 +503,7 @@ a0 = 0x00001000 (4096)
 - Correct datapath: PC → ALU input via `ALUsrc2` multiplexer
 
 ### Datapath Verification
-This test specifically verifies the new `mux_pcVSreg` multiplexer:
-
-```
-        ┌─────────────┐
- regOp ─┤             │
-        │  mux_pcVSreg├──► ALUop1 ──► ALU 
-   PC ──┤             │              (ADD)
-        └──────▲──────┘
-               │
-            ALUsrc2 = 1  (select PC)
-```
+This test specifically verifies the new `mux_pcVSreg` multiplexer (control signal : ALUsrc2 = 1 )
 
 ---
 
