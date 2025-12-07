@@ -28,14 +28,13 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     VL_IN8(&clk,0,0);
     VL_IN8(&fetch_i,0,0);
     VL_IN8(&fetch_d,0,0);
-    VL_IN8(&l1write_back_en,0,0);
     VL_IN8(&ready,0,0);
+    VL_IN8(&l1write_back_en,0,0);
     VL_IN8(&wb_ready,0,0);
     VL_OUT8(&ready_i,0,0);
     VL_OUT8(&ready_d,0,0);
     VL_OUT8(&wb_ready_d,0,0);
     VL_OUT8(&write_back_en,0,0);
-    VL_OUT8(&main_mem_addr,0,0);
     VL_OUT8(&main_mem_fetch,0,0);
     VL_IN(&addr_i,31,0);
     VL_IN(&addr_d,31,0);
@@ -45,6 +44,7 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     VL_OUTW(&data_out,127,0,4);
     VL_OUTW(&write_back_data,127,0,4);
     VL_OUT(&write_back_addr,31,0);
+    VL_OUT(&main_mem_addr,31,0);
 
     // CELLS
     // Public to allow access to /* verilator public */ items.

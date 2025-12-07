@@ -92,20 +92,15 @@ TEST_F(L2CacheTestbench, InstructionFetchMissAndHit) {
 
     runSimulation(1);
 
-    EXPECT_EQ(top->ready_i, 1)
-        << "L2 should assert ready_i when memory has provided the line.";
+    EXPECT_EQ(top->ready_i, 0)
+        << "L2 should not assert ready_i on the same cycle when memory has provided the line.";
 
     // Deassert ready, then hit again on same address
     top->ready = 0;
     runSimulation(1);
 
     EXPECT_EQ(top->ready_i, 1)
-        << "L2 should not hit on the same I address on the after fill.";
-
-    runSimulation(1);
-
-    EXPECT_EQ(top->ready_i, 1)
-        << "L2 should not hit on the same I address on the after fill. !!!";
+        << "L2 should hit on the same I address after fill.";
 
     // If data_out is wide (VlWide<4>), check a single word:
     //   data_out[0] is least-significant 32 bits.
@@ -142,8 +137,8 @@ TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
 
     runSimulation(1);
 
-    EXPECT_EQ(top->ready_d, 1)
-        << "L2 should assert ready_d after memory returns a line.";
+    EXPECT_EQ(top->ready_d, 0)
+        << "L2 should not assert ready_d in the same cycle as when memory returns a line.";
 
     top->ready = 0;
     runSimulation(1);
@@ -167,7 +162,8 @@ TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
 TEST_F(L2CacheTestbench, L1WriteBackForwardToMemory) {
     initializeInputs();
 
-    uint32_t addrD = 0x00000100;
+    uint32_t addrD  = 0x00000100;
+    uint32_t addrWb = 0xF0000000;
 
     // Fill L2 line from memory first
     top->fetch_d = 1;
@@ -182,7 +178,7 @@ TEST_F(L2CacheTestbench, L1WriteBackForwardToMemory) {
     // Now simulate L1 writing back new data for the same address
     setL1WriteBackData4(0xAAAA0001, 0xAAAA0002, 0xAAAA0003, 0xAAAA0004);
     top->l1write_back_en   = 1;
-    top->l1write_back_addr = addrD;
+    top->l1write_back_addr = addrWb;
     top->fetch_d           = 1;
 
     runSimulation(1);

@@ -14,14 +14,13 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     , clk{vlSymsp->TOP.clk}
     , fetch_i{vlSymsp->TOP.fetch_i}
     , fetch_d{vlSymsp->TOP.fetch_d}
-    , l1write_back_en{vlSymsp->TOP.l1write_back_en}
     , ready{vlSymsp->TOP.ready}
+    , l1write_back_en{vlSymsp->TOP.l1write_back_en}
     , wb_ready{vlSymsp->TOP.wb_ready}
     , ready_i{vlSymsp->TOP.ready_i}
     , ready_d{vlSymsp->TOP.ready_d}
     , wb_ready_d{vlSymsp->TOP.wb_ready_d}
     , write_back_en{vlSymsp->TOP.write_back_en}
-    , main_mem_addr{vlSymsp->TOP.main_mem_addr}
     , main_mem_fetch{vlSymsp->TOP.main_mem_fetch}
     , addr_i{vlSymsp->TOP.addr_i}
     , addr_d{vlSymsp->TOP.addr_d}
@@ -31,6 +30,7 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     , data_out{vlSymsp->TOP.data_out}
     , write_back_data{vlSymsp->TOP.write_back_data}
     , write_back_addr{vlSymsp->TOP.write_back_addr}
+    , main_mem_addr{vlSymsp->TOP.main_mem_addr}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context

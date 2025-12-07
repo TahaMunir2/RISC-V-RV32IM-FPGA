@@ -21,7 +21,7 @@ module l2_cache #(
     output logic [DATA_WIDTH*4-1:0] write_back_data,
     output logic [ADDRESS_WIDTH-1:0] write_back_addr,
     output logic write_back_en,
-    output logic main_mem_addr,
+    output logic [ADDRESS_WIDTH-1:0] main_mem_addr,
     output logic main_mem_fetch
 );
     /* verilator lint_off UNUSED */
@@ -79,6 +79,7 @@ module l2_cache #(
     logic valid0, valid1, valid2, valid3;
     logic miss;
     logic evict;
+    logic wb_ready_d_next;
 
     assign tag_bits_rd = addr[ADDRESS_WIDTH-1:13];
     assign set_rd = addr[12:5];
@@ -87,6 +88,7 @@ module l2_cache #(
     //l1 write back request logic
     logic [DATA_WIDTH*4-1:0] l1write_back_data_buffer;
     logic l1write_buffer;
+    logic l1write_buffer_next;
     logic [ADDRESS_WIDTH-1:0] l1write_back_addr_buffer;
     logic [ADDRESS_WIDTH-1:13] tag_bits_wb;
     logic [7:0] set_wb;
@@ -105,7 +107,8 @@ module l2_cache #(
 
     //l2 write back request logic
     logic [DATA_WIDTH*8-1:0] l2write_back_data_buffer;
-    logic [1:0] l2write_buffer; //indicates number of 4 word blocks needed to be written back to main mekm
+    logic [1:0] l2write_buffer; //indicates number of 4 word blocks needed to be written back to main mem
+    logic [1:0] l2write_buffer_next;
     logic [ADDRESS_WIDTH-1:0] l2write_back_addr_buffer;
 
     initial begin
@@ -131,6 +134,22 @@ module l2_cache #(
         l1write = 0;
         req_i = 0;
         req_d = 0;
+        wmask = '0;
+        wr_en = 1'b0;
+        rd_en = 1'b0;
+        wr_wb = 1'b0;
+        write_data = '0;
+        data_out = '0;
+        write_back_en = 0;
+        ready_i = 0;
+        ready_d = 0;
+        wb_ready_d = 0;
+        evict = 0;
+        main_mem_addr = '0;
+        main_mem_fetch = 0;
+        wb_ready_d_next = wb_ready_d;
+        l1write_buffer_next = l1write_buffer;
+        l2write_buffer_next = l2write_buffer;
 
         //arbiter logic
         if (!fetch_i && !fetch_d) begin
@@ -158,254 +177,242 @@ module l2_cache #(
             l1write = l1write_back_en;
             req_d = 1;
         end
-    end
-
-    always_ff @(posedge clk) begin // only write is synchronous
-        //default case
-        wmask <= '0;
-        wr_en <= 1'b0;
-        rd_en <= 1'b0;
-        wr_wb <= 1'b0;
-        write_data <= '0;
-        data_out <= '0;
-        write_back_en <= 0;
-        ready_i <= 0;
-        ready_d <= 0;
-        wb_ready_d <= 0;
-        evict <= 0;
-        main_mem_addr <= '0;
-        main_mem_fetch <= 0;
-
-        if (l1write && !l1write_buffer) begin
-            wb_ready_d <= 1;
-
-            l1write_buffer <= l1write;
-            l1write_back_data_buffer <= l1write_back_data;
-            l1write_back_addr_buffer <= l1write_back_addr;
-        end
-
-        if (l1write_buffer) begin
-            // hit detection
-            hit0_wb <= (cache[set_wb].block0.tag == tag_bits_rd && cache[set_wb].block0.valid && fetch); // if the tags are the same, and its a valid set_rd and we are working with the cache then its a hit0
-            hit1_wb <= (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
-            hit2_wb <= (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
-            hit3_wb <= (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
-            miss_wb <= ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
-        end
 
         // hit detection
-        hit0 <= ((cache[set_rd].block0.tag == tag_bits_rd) && cache[set_rd].block0.valid); // if the tags are the same, and its a valid set_rd and we are working with the cache then its a hit0
-        hit1 <= ((cache[set_rd].block1.tag == tag_bits_rd) && cache[set_rd].block1.valid);
-        hit2 <= ((cache[set_rd].block2.tag == tag_bits_rd) && cache[set_rd].block2.valid);
-        hit3 <= ((cache[set_rd].block3.tag == tag_bits_rd) && cache[set_rd].block3.valid);
-        miss <= ~(hit0 | hit1 | hit2 | hit3); // we need to know if we are accessing the cache 
+        hit0 = ((cache[set_rd].block0.tag == tag_bits_rd) && cache[set_rd].block0.valid);
+        hit1 = ((cache[set_rd].block1.tag == tag_bits_rd) && cache[set_rd].block1.valid);
+        hit2 = ((cache[set_rd].block2.tag == tag_bits_rd) && cache[set_rd].block2.valid);
+        hit3 = ((cache[set_rd].block3.tag == tag_bits_rd) && cache[set_rd].block3.valid);
+        miss = ~(hit0 | hit1 | hit2 | hit3);
 
-        valid0 <= cache[set_rd].block0.valid; // check validityzzaz
-        valid1 <= cache[set_rd].block1.valid;
-        valid2 <= cache[set_rd].block2.valid;
-        valid3 <= cache[set_rd].block3.valid;
+        valid0 = cache[set_rd].block0.valid;
+        valid1 = cache[set_rd].block1.valid;
+        valid2 = cache[set_rd].block2.valid;
+        valid3 = cache[set_rd].block3.valid;
 
+        if (l1write_buffer) begin
+            hit0_wb = (cache[set_wb].block0.tag == tag_bits_rd && cache[set_wb].block0.valid && fetch);
+            hit1_wb = (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
+            hit2_wb = (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
+            hit3_wb = (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
+            miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
+        end
+
+        if (l1write && !l1write_buffer) begin
+            wb_ready_d_next = 1;
+
+            l1write_buffer = l1write;
+            l1write_back_data_buffer = l1write_back_data;
+            l1write_back_addr_buffer = l1write_back_addr;
+        end
+        
         // wr and rd en logic
         if (fetch) begin
 
             if (miss) begin
                 
-                main_mem_addr <= addr;
-                main_mem_fetch <= 1;
-                //way_rd determination
-                if (!valid0)      way_rd <= 2'b00;
-                else if (!valid1) way_rd <= 2'b01;
-                else if (!valid2) way_rd <= 2'b10;          
-                else if (!valid3) way_rd <= 2'b11;
+                main_mem_addr = addr;
+                main_mem_fetch = 1;
+
+                if (!valid0)      way_rd = 2'b00;
+                else if (!valid1) way_rd = 2'b01;
+                else if (!valid2) way_rd = 2'b10;          
+                else if (!valid3) way_rd = 2'b11;
                 else begin
-                    evict <= 1;
+                    evict = 1;
 
                     if (cache[set_rd].u01) begin
-
                         if (cache[set_rd].u12) begin
-
                             if (cache[set_rd].u23) begin
-                                way_rd <= 2'b11;
+                                way_rd = 2'b11;
                             end
-
-                            else way_rd <= 2'b10;
+                            else way_rd = 2'b10;
                         end
-
                         else if (cache[set_rd].u13) begin
-                            way_rd <= 2'b11;
+                            way_rd = 2'b11;
                         end
-
-                        else way_rd <= 2'b01;
-
+                        else way_rd = 2'b01;
                     end
 
                     else if (cache[set_rd].u02) begin
-
                         if (cache[set_rd].u23) begin
-                            way_rd <= 2'b11;
+                            way_rd = 2'b11;
                         end
-
-                        else way_rd <= 2'b10;
+                        else way_rd = 2'b10;
                     end
 
                     else if (cache[set_rd].u03) begin
-                        way_rd <= 2'b11;
+                        way_rd = 2'b11;
                     end
 
-                    else way_rd <= 2'b00;
+                    else way_rd = 2'b00;
                 end
 
                 if (evict) begin
                     if (way_rd == 2'b00) begin
                         if (cache[set_rd].block0.dirty && (l2write_buffer == 0)) begin 
-                            l2write_back_data_buffer <= cache[set_rd].block0[255:0];
-                            l2write_back_addr_buffer <= {{cache[set_rd].block0.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block0.dirty <= 0;
-                            l2write_buffer <= 2'b10;
+                            l2write_back_data_buffer = cache[set_rd].block0[255:0];
+                            l2write_back_addr_buffer = {{cache[set_rd].block0.tag}, {set_rd}, {5'b0}};
+                            cache[set_rd].block0.dirty = 0;
+                            l2write_buffer = 2'b10;
                         end
 
                         else if (!cache[set_rd].block0.dirty && ready) begin
-                            wr_en <= 1;
-                            write_data <= line_from_mem;
-                            wmask <= '1;
-                            way <= way_rd;
-                            tag_bits <= tag_bits_rd;
-                            set <= set_rd;
-                            block_offset <= block_offset_rd;
-                            way <= way_rd;
+                            wr_en = 1;
+                            write_data = line_from_mem;
+                            wmask = '1;
+                            way = way_rd;
+                            tag_bits = tag_bits_rd;
+                            set = set_rd;
+                            block_offset = block_offset_rd;
                         end
                     end
 
                     else if (way_rd == 2'b01) begin
                         if (cache[set_rd].block1.dirty && (l2write_buffer == 2'b00)) begin
-                            l2write_back_data_buffer <= cache[set_rd].block1[255:0];
-                            l2write_back_addr_buffer <= {{cache[set_rd].block1.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block1.dirty <= 0;
-                            l2write_buffer <= 2'b10;
+                            l2write_back_data_buffer = cache[set_rd].block1[255:0];
+                            l2write_back_addr_buffer = {{cache[set_rd].block1.tag}, {set_rd}, {5'b0}};
+                            cache[set_rd].block1.dirty = 0;
+                            l2write_buffer = 2'b10;
                         end
 
                         else if (!cache[set_rd].block1.dirty && ready) begin
-                            wr_en <= 1;
-                            write_data <= line_from_mem;
-                            wmask <= '1;
-                            tag_bits <= tag_bits_rd;
-                            set <= set_rd;
-                            block_offset <= block_offset_rd;
-                            way <= way_rd;
+                            wr_en = 1;
+                            write_data = line_from_mem;
+                            wmask = '1;
+                            tag_bits = tag_bits_rd;
+                            set = set_rd;
+                            block_offset = block_offset_rd;
+                            way = way_rd;
                         end
                     end
 
                     else if (way_rd == 2'b10) begin
                         if (cache[set_rd].block2.dirty && (l2write_buffer == 2'b00)) begin 
-                            l2write_back_data_buffer <= cache[set_rd].block2[255:0];
-                            l2write_back_addr_buffer <= {{cache[set_rd].block2.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block2.dirty <= 0;
-                            l2write_buffer <= 2'b10;
+                            l2write_back_data_buffer = cache[set_rd].block2[255:0];
+                            l2write_back_addr_buffer = {{cache[set_rd].block2.tag}, {set_rd}, {5'b0}};
+                            cache[set_rd].block2.dirty = 0;
+                            l2write_buffer = 2'b10;
                         end
 
                         else if (!cache[set_rd].block2.dirty && ready) begin
-                            wr_en <= 1;
-                            write_data <= line_from_mem;
-                            wmask <= '1;
-                            tag_bits <= tag_bits_rd;
-                            set <= set_rd;
-                            block_offset <= block_offset_rd;
-                            way <= way_rd;
+                            wr_en = 1;
+                            write_data = line_from_mem;
+                            wmask = '1;
+                            tag_bits = tag_bits_rd;
+                            set = set_rd;
+                            block_offset = block_offset_rd;
+                            way = way_rd;
                         end
                     end
 
                     else if (way_rd == 2'b11) begin
                         if (cache[set_rd].block3.dirty && (l2write_buffer == 0)) begin 
-                            l2write_back_data_buffer <= cache[set_rd].block3[255:0];
-                            l2write_back_addr_buffer <= {{cache[set_rd].block3.tag}, {set_rd}, {5'b0}};
-                            cache[set_rd].block3.dirty <= 0;
-                            l2write_buffer <= 2'b10;
+                            l2write_back_data_buffer = cache[set_rd].block3[255:0];
+                            l2write_back_addr_buffer = {{cache[set_rd].block3.tag}, {set_rd}, {5'b0}};
+                            cache[set_rd].block3.dirty = 0;
+                            l2write_buffer = 2'b10;
                         end
 
                         else if (!cache[set_rd].block3.dirty && ready) begin
-                            wr_en <= 1;
-                            write_data <= line_from_mem;
-                            wmask <= '1;
-                            tag_bits <= tag_bits_rd;
-                            set <= set_rd;
-                            block_offset <= block_offset_rd;
-                            way <= way_rd;
+                            wr_en = 1;
+                            write_data = line_from_mem;
+                            wmask = '1;
+                            tag_bits = tag_bits_rd;
+                            set = set_rd;
+                            block_offset = block_offset_rd;
+                            way = way_rd;
                         end
                     end
                 end
 
                 else if (ready) begin
-                    wr_en      <= 1'b1;
-                    write_data <= line_from_mem;
-                    wmask <= '1;
-                    tag_bits <= tag_bits_rd;
-                    set <= set_rd;
-                    block_offset <= block_offset_rd;
-                    way <= way_rd;
+                    wr_en = 1'b1;
+                    write_data = line_from_mem;
+                    wmask = '1;
+                    tag_bits = tag_bits_rd;
+                    set = set_rd;
+                    block_offset = block_offset_rd;
+                    way = way_rd;
                 end
             end
 
             else if (!miss) begin
-                //way_rd determination
-                if (hit0) way <= 0;
-                else if (hit1) way <= 1;
-                else if (hit2) way <= 2;
-                else if (hit3) way <= 3;
+                if (hit0) way = 0;
+                else if (hit1) way = 1;
+                else if (hit2) way = 2;
+                else if (hit3) way = 3;
 
-                if (!l1write || wb_ready_d) begin // if L1 cache ready to receive data, enable read
-                    rd_en <= 1;
-                    tag_bits <= tag_bits_rd;
-                    set <= set_rd;
-                    block_offset <= block_offset_rd;
+                if (!l1write || wb_ready_d) begin
+                    rd_en = 1;
+                    tag_bits = tag_bits_rd;
+                    set = set_rd;
+                    block_offset = block_offset_rd;
                 end
-
             end
+        end
 
+        if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) begin
+            wr_wb = 1;
+            l1write_buffer = l1write_buffer - 1;
+            if (block_offset_wb == 3'b000) begin
+                write_data[127:0] = l1write_back_data_buffer;
+            end
+            else if (block_offset_wb == 3'b100) begin
+                write_data[255:128] = l1write_back_data_buffer;
+            end
         end
 
         if ((l2write_buffer == 2'b10) && wb_ready) begin
-            write_back_en <= 1;
-            write_back_data <= l2write_back_data_buffer[127:0];
-            write_back_addr <= l2write_back_addr_buffer;
-            l2write_buffer <= l2write_buffer - 1;
+            write_back_en = 1;
+            write_back_data = l2write_back_data_buffer[127:0];
+            write_back_addr = l2write_back_addr_buffer;
+            l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l2write_buffer == 2'b01) && wb_ready) begin
-            write_back_en <= 1;
-            write_back_data <= l2write_back_data_buffer[255:128];
-            write_back_addr <= {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
-            l2write_buffer <= l2write_buffer - 1;
+            write_back_en = 1;
+            write_back_data = l2write_back_data_buffer[255:128];
+            write_back_addr = {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
+            l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l1write_buffer && miss_wb) && wb_ready) begin
-            write_back_en <= 1;
-            write_back_data <= l1write_back_data_buffer;
-            write_back_addr <= l1write_back_addr_buffer;
-            l2write_buffer <= l1write_buffer - 1;
+            write_back_en = 1;
+            write_back_data = l1write_back_data_buffer;
+            write_back_addr = l1write_back_addr_buffer;
+            l1write_buffer_next = l1write_buffer - 1;
         end
 
         if (!rd_en && !wr_en && !miss_wb) begin
-            wr_en <= 1;
-            wr_wb <= 1;
-            write_data <= {2{l1write_back_data_buffer}};
+            wr_en = 1;
+            wr_wb = 1;
+            write_data = {2{l1write_back_data_buffer}};
 
-            if (hit0_wb) way <= 2'b00;
-            else if (hit1_wb) way <= 2'b01;
-            else if (hit2_wb) way <= 2'b10;
-            else if (hit3_wb) way <= 2'b11;
-            tag_bits <= tag_bits_wb;
-            set <= set_wb;
-            block_offset <= block_offset_wb;
+            if (hit0_wb) way = 2'b00;
+            else if (hit1_wb) way = 2'b01;
+            else if (hit2_wb) way = 2'b10;
+            else if (hit3_wb) way = 2'b11;
+
+            tag_bits = tag_bits_wb;
+            set = set_wb;
+            block_offset = block_offset_wb;
 
             if (block_offset_wb == 3'b000) begin
-                wmask <= {{128{1'b0}}, {128{1'b1}}};
+                wmask = {{128{1'b0}}, {128{1'b1}}};
             end
-
             else if (block_offset_wb == 3'b100) begin
-                wmask <= {{128{1'b1}}, {128{1'b0}}};
+                wmask = {{128{1'b1}}, {128{1'b0}}};
             end
-
         end
+    end
+
+
+    always_ff @(posedge clk) begin
+        // assign all "next" values
+        wb_ready_d <= wb_ready_d_next;
+        l1write_buffer <= l1write_buffer_next;
+        l2write_buffer <= l2write_buffer_next;
 
         //write logic
         if (wr_en) begin

@@ -3,6 +3,7 @@
 #include "Vdut.cpp"
 #include "Vdut___024root__DepSet_h5056ad81__0.cpp"
 #include "Vdut__Trace__0.cpp"
+#include "Vdut__ConstPool_0.cpp"
 #include "Vdut___024root__Slow.cpp"
 #include "Vdut___024root__DepSet_h5056ad81__0__Slow.cpp"
 #include "Vdut__Syms.cpp"
