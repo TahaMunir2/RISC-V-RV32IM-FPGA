@@ -241,6 +241,25 @@ FinalTarget = targetE;
 
 By default, we proceed sequentially (`PC + 4`). The `FinalTarget` default doesn't matter since it's only used when `PCSrcF = 2'b01`.
 
+##### Target Address Computation
+
+```systemverilog
+PCSrcF_assertion PCSourceF(
+    // ...
+    .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
+    .targetE(PCE + ExtImmE),
+    .FinalTarget(target),
+    // ...
+);
+```
+
+Two targets are computed:
+- **`targetF`**: Speculative target from Fetch (B-type immediate extracted directly from `InstrF`)
+- **`targetE`**: Actual target from Execute (`PCE + ExtImmE`)
+
+The `PCSrcF_assertion` module selects which one to use as `FinalTarget`.
+
+
 ### 2.3 Overall Integration
 
 This section describes how the branch predictor, PC source assertion, and PC block are wired together. All connections described here are illustrated in the schematic below.
@@ -347,79 +366,54 @@ The `false_prediction` signal feeds into:
 2. **`PCSrcF_assertion`**: Overrides Fetch-stage decisions to correct the PC
 
 
-##### 4. Target Address Computation
-
-```systemverilog
-PCSrcF_assertion PCSourceF(
-    // ...
-    .targetF(PCF + {{20{InstrF[31]}}, InstrF[7], InstrF[30:25], InstrF[11:8], 1'b0}),
-    .targetE(PCE + ExtImmE),
-    .FinalTarget(target),
-    // ...
-);
-```
-
-Two targets are computed:
-- **`targetF`**: Speculative target from Fetch (B-type immediate extracted directly from `InstrF`)
-- **`targetE`**: Actual target from Execute (`PCE + ExtImmE`)
-
-The `PCSrcF_assertion` module selects which one to use as `FinalTarget`.
-
-##### 5. PC Block Connections
-
-```systemverilog
-pc_block pc_block (
-    .clk(clk),
-    .rst(rst),
-    .enable(PCWrite),
-    .Imm_op(target),        // FinalTarget from PCSrcF_assertion
-    .pc_src(PCSrcF),        // PC source select from PCSrcF_assertion
-    .pc(PCF),               // Current PC output
-    .pc_saved(PCPlus4E),    // For misprediction recovery
-    .pc_save(PCPlus4F),     // PC+4 output for pipeline
-    .ALU(ALUResultE)        // For JALR
-);
-```
-
-##### 6. Prediction Propagation Through Pipeline
+##### 4. Prediction Propagation Through Pipeline
 
 The prediction made in Fetch must travel with the instruction to Execute for comparison:
-
-```
-Fetch          Decode         Execute
-─────          ──────         ───────
-pred_takenF ──► pred_takenD ──► pred_takenE
-               (fd_pipeline)   (de_pipeline)
-```
-
 This ensures that when a branch reaches Execute, we still know what prediction was made for it.
 
-#### Complete Data Flow Summary
+##### 5. Hazard Unit Modifications
 
-| Stage | Action |
-|-------|--------|
-| **Fetch** | Read `pred_takenF` from predictor using `PCF[7:2]`. If branch detected and prediction = taken, speculatively fetch from `targetF`. |
-| **Decode** | Propagate `pred_takenD` through pipeline register. |
-| **Execute** | Compare `pred_takenE` with actual outcome (`PCSrcE`). If mismatch, assert `false_prediction` and correct PC via `PCSrcF`. Update predictor state with actual outcome. |
-
-#### Hazard Unit Modifications
-
-The hazard unit now receives `false_prediction` to trigger pipeline flushes:
-
+The hazard unit was modified to handle branch mispredictions. Previously, flushing occurred whenever a branch was taken (`PCSrcE != 0`). Now, we only flush on **mispredictions** or **jumps**:
 ```systemverilog
-hazard_unit hazard_unit (
-    // ...
-    .JumpE(JumpE),
-    .false_prediction(false_prediction),
-    .flush_d_exec(flush_d_exec),
-    .flush_f_d(flush_f_d),
-    // ...
-);
+input logic JumpE,
+input logic false_prediction  // Replaces PCSrcE for flush decisions
 ```
 
-When a misprediction is detected, both the Fetch-Decode and Decode-Execute pipeline registers are flushed to discard speculatively fetched instructions.
+#### Flush Logic
+```systemverilog
+always_comb begin
+    // Default: no stall, no flush
+    PCWrite      = 1;
+    F_Write      = 1;
+    flush_d_exec = 0;
+    flush_f_d    = 0;
 
----
+    // Flush on misprediction or jump
+    if (false_prediction || JumpE) begin
+        flush_f_d    = 1;  // Flush Fetch-Decode register
+        flush_d_exec = 1;  // Flush Decode-Execute register
+    end
+
+    // Stall on load-use hazard
+    if (wStall == 1) begin
+        PCWrite      = 0;
+        F_Write      = 0;
+        flush_d_exec = 1;
+    end
+end
+```
+
+#### Key Change: When to Flush
+
+| Condition | Old Behavior | New Behavior |
+|-----------|--------------|--------------|
+| Branch taken, correctly predicted | Flush | **No flush** ✓ |
+| Branch taken, mispredicted | Flush | Flush |
+| Branch not taken, correctly predicted | No flush | No flush |
+| Branch not taken, mispredicted | No flush | **Flush** ✓ |
+| Jump (`JAL`/`JALR`) | Flush | Flush |
+
+This reduces unnecessary flushes when the branch predictor guesses correctly, improving pipeline efficiency.
 
 ## 3. Schematic
 
