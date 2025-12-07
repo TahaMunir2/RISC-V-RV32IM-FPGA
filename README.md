@@ -117,6 +117,8 @@ Execution Time = (# Instructions) × CPI × Tᶜ
 ##### Pipelined Processor Performance
 
 For a pipelined processor, the clock period is determined by the **slowest pipeline stage**:
+We note that the formula seen in the lecture accounts for the extra hardware in our circuit (implementing all of the 37 instructions).
+(We count the different occurences of each component using the schematic drawn in the section below)
 
 ```
 Tc_pipelined = max of:
