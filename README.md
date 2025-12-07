@@ -16,7 +16,7 @@
   - [4.1.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
   - [4.1.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
   - [4.1.4 Test 9: Add Upper Immediate to PC](#test-9-add-upper-immediate-to-pc-9_auipcs)
-  -[4.2 Results](#results)
+  - [4.2 Results](#results)
     
 ## Overview
 
