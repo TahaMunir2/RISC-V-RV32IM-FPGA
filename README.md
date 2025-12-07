@@ -427,18 +427,6 @@ When comparing `-5` with `2`:
 - **Signed (`BLT`)**: -5 < 2 → **True**
 - **Unsigned (`BLTU`)**: 4,294,967,291 < 2 → **False**
 
-### Loop Iterations
-
-| Iteration | a0 (before) | a0 (after `addi`) | `blt a0, t2` | `bge a0, t2` |
-|-----------|-------------|-------------------|--------------|--------------|
-| 1 | -5 | -4 | -4 < 2 ✓ → loop | - |
-| 2 | -4 | -3 | -3 < 2 ✓ → loop | - |
-| 3 | -3 | -2 | -2 < 2 ✓ → loop | - |
-| 4 | -2 | -1 | -1 < 2 ✓ → loop | - |
-| 5 | -1 | 0 | 0 < 2 ✓ → loop | - |
-| 6 | 0 | 1 | 1 < 2 ✓ → loop | - |
-| 7 | 1 | 2 | 2 < 2 ✗ | 2 ≥ 2 ✓ → exit |
-
 ### Expected Output
 ```
 a0 = 2
@@ -468,42 +456,25 @@ main:
     auipc a0, 1
 ```
 
-### Instruction Encoding
-
-```
-AUIPC a0, 1
-
-┌────────────────────┬───────┬─────────┐
-│   imm[31:12]       │  rd   │ opcode  │
-├────────────────────┼───────┼─────────┤
-│ 0000 0000 0001     │ 01010 │ 0010111 │
-│ (1 << 12 = 0x1000) │ (a0)  │ (AUIPC) │
-└────────────────────┴───────┴─────────┘
-```
-
 ### Calculation
+
+The program is loaded at address `0xBFC00000`:
 
 ```
 a0 = PC + (imm << 12)
-a0 = PC + (1 << 12)
-a0 = PC + 0x1000
-a0 = PC + 4096
+a0 = 0xBFC00000 + (1 << 12)
+a0 = 0xBFC00000 + 0x00001000
+a0 = 0xBFC01000
 ```
 
 ### Expected Output
-Assuming `main` is at address `0x00000000`:
+
 ```
-a0 = 0x00001000 (4096)
+a0 = 0xBFC01000 = 3217035264 (decimal)
 ```
 
 ### What It Tests
 - `AUIPC` instruction
-- Upper immediate encoding (20-bit immediate, shifted left by 12)
 - PC-relative address calculation
-- Correct datapath: PC → ALU input via `ALUsrc2` multiplexer
-
-### Datapath Verification
-This test specifically verifies the new `mux_pcVSreg` multiplexer (control signal : ALUsrc2 = 1 )
-
----
+- Correct datapath:ALU input (PC) via `ALUsrc2` multiplexer
 
