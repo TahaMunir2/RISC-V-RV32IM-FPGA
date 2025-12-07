@@ -10,7 +10,7 @@
   - [2.5 Extended Branch Comparison Signals](#extended-branch-comparison-signals)
   - [2.6 Memory Interface Extensions](#memory-interface-extensions)
 - [3. Final Circuit Schematic](#final-circuit-schematic)
-- [4. Testing](#testing)
+- [4. Additional testing added to demonstrate the new features](#testing)
   - [4.1 Test 6: Branch Equal](#test-6-branch-equal-6_beqs)
   - [4.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
   - [4.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
