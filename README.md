@@ -34,7 +34,7 @@
 
 ## 3. Schematic
 
-![diagram](Schematic.png)
+![diagram](pipelining.png)
 
 ---
 
