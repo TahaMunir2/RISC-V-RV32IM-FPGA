@@ -1,18 +1,21 @@
 # Full RV32I (37-Instruction):
 
 ## Table of Contents
-- [1. Overview](#1-Overview)
-- [2. Implementation](#2-Implementation)
-  - [2.1 Instruction Set Coverage](#21-Instruction-Set-Coverage)
-  - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#Control-Unit-Evolution)
-  - [2.3 New Multiplexer: PC vs Register (`mux_pcVSreg`)](#New-Multiplexer)
-  - [2.4 Extended ALU Control](#Extended-ALU-Control)
-  - [2.5 Extended Branch Comparison Signals](#Extended-Branch-Comparison-Signals)
-- [3. Schematic](#3-schematic)
-- [4. Testing & Verification](#4-testing--verification)
-  - [4.1 Hazard Unit Testing](#41-hazard-unit-testing)
-  - [4.2 Full Pipeline Testing](#42-full-pipeline-testing)
-
+- [1. Overview](#overview)
+- [2. Implementation](#implementation)
+  - [2.1 Instruction Set Coverage](#instruction-set-coverage)
+  - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#control-unit-evolution-from-9-to-37-instructions)
+  - [2.3 New Multiplexer: PC vs Register](#new-multiplexer-pc-vs-register-mux_pcvsreg)
+  - [2.4 Extended ALU Control](#extended-alu-control)
+  - [2.5 Extended Branch Comparison Signals](#extended-branch-comparison-signals)
+  - [2.6 Memory Interface Extensions](#memory-interface-extensions)
+- [3. Final Circuit Schematic](#final-circuit-schematic)
+- [4. Testing](#testing)
+  - [4.1 Test 6: Branch Equal](#test-6-branch-equal-6_beqs)
+  - [4.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
+  - [4.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
+  - [4.4 Test 9: Add Upper Immediate to PC](#test-9-add-upper-immediate-to-pc-9_auipcs)
+    
 ## Overview
 
 This section extends the reduced RV32I core from a 9-instruction subset to the full 37-instruction RV32I base integer ISA. The original design already implemented a working single-cycle datapath with a compact control unit targeting a minimal, but functional, subset of instructions. The work presented here **keeps the same overall datapath structure** and **systematically enriches the control logic** so that all arithmetic/logic, load/store, branch, and control-flow instructions defined in RV32I are supported.
