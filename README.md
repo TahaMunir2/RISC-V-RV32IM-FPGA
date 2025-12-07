@@ -197,9 +197,13 @@ This allows most data hazards to be resolved **without stalling**, maintaining p
 
 ### PCSrc_assertion logic explained
 
-In a pipelined processor, branch and jump decisions must be resolved in the Execute stage, where the ALU computes the comparison flags. The `PCSrc_assertion` module determines the next PC source based on the instruction type and comparison results.
+In the single-cycle design, branch resolution happens within the control unit. In the pipelined design, however:
+1. **Control signals are generated in Decode** which is before comparison flags are available
+2. **Comparison flags are computed in Execute** by the ALU
 
-#### Purpose
+Therefore, we need a dedicated module in the Execute stage that combines the pipelined control signals (`Branch_e`, `Jump_e`, `funct3`) with the ALU flags (`EQ`, `LT`, `LTU`) to produce the final `PCSrcE` decision.
+
+#### Output
 
 This module generates the `PCSrcE` control signal, which selects the source for the next Program Counter:
 
@@ -207,7 +211,17 @@ This module generates the `PCSrcE` control signal, which selects the source for 
 |--------|----------------|-----------|
 | `2'b00` | `PC + 4` | No branch/jump (sequential execution) |
 | `2'b01` | `PCTargetE` | Branch taken or `JAL` |
-| `2'b10` | `ALUResultE` | `JALR` (register-based jump) |
+| `2'b10` | `ALUResultE` | `JALR` (register based jump) |
+
+Which matches the logic in the pc_block: 
+
+```systemverilog
+case (pc_src)
+  2'b00: internal_pc <= inc_pc;    // PC + 4
+  2'b01: internal_pc <= branch_pc; // PC + Imm
+  2'b10: internal_pc <= ALU;       // JALR
+  default: internal_pc <= inc_pc;  
+```
 
 #### Branch Resolution Logic
 
@@ -228,19 +242,11 @@ Note the symmetry: each pair of branches (`BLT`/`BGE`, `BLTU`/`BGEU`, `BEQ`/`BNE
 
 When `Jump_e` is asserted:
 
-| ALUSrcE | Instruction | PCSrcE | Target Calculation |
+| ALUSrcE | Instruction | PCSrcE | Target Calculation (computed in the pc block) |
 |---------|-------------|--------|-------------------|
 | `0` | `JAL` | `2'b01` | `PC + immediate` (PC-relative) |
 | `1` | `JALR` | `2'b10` | `rs1 + immediate` (register-based) |
 
-
-#### Integration of this module
-
-In the single-cycle design, branch resolution happens within the control unit. In the pipelined design, however:
-1. **Control signals are generated in Decode** which is before comparison flags are available
-2. **Comparison flags are computed in Execute** by the ALU
-
-Therefore, we need a dedicated module in the Execute stage that combines the pipelined control signals (`Branch_e`, `Jump_e`, `funct3`) with the ALU flags (`EQ`, `LT`, `LTU`) to produce the final `PCSrcE` decision.
 
 ---
 
