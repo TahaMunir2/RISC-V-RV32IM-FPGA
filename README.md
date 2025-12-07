@@ -287,3 +287,5 @@ module regandalu #(DATA_WIDTH=32)(
 );
 ```
 ![diagram](Schematic.pdf)
+
+<img src="./Schematic.pdf">
