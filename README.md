@@ -15,7 +15,7 @@
 ## 1. Overview
 
 Pipelining is a technique used to improve processor performance by letting different parts of multiple instructions run at the same time instead of completing one instruction fully before starting the next.
-In a single-cycle CPU, each instruction passes sequentially through several steps—fetch, decode, execute, memory access, and writeback and this total delay defines the clock cycle. 
+In a single-cycle CPU, each instruction passes sequentially through several steps: fetch, decode, execute, memory access, and writeback and this total delay defines the clock cycle. 
 
 Pipelining divides these steps into separate hardware stages and places pipeline registers between them, so that each stage works on a different instruction every cycle. As a result, while one instruction is being executed, another is being decoded and a third is already being fetched. The processor therefore achieves higher throughput.
 
