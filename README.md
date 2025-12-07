@@ -286,3 +286,4 @@ module regandalu #(DATA_WIDTH=32)(
     output logic [DATA_WIDTH-1:0]   ALU_OUT
 );
 ```
+![diagram](Schematic.pdf)
