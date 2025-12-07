@@ -293,15 +293,12 @@ module regandalu #(DATA_WIDTH=32)(
 
 
 ---
-## Testing:
+# Testing:
 
 We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
 
-# Assembly Test Programs
+## Assembly Test Programs:
 
-This document describes the assembly test programs developed to verify the extended RISC-V implementation. Each test targets specific instruction types and edge cases.
-
----
 
 ## Test 6: Branch Equal (`6_beq.s`)
 
