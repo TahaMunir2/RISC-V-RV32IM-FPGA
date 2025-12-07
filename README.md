@@ -10,11 +10,13 @@
   - [2.5 Extended Branch Comparison Signals](#extended-branch-comparison-signals)
   - [2.6 Memory Interface Extensions](#memory-interface-extensions)
 - [3. Final Circuit Schematic](#final-circuit-schematic)
-- [4. Additional testing added to demonstrate the new features](#testing)
-  - [4.1 Test 6: Branch Equal](#test-6-branch-equal-6_beqs)
-  - [4.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
-  - [4.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
-  - [4.4 Test 9: Add Upper Immediate to PC](#test-9-add-upper-immediate-to-pc-9_auipcs)
+- [4. Testing](#testing)
+- [4.1 Additional testing added to demonstrate the new features](#assembly-test-programs)
+  - [4.1.1 Test 6: Branch Equal](#test-6-branch-equal-6_beqs)
+  - [4.1.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
+  - [4.1.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
+  - [4.1.4 Test 9: Add Upper Immediate to PC](#test-9-add-upper-immediate-to-pc-9_auipcs)
+  [4.2 Results](#Results)
     
 ## Overview
 
@@ -245,15 +247,15 @@ Two new signals were added to support variable-width loads with sign/zero extens
 
 We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
 
-## Assembly Test Programs:
+### Assembly Test Programs:
 
 
-## Test 6: Branch Equal (`6_beq.s`)
+#### Test 6: Branch Equal (`6_beq.s`)
 
-### Purpose
+##### Purpose
 Tests the `BEQ` (Branch if Equal) instruction in a loop context.
 
-### Code
+##### Code
 ```asm
 .text
 .globl main
@@ -265,7 +267,7 @@ iloop:
     beq t1, a0, iloop
 ```
 
-### Execution Trace
+##### Execution Trace
 
 | Cycle | Instruction | a0 | t1 | Branch Taken? |
 |-------|-------------|----|----|---------------|
@@ -276,12 +278,12 @@ iloop:
 | 5 | `addi a0, a0, 1` | 2 | 1 | - |
 | 6 | `beq t1, a0, iloop` | 2 | 1 | No (1 ≠ 2) |
 
-### Expected Output
+##### Expected Output
 ```
 a0 = 2
 ```
 
-### What It Tests
+##### What It Tests
 -`BEQ` instruction correctly compares two registers
 - Branch taken when registers are equal
 - Branch not taken when registers differ
@@ -289,12 +291,12 @@ a0 = 2
 
 ---
 
-## Test 7: Store Byte & Load Word (`7_sb_lw.s`)
+#### Test 7: Store Byte & Load Word (`7_sb_lw.s`)
 
-### Purpose
+##### Purpose
 Tests byte-level memory operations and little-endian word construction.
 
-### Code
+##### Code
 ```asm
 .text
 .globl main
@@ -308,7 +310,7 @@ main:
     lw a0, 0(zero)
 ```
 
-### Memory Layout After Stores
+##### Memory Layout After Stores
 
 | Address | Value | Source |
 |---------|-------|--------|
@@ -317,7 +319,7 @@ main:
 | 0x02 | 0x00 | `sb t1, 2(zero)` |
 | 0x03 | 0x00 | `sb t1, 3(zero)` |
 
-### Word Construction (Little-Endian)
+##### Word Construction (Little-Endian)
 
 ```
 Address:    0x03    0x02    0x01    0x00
@@ -326,12 +328,12 @@ Value:      0x00    0x00    0x01    0x01
 Word:              0x00000101 = 257
 ```
 
-### Expected Output
+##### Expected Output
 ```
 a0 = 257 (0x00000101)
 ```
 
-### What It Tests
+##### What It Tests
 -`SB` (Store Byte) instruction
 - `LW` (Load Word) instruction
 - Little-endian byte ordering
@@ -340,12 +342,12 @@ a0 = 257 (0x00000101)
 
 ---
 
-## Test 8: Inequality Branching (`8_inequality_branching.s`)
+#### Test 8: Inequality Branching (`8_inequality_branching.s`)
 
-### Purpose
+##### Purpose
 Tests all inequality branch instructions, including signed vs unsigned comparison edge cases.
 
-### Code
+##### Code
 ```asm
 .text
 .globl main
@@ -365,7 +367,7 @@ endm:
 endi:
 ```
 
-### Key Insight: Signed vs Unsigned Comparison
+##### Key Insight: Signed vs Unsigned Comparison
 
 | Value | Signed Interpretation | Unsigned Interpretation |
 |-------|----------------------|------------------------|
@@ -375,12 +377,12 @@ When comparing `-5` with `2`:
 - **Signed (`BLT`)**: -5 < 2 → **True**
 - **Unsigned (`BLTU`)**: 4,294,967,291 < 2 → **False**
 
-### Expected Output
+##### Expected Output
 ```
 a0 = 2
 ```
 
-### What It Tests
+##### What It Tests
 - `BLT` (Branch if Less Than, signed)
 - `BGE` (Branch if Greater or Equal, signed)
 - `BLTU` (Branch if Less Than, unsigned)
@@ -391,12 +393,12 @@ a0 = 2
 
 ---
 
-## Test 9: Add Upper Immediate to PC (`9_auipc.s`)
+#### Test 9: Add Upper Immediate to PC (`9_auipc.s`)
 
-### Purpose
+##### Purpose
 Tests the `AUIPC` instruction which adds an upper immediate to the program counter.
 
-### Code
+##### Code
 ```asm
 .text
 .globl main
@@ -404,7 +406,7 @@ main:
     auipc a0, 1
 ```
 
-### Calculation
+##### Calculation
 
 The program is loaded at address `0xBFC00000`:
 
@@ -415,13 +417,13 @@ a0 = 0xBFC00000 + 0x00001000
 a0 = 0xBFC01000
 ```
 
-### Expected Output
+##### Expected Output
 
 ```
 a0 = 0xBFC01000 = 3217035264 (decimal)
 ```
 
-### What It Tests
+##### What It Tests
 - `AUIPC` instruction
 - PC-relative address calculation
 - Correct datapath:ALU input (PC) via `ALUsrc2` multiplexer
