@@ -5,7 +5,9 @@
 - [2. Implementation](#2-implementation)
   - [2.1 Pipeline Architecture](#21-pipeline-architecture)
   - [2.2 Performance Analysis](#performance_analysis)
-  - [2.3 Hazard Unit](#22-hazard-unit)
+  - [2.3 Forwarding Multiplexers](#forwarding-multiplexers)
+  - [2.4 PCSrc_assertion logic explained](#pcsrc_assertion-logic-explained)
+  - [2.5 Hazard Unit](#22-hazard-unit)
 - [3. Schematic](#3-schematic)
 - [4. Testing & Verification](#4-testing--verification)
   - [4.1 Hazard Unit Testing](#41-hazard-unit-testing)
@@ -154,7 +156,7 @@ Speedup = 300s / 129s ≈ 1.74×
 This demonstrates the fundamental advantage of pipelining: **higher throughput** through instruction-level parallelism, even at the cost of slightly reduced efficiency per instruction.
 
 
-#### forwarding multiplexers
+### Forwarding Multiplexers
 
 Data hazards occur when an instruction depends on the result of a previous instruction still in the pipeline. Rather than stalling, we can **forward** the required data directly from where it is available to where it is needed.
 
@@ -193,7 +195,7 @@ The **Hazard Unit** monitors register addresses across pipeline stages (`Rs1E`, 
 This allows most data hazards to be resolved **without stalling**, maintaining pipeline throughput. (See more on the hazard unit logic below)
 
 
-#### PCSrc_assertion logic explained
+### PCSrc_assertion logic explained
 
 ---
 
