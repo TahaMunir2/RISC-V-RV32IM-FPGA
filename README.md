@@ -296,3 +296,267 @@ module regandalu #(DATA_WIDTH=32)(
 ## Testing:
 
 We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
+
+# Assembly Test Programs
+
+This document describes the assembly test programs developed to verify the extended RISC-V implementation. Each test targets specific instruction types and edge cases.
+
+---
+
+## Test 6: Branch Equal (`6_beq.s`)
+
+### Purpose
+Tests the `BEQ` (Branch if Equal) instruction in a loop context.
+
+### Code
+```asm
+.text
+.globl main
+main:
+    addi t1, zero, 1
+    li a0, 0
+iloop:
+    addi a0, a0, 1
+    beq t1, a0, iloop
+```
+
+### Execution Trace
+
+| Cycle | Instruction | a0 | t1 | Branch Taken? |
+|-------|-------------|----|----|---------------|
+| 1 | `addi t1, zero, 1` | 0 | 1 | - |
+| 2 | `li a0, 0` | 0 | 1 | - |
+| 3 | `addi a0, a0, 1` | 1 | 1 | - |
+| 4 | `beq t1, a0, iloop` | 1 | 1 | ✅ Yes (1 == 1) |
+| 5 | `addi a0, a0, 1` | 2 | 1 | - |
+| 6 | `beq t1, a0, iloop` | 2 | 1 | ❌ No (1 ≠ 2) |
+
+### Expected Output
+```
+a0 = 2
+```
+
+### What It Tests
+- ✅ `BEQ` instruction correctly compares two registers
+- ✅ Branch taken when registers are equal
+- ✅ Branch not taken when registers differ
+- ✅ Loop control flow with conditional branching
+
+---
+
+## Test 7: Store Byte & Load Word (`7_sb_lw.s`)
+
+### Purpose
+Tests byte-level memory operations and little-endian word construction.
+
+### Code
+```asm
+.text
+.globl main
+main:
+    li t1, 0
+    li a0, 1
+    sb a0, 0(zero)
+    sb a0, 1(zero)
+    sb t1, 2(zero)
+    sb t1, 3(zero)
+    lw a0, 0(zero)
+```
+
+### Memory Layout After Stores
+
+| Address | Value | Source |
+|---------|-------|--------|
+| 0x00 | 0x01 | `sb a0, 0(zero)` |
+| 0x01 | 0x01 | `sb a0, 1(zero)` |
+| 0x02 | 0x00 | `sb t1, 2(zero)` |
+| 0x03 | 0x00 | `sb t1, 3(zero)` |
+
+### Word Construction (Little-Endian)
+
+```
+Address:    0x03    0x02    0x01    0x00
+Value:      0x00    0x00    0x01    0x01
+            ────────────────────────────
+Word:              0x00000101 = 257
+```
+
+### Expected Output
+```
+a0 = 257 (0x00000101)
+```
+
+### What It Tests
+- ✅ `SB` (Store Byte) instruction
+- ✅ `LW` (Load Word) instruction
+- ✅ Little-endian byte ordering
+- ✅ Memory addressing with zero base register
+- ✅ Multi-byte value construction from individual bytes
+
+---
+
+## Test 8: Inequality Branching (`8_inequality_branching.s`)
+
+### Purpose
+Tests all inequality branch instructions, including signed vs unsigned comparison edge cases.
+
+### Code
+```asm
+.text
+.globl main
+main:
+    addi t2, zero, 2
+    li a0, -5
+    bltu a0, t2, mloop      # Unsigned: -5 = 0xFFFFFFFB > 2
+    blt a0, t2, iloop       # Signed: -5 < 2 ✓
+mloop:
+    bgeu a0, t2, endm       # Unsigned: 0xFFFFFFFB >= 2 ✓
+iloop:
+    addi a0, a0, 1
+    blt a0, t2, iloop       # Loop while a0 < 2 (signed)
+    bge a0, t2, endi        # Exit when a0 >= 2 (signed)
+endm:
+    li a0, 10
+endi:
+```
+
+### Key Insight: Signed vs Unsigned Comparison
+
+| Value | Signed Interpretation | Unsigned Interpretation |
+|-------|----------------------|------------------------|
+| `0xFFFFFFFB` | -5 | 4,294,967,291 |
+
+When comparing `-5` with `2`:
+- **Signed (`BLT`)**: -5 < 2 → **True**
+- **Unsigned (`BLTU`)**: 4,294,967,291 < 2 → **False**
+
+### Execution Flow
+
+```
+                    ┌─────────────────────────┐
+                    │ t2 = 2, a0 = -5         │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │ bltu a0, t2, mloop      │
+                    │ (unsigned: 0xFFFFFFFB)  │
+                    │ NOT TAKEN (big > small) │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │ blt a0, t2, iloop       │
+                    │ (signed: -5 < 2)        │
+                    │ TAKEN ──────────────────┼──────┐
+                    └─────────────────────────┘      │
+                                                     │
+                    ┌────────────────────────────────▼─┐
+                    │ iloop:                           │
+                    │   addi a0, a0, 1                 │◄────┐
+                    │   blt a0, t2, iloop ─────────────┼─────┘
+                    │   (loop while a0 < 2)            │  (when a0 < 2)
+                    │   bge a0, t2, endi ──────────────┼──────┐
+                    └──────────────────────────────────┘      │
+                                                              │
+                    ┌─────────────────────────────────────────▼─┐
+                    │ endi: (program ends)                      │
+                    └───────────────────────────────────────────┘
+```
+
+### Loop Iterations
+
+| Iteration | a0 (before) | a0 (after `addi`) | `blt a0, t2` | `bge a0, t2` |
+|-----------|-------------|-------------------|--------------|--------------|
+| 1 | -5 | -4 | -4 < 2 ✓ → loop | - |
+| 2 | -4 | -3 | -3 < 2 ✓ → loop | - |
+| 3 | -3 | -2 | -2 < 2 ✓ → loop | - |
+| 4 | -2 | -1 | -1 < 2 ✓ → loop | - |
+| 5 | -1 | 0 | 0 < 2 ✓ → loop | - |
+| 6 | 0 | 1 | 1 < 2 ✓ → loop | - |
+| 7 | 1 | 2 | 2 < 2 ✗ | 2 ≥ 2 ✓ → exit |
+
+### Expected Output
+```
+a0 = 2
+```
+
+### What It Tests
+- ✅ `BLT` (Branch if Less Than, signed)
+- ✅ `BGE` (Branch if Greater or Equal, signed)
+- ✅ `BLTU` (Branch if Less Than, unsigned)
+- ✅ `BGEU` (Branch if Greater or Equal, unsigned)
+- ✅ Signed vs unsigned comparison semantics
+- ✅ Negative number handling in comparisons
+- ✅ Complex control flow with multiple branch targets
+
+---
+
+## Test 9: Add Upper Immediate to PC (`9_auipc.s`)
+
+### Purpose
+Tests the `AUIPC` instruction which adds an upper immediate to the program counter.
+
+### Code
+```asm
+.text
+.globl main
+main:
+    auipc a0, 1
+```
+
+### Instruction Encoding
+
+```
+AUIPC a0, 1
+
+┌────────────────────┬───────┬─────────┐
+│   imm[31:12]       │  rd   │ opcode  │
+├────────────────────┼───────┼─────────┤
+│ 0000 0000 0001     │ 01010 │ 0010111 │
+│ (1 << 12 = 0x1000) │ (a0)  │ (AUIPC) │
+└────────────────────┴───────┴─────────┘
+```
+
+### Calculation
+
+```
+a0 = PC + (imm << 12)
+a0 = PC + (1 << 12)
+a0 = PC + 0x1000
+a0 = PC + 4096
+```
+
+### Expected Output
+Assuming `main` is at address `0x00000000`:
+```
+a0 = 0x00001000 (4096)
+```
+
+### What It Tests
+- ✅ `AUIPC` instruction
+- ✅ Upper immediate encoding (20-bit immediate, shifted left by 12)
+- ✅ PC-relative address calculation
+- ✅ Correct datapath: PC → ALU input via `ALUsrc2` multiplexer
+
+### Datapath Verification
+This test specifically verifies the new `mux_pcVSreg` multiplexer:
+
+```
+        ┌─────────────┐
+ regOp ─┤             │
+        │  mux_pcVSreg├──► ALUop1 ──► ALU ──► a0
+   PC ──┤             │              (ADD)
+        └──────▲──────┘
+               │
+            ALUsrc2 = 1  (select PC)
+```
+
+---
+
+## Summary
+
+| Test | Instructions Tested | Key Concepts |
+|------|--------------------|--------------| 
+| `6_beq.s` | `BEQ`, `ADDI` | Conditional branching, loop control |
+| `7_sb_lw.s` | `SB`, `LW` | Memory operations, little-endian |
+| `8_inequality_branching.s` | `BLT`, `BGE`, `BLTU`, `BGEU` | Signed vs unsigned comparisons |
+| `9_auipc.s` | `AUIPC` | PC-relative addressing, upper immediate |
