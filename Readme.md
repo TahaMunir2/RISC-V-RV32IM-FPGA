@@ -266,7 +266,7 @@ endcase
 | `2'b10` | `ALU` | `ALUResultE` | `JALR` instruction |
 | `2'b11` | `pc_saved` | `PCPlus4E` | Recovery from "predicted taken, actually not taken" |
 
-#### Why `pc_saved` is Different from `inc_pc`
+#### Difference between `pc_saved` and `inc_pc` (`pc_saved` is different from `pc_save` in our previous designs) 
 
 Both represent a `PC + 4` value, but from **different instructions**:
 
