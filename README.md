@@ -5,10 +5,9 @@
 - [2. Implementation](#2-Implementation)
   - [2.1 Instruction Set Coverage](#21-Instruction-Set-Coverage)
   - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#Control-Unit-Evolution:-From-9-to-37-Instructions)
-  - [2.3 Datapath Modifications](#Datapath-Modifications)
-  - [2.4 New Multiplexer: PC vs Register (`mux_pcVSreg`)](#New-Multiplexer)
-  - [2.5 Extended ALU Control](#Extended-ALU-Control)
-  - [2.6 Extended Branch Comparison Signals](#Extended-Branch-Comparison-Signals)
+  - [2.3 New Multiplexer: PC vs Register (`mux_pcVSreg`)](#New-Multiplexer:-PC-vs-Register-(`mux_pcVSreg`))
+  - [2.4 Extended ALU Control](#Extended-ALU-Control)
+  - [2.5 Extended Branch Comparison Signals](#Extended-Branch-Comparison-Signals)
 - [3. Schematic](#3-schematic)
 - [4. Testing & Verification](#4-testing--verification)
   - [4.1 Hazard Unit Testing](#41-hazard-unit-testing)
@@ -113,10 +112,6 @@ To go from the reduced 9-instruction core to the full 37-instruction RV32I imple
   Signals such as `RegWrite`, `ImmSrc`, `PCSrc`, `ResultSrc`, and `MemWrite` retain the same roles as in the 9-instruction version, so the existing datapath modules (register file, sign-extension unit, PC logic, and data memory) can be reused with only minimal, local changes .
 
 Together, these changes transform the original “minimal subset” controller into a complete **RV32I-compliant control unit**, while maintaining the same overall architectural style introduced in the previous section.
-
-### Datapath Modifications: 9 to 37 Instructions
-
-This section describes the changes made to the datapath (`regandalu` module) to extend the RISC-V implementation from 9 instructions to the full RV32I base instruction set (37 instructions).
 
 ---
 
