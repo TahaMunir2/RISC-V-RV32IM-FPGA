@@ -10,7 +10,7 @@ VM_C11 = 1
 # Coverage output mode?  0/1 (from --coverage)
 VM_COVERAGE = 0
 # Parallel builds?  0/1 (from --output-split)
-VM_PARALLEL_BUILDS = 1
+VM_PARALLEL_BUILDS = 0
 # Threaded output mode?  0/1/N threads (from --threads)
 VM_THREADS = 0
 # Tracing output mode?  0/1 (from --trace/--trace-fst)
@@ -25,7 +25,6 @@ VM_TRACE_FST = 0
 VM_CLASSES_FAST += \
 	Vdut \
 	Vdut___024root__DepSet_h5056ad81__0 \
-	Vdut___024root__DepSet_h5056ad81__1 \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
 VM_CLASSES_SLOW += \

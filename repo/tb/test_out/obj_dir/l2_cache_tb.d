@@ -1,10 +1,11 @@
-Vdut__Trace__0.o: Vdut__Trace__0.cpp \
- /usr/local/share/verilator/include/verilated_vcd_c.h \
+l2_cache_tb.o: ../tests/l2_cache_tb.cpp ../tests/testbench.h \
+ ../tests/base_testbench.h Vdut.h \
  /usr/local/share/verilator/include/verilated.h \
  /usr/local/share/verilator/include/verilatedos.h \
  /usr/local/share/verilator/include/verilated_config.h \
  /usr/local/share/verilator/include/verilated_types.h \
  /usr/local/share/verilator/include/verilated_funcs.h \
+ /usr/local/share/verilator/include/verilated_vcd_c.h \
+ /usr/local/share/verilator/include/verilated.h \
  /usr/local/share/verilator/include/verilated_trace.h \
- /usr/local/share/verilator/include/verilated_trace_defs.h Vdut__Syms.h \
- /usr/local/share/verilator/include/verilated.h Vdut.h Vdut___024root.h
+ /usr/local/share/verilator/include/verilated_trace_defs.h

@@ -12,22 +12,25 @@ Vdut::Vdut(VerilatedContext* _vcontextp__, const char* _vcname__)
     : VerilatedModel{*_vcontextp__}
     , vlSymsp{new Vdut__Syms(contextp(), _vcname__, this)}
     , clk{vlSymsp->TOP.clk}
-    , fetch{vlSymsp->TOP.fetch}
-    , SizeWrite_m{vlSymsp->TOP.SizeWrite_m}
-    , MemWrite_m{vlSymsp->TOP.MemWrite_m}
-    , LoadSize{vlSymsp->TOP.LoadSize}
-    , LoadUnsigned{vlSymsp->TOP.LoadUnsigned}
+    , fetch_i{vlSymsp->TOP.fetch_i}
+    , fetch_d{vlSymsp->TOP.fetch_d}
+    , l1write_back_en{vlSymsp->TOP.l1write_back_en}
     , ready{vlSymsp->TOP.ready}
+    , wb_ready{vlSymsp->TOP.wb_ready}
+    , ready_i{vlSymsp->TOP.ready_i}
+    , ready_d{vlSymsp->TOP.ready_d}
+    , wb_ready_d{vlSymsp->TOP.wb_ready_d}
     , write_back_en{vlSymsp->TOP.write_back_en}
-    , l2_fetch{vlSymsp->TOP.l2_fetch}
-    , stall{vlSymsp->TOP.stall}
-    , addr{vlSymsp->TOP.addr}
-    , wd{vlSymsp->TOP.wd}
+    , main_mem_addr{vlSymsp->TOP.main_mem_addr}
+    , main_mem_fetch{vlSymsp->TOP.main_mem_fetch}
+    , addr_i{vlSymsp->TOP.addr_i}
+    , addr_d{vlSymsp->TOP.addr_d}
     , line_from_mem{vlSymsp->TOP.line_from_mem}
+    , l1write_back_data{vlSymsp->TOP.l1write_back_data}
+    , l1write_back_addr{vlSymsp->TOP.l1write_back_addr}
     , data_out{vlSymsp->TOP.data_out}
-    , write_back{vlSymsp->TOP.write_back}
+    , write_back_data{vlSymsp->TOP.write_back_data}
     , write_back_addr{vlSymsp->TOP.write_back_addr}
-    , l2_addr{vlSymsp->TOP.l2_addr}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context
@@ -52,7 +55,6 @@ Vdut::~Vdut() {
 void Vdut___024root___eval_initial(Vdut___024root* vlSelf);
 void Vdut___024root___eval_settle(Vdut___024root* vlSelf);
 void Vdut___024root___eval(Vdut___024root* vlSelf);
-QData Vdut___024root___change_request(Vdut___024root* vlSelf);
 #ifdef VL_DEBUG
 void Vdut___024root___eval_debug_assertions(Vdut___024root* vlSelf);
 #endif  // VL_DEBUG
@@ -62,27 +64,12 @@ static void _eval_initial_loop(Vdut__Syms* __restrict vlSymsp) {
     vlSymsp->__Vm_didInit = true;
     Vdut___024root___eval_initial(&(vlSymsp->TOP));
     // Evaluate till stable
-    int __VclockLoop = 0;
-    QData __Vchange = 1;
     vlSymsp->__Vm_activity = true;
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Initial loop\n"););
         Vdut___024root___eval_settle(&(vlSymsp->TOP));
         Vdut___024root___eval(&(vlSymsp->TOP));
-        if (VL_UNLIKELY(++__VclockLoop > 100)) {
-            // About to fail, so enable debug to see what's not settling.
-            // Note you must run make with OPT=-DVL_DEBUG for debug prints.
-            int __Vsaved_debug = Verilated::debug();
-            Verilated::debug(1);
-            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
-            Verilated::debug(__Vsaved_debug);
-            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1d_cache.sv", 1, "",
-                "Verilated model didn't DC converge\n"
-                "- See https://verilator.org/warn/DIDNOTCONVERGE");
-        } else {
-            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
-        }
-    } while (VL_UNLIKELY(__Vchange));
+    } while (0);
 }
 
 void Vdut::eval_step() {
@@ -94,26 +81,11 @@ void Vdut::eval_step() {
     // Initialize
     if (VL_UNLIKELY(!vlSymsp->__Vm_didInit)) _eval_initial_loop(vlSymsp);
     // Evaluate till stable
-    int __VclockLoop = 0;
-    QData __Vchange = 1;
     vlSymsp->__Vm_activity = true;
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Clock loop\n"););
         Vdut___024root___eval(&(vlSymsp->TOP));
-        if (VL_UNLIKELY(++__VclockLoop > 100)) {
-            // About to fail, so enable debug to see what's not settling.
-            // Note you must run make with OPT=-DVL_DEBUG for debug prints.
-            int __Vsaved_debug = Verilated::debug();
-            Verilated::debug(1);
-            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
-            Verilated::debug(__Vsaved_debug);
-            VL_FATAL_MT("/home/leoyin/Documents/iac/Team5/repo/rtl/l1d_cache.sv", 1, "",
-                "Verilated model didn't converge\n"
-                "- See https://verilator.org/warn/DIDNOTCONVERGE");
-        } else {
-            __Vchange = Vdut___024root___change_request(&(vlSymsp->TOP));
-        }
-    } while (VL_UNLIKELY(__Vchange));
+    } while (0);
     // Evaluate cleanup
 }
 

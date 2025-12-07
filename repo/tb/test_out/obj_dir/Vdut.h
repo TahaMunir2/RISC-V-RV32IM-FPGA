@@ -26,22 +26,25 @@ class Vdut VL_NOT_FINAL : public VerilatedModel {
     // The application code writes and reads these signals to
     // propagate new values into/out from the Verilated model.
     VL_IN8(&clk,0,0);
-    VL_IN8(&fetch,0,0);
-    VL_IN8(&SizeWrite_m,1,0);
-    VL_IN8(&MemWrite_m,0,0);
-    VL_IN8(&LoadSize,1,0);
-    VL_IN8(&LoadUnsigned,0,0);
+    VL_IN8(&fetch_i,0,0);
+    VL_IN8(&fetch_d,0,0);
+    VL_IN8(&l1write_back_en,0,0);
     VL_IN8(&ready,0,0);
+    VL_IN8(&wb_ready,0,0);
+    VL_OUT8(&ready_i,0,0);
+    VL_OUT8(&ready_d,0,0);
+    VL_OUT8(&wb_ready_d,0,0);
     VL_OUT8(&write_back_en,0,0);
-    VL_OUT8(&l2_fetch,0,0);
-    VL_OUT8(&stall,0,0);
-    VL_IN(&addr,31,0);
-    VL_IN(&wd,31,0);
-    VL_INW(&line_from_mem,127,0,4);
-    VL_OUT(&data_out,31,0);
-    VL_OUTW(&write_back,127,0,4);
+    VL_OUT8(&main_mem_addr,0,0);
+    VL_OUT8(&main_mem_fetch,0,0);
+    VL_IN(&addr_i,31,0);
+    VL_IN(&addr_d,31,0);
+    VL_INW(&line_from_mem,255,0,8);
+    VL_INW(&l1write_back_data,127,0,4);
+    VL_IN(&l1write_back_addr,31,0);
+    VL_OUTW(&data_out,127,0,4);
+    VL_OUTW(&write_back_data,127,0,4);
     VL_OUT(&write_back_addr,31,0);
-    VL_OUT(&l2_addr,31,0);
 
     // CELLS
     // Public to allow access to /* verilator public */ items.
