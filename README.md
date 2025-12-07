@@ -324,9 +324,9 @@ iloop:
 | 1 | `addi t1, zero, 1` | 0 | 1 | - |
 | 2 | `li a0, 0` | 0 | 1 | - |
 | 3 | `addi a0, a0, 1` | 1 | 1 | - |
-| 4 | `beq t1, a0, iloop` | 1 | 1 | ✅ Yes (1 == 1) |
+| 4 | `beq t1, a0, iloop` | 1 | 1 | Yes (1 == 1) |
 | 5 | `addi a0, a0, 1` | 2 | 1 | - |
-| 6 | `beq t1, a0, iloop` | 2 | 1 | ❌ No (1 ≠ 2) |
+| 6 | `beq t1, a0, iloop` | 2 | 1 | No (1 ≠ 2) |
 
 ### Expected Output
 ```
@@ -334,10 +334,10 @@ a0 = 2
 ```
 
 ### What It Tests
-- ✅ `BEQ` instruction correctly compares two registers
-- ✅ Branch taken when registers are equal
-- ✅ Branch not taken when registers differ
-- ✅ Loop control flow with conditional branching
+-`BEQ` instruction correctly compares two registers
+- Branch taken when registers are equal
+- Branch not taken when registers differ
+- Loop control flow with conditional branching
 
 ---
 
@@ -384,11 +384,11 @@ a0 = 257 (0x00000101)
 ```
 
 ### What It Tests
-- ✅ `SB` (Store Byte) instruction
-- ✅ `LW` (Load Word) instruction
-- ✅ Little-endian byte ordering
-- ✅ Memory addressing with zero base register
-- ✅ Multi-byte value construction from individual bytes
+-`SB` (Store Byte) instruction
+- `LW` (Load Word) instruction
+- Little-endian byte ordering
+- Memory addressing with zero base register
+- Multi-byte value construction from individual bytes
 
 ---
 
@@ -445,13 +445,13 @@ a0 = 2
 ```
 
 ### What It Tests
-- ✅ `BLT` (Branch if Less Than, signed)
-- ✅ `BGE` (Branch if Greater or Equal, signed)
-- ✅ `BLTU` (Branch if Less Than, unsigned)
-- ✅ `BGEU` (Branch if Greater or Equal, unsigned)
-- ✅ Signed vs unsigned comparison semantics
-- ✅ Negative number handling in comparisons
-- ✅ Complex control flow with multiple branch targets
+- `BLT` (Branch if Less Than, signed)
+- `BGE` (Branch if Greater or Equal, signed)
+- `BLTU` (Branch if Less Than, unsigned)
+- `BGEU` (Branch if Greater or Equal, unsigned)
+- Signed vs unsigned comparison semantics
+- Negative number handling in comparisons
+- Complex control flow with multiple branch targets
 
 ---
 
@@ -497,10 +497,10 @@ a0 = 0x00001000 (4096)
 ```
 
 ### What It Tests
-- ✅ `AUIPC` instruction
-- ✅ Upper immediate encoding (20-bit immediate, shifted left by 12)
-- ✅ PC-relative address calculation
-- ✅ Correct datapath: PC → ALU input via `ALUsrc2` multiplexer
+- `AUIPC` instruction
+- Upper immediate encoding (20-bit immediate, shifted left by 12)
+- PC-relative address calculation
+- Correct datapath: PC → ALU input via `ALUsrc2` multiplexer
 
 ### Datapath Verification
 This test specifically verifies the new `mux_pcVSreg` multiplexer:
@@ -517,11 +517,3 @@ This test specifically verifies the new `mux_pcVSreg` multiplexer:
 
 ---
 
-## Summary
-
-| Test | Instructions Tested | Key Concepts |
-|------|--------------------|--------------| 
-| `6_beq.s` | `BEQ`, `ADDI` | Conditional branching, loop control |
-| `7_sb_lw.s` | `SB`, `LW` | Memory operations, little-endian |
-| `8_inequality_branching.s` | `BLT`, `BGE`, `BLTU`, `BGEU` | Signed vs unsigned comparisons |
-| `9_auipc.s` | `AUIPC` | PC-relative addressing, upper immediate |
