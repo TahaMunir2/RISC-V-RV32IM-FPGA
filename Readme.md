@@ -407,10 +407,10 @@ end
 
 | Condition | Old Behavior | New Behavior |
 |-----------|--------------|--------------|
-| Branch taken, correctly predicted | Flush | **No flush** ✓ |
+| Branch taken, correctly predicted | Flush | **No flush** |
 | Branch taken, mispredicted | Flush | Flush |
 | Branch not taken, correctly predicted | No flush | No flush |
-| Branch not taken, mispredicted | No flush | **Flush** ✓ |
+| Branch not taken, mispredicted | No flush | **Flush** |
 | Jump (`JAL`/`JALR`) | Flush | Flush |
 
 This reduces unnecessary flushes when the branch predictor guesses correctly, improving pipeline efficiency.
