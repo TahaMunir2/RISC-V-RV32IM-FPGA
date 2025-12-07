@@ -197,6 +197,51 @@ This allows most data hazards to be resolved **without stalling**, maintaining p
 
 ### PCSrc_assertion logic explained
 
+In a pipelined processor, branch and jump decisions must be resolved in the Execute stage, where the ALU computes the comparison flags. The `PCSrc_assertion` module determines the next PC source based on the instruction type and comparison results.
+
+#### Purpose
+
+This module generates the `PCSrcE` control signal, which selects the source for the next Program Counter:
+
+| PCSrcE | Next PC Source | Condition |
+|--------|----------------|-----------|
+| `2'b00` | `PC + 4` | No branch/jump (sequential execution) |
+| `2'b01` | `PCTargetE` | Branch taken or `JAL` |
+| `2'b10` | `ALUResultE` | `JALR` (register-based jump) |
+
+#### Branch Resolution Logic
+
+When `Branch_e` is asserted, the module decodes `funct3` to determine which comparison flag to evaluate:
+
+| funct3 | Instruction | Branch Taken When |
+|--------|-------------|-------------------|
+| `3'b000` | `BEQ` | `EQ == 1` (equal) |
+| `3'b001` | `BNE` | `EQ == 0` (not equal) |
+| `3'b100` | `BLT` | `LT == 1` (less than, signed) |
+| `3'b101` | `BGE` | `LT == 0` (greater or equal, signed) |
+| `3'b110` | `BLTU` | `LTU == 1` (less than, unsigned) |
+| `3'b111` | `BGEU` | `LTU == 0` (greater or equal, unsigned) |
+
+Note the symmetry: each pair of branches (`BLT`/`BGE`, `BLTU`/`BGEU`, `BEQ`/`BNE`) uses the **same flag** but with **opposite polarity**.
+
+#### Jump Resolution Logic
+
+When `Jump_e` is asserted:
+
+| ALUSrcE | Instruction | PCSrcE | Target Calculation |
+|---------|-------------|--------|-------------------|
+| `0` | `JAL` | `2'b01` | `PC + immediate` (PC-relative) |
+| `1` | `JALR` | `2'b10` | `rs1 + immediate` (register-based) |
+
+
+#### Integration of this module
+
+In the single-cycle design, branch resolution happens within the control unit. In the pipelined design, however:
+1. **Control signals are generated in Decode** which is before comparison flags are available
+2. **Comparison flags are computed in Execute** by the ALU
+
+Therefore, we need a dedicated module in the Execute stage that combines the pipelined control signals (`Branch_e`, `Jump_e`, `funct3`) with the ALU flags (`EQ`, `LT`, `LTU`) to produce the final `PCSrcE` decision.
+
 ---
 
 ### 2.2 Hazard Unit
