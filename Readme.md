@@ -33,6 +33,8 @@ We maintain a table indexed by the branch PC containing:
 - The **2-bit prediction state**
 - The **target address** for fast redirection when predicting "taken"
 
+**Integration**: Integrating the branch predictor into the pipeline is also challenging because both the Fetch stage (making predictions) and the Execute stage (resolving actual outcomes) compete to update the Program Counter, so we had to implement synchronization between these 2 stages.
+
 ---
 
 ## 2. Implementation
