@@ -82,13 +82,13 @@ This allows a subsequent instruction to read a value written by a preceding inst
 The performance of a processor is determined by the time required to execute a program:
 
 ```
-Execution Time = (# Instructions) × CPI × Tᶜ
+Execution Time = (# Instructions) × CPI × Tc
 ```
 
 Where:
 - **# Instructions**: Total number of instructions in the program
 - **CPI**: Cycles Per Instruction (average clock cycles per instruction)
-- **Tᶜ**: Clock cycle time (seconds per cycle)
+- **Tc**: Clock cycle time (seconds per cycle)
 
 ##### Component Delays
 
@@ -114,7 +114,7 @@ The table below shows typical propagation delays for processor components:
 For a single-cycle processor, the clock period must accommodate the **entire critical path** through all stages:
 
 ```
-Tᶜ_single = t_pcq + 2·t_mem + t_RFread + t_ALU + t_mux + t_RFsetup
+Tc_single = t_pcq + 2·t_mem + t_RFread + t_ALU + t_mux + t_RFsetup
           = 40 + 2(200) + 100 + 120 + 30 + 60
           = 750 ps
 ```
@@ -132,14 +132,14 @@ Execution Time = (# Instructions) × CPI × Tᶜ
 For a pipelined processor, the clock period is determined by the **slowest pipeline stage**:
 
 ```
-Tᶜ_pipelined = max of:
+Tc_pipelined = max of:
     ├── Fetch:     t_pcq + t_mem + t_setup              = 290 ps
     ├── Decode:    2(t_RFread + t_setup)                = 300 ps
     ├── Execute:   t_pcq + 4·t_mux + t_ALU + t_AND-OR + t_setup = 350 ps  ← Critical
     ├── Memory:    t_pcq + t_mem + t_setup              = 290 ps
     └── Writeback: 2(t_pcq + t_mux + t_RFwrite)         = 280 ps
 
-Tᶜ_pipelined = 350 ps
+Tc_pipelined = 350 ps
 ```
 
 The Execute stage is the **critical path**, limiting the clock frequency.
@@ -149,7 +149,7 @@ However, pipelining introduces **hazards** (data dependencies, control dependenc
 **Example**: Program with 100 billion instructions (CPI = 1.23)
 
 ```
-Execution Time = (# Instructions) × CPI × Tᶜ
+Execution Time = (# Instructions) × CPI × Tc
                = (100 × 10⁹) × (1.23) × (350 × 10⁻¹² s)
                = 43 seconds
 ```
@@ -158,7 +158,7 @@ Execution Time = (# Instructions) × CPI × Tᶜ
 
 | Metric | Single-Cycle | Pipelined |
 |--------|--------------|-----------|
-| Clock Period (Tᶜ) | 750 ps | 350 ps |
+| Clock Period (Tc) | 750 ps | 350 ps |
 | CPI | 1.0 | 1.23 |
 | Execution Time (100B instructions) | 75 seconds | 43 seconds |
 | **Speedup** | — | **1.74×** |
