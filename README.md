@@ -291,3 +291,8 @@ module regandalu #(DATA_WIDTH=32)(
 
 ![diagram](schematic.png)
 
+
+---
+## Testing:
+
+We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
