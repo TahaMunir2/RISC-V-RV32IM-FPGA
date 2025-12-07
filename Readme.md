@@ -90,7 +90,9 @@ if (rst) begin
 end
 ```
 
-On reset, all entries initialize to **`WEAKLY_NOT_TAKEN`** — a neutral starting point since we have no prior branch history.
+On reset, all entries initialize to **`WEAKLY_NOT_TAKEN`**, a neutral starting point since we have no prior branch history.
+We could have also picked **`WEAKLY_TAKEN`** .
+However, we intentionally don't pick **STRONGLY_TAKEN** or **STRONGLY_NOT_TAKEN** because these extreme states would bias the predictor before any branch history is available.
 
 #### State Transitions (Update Logic)
 
