@@ -48,9 +48,9 @@ To distinguish signals at different pipeline stages, we append a suffix indicati
 |--------|-------|---------|
 | `F` | Fetch | `PCF`, `InstrF` |
 | `D` | Decode | `PCD`, `RD1D`, `RD2D` |
-| `E` | Execute | `PCE`, `SrcAE`, `SrcBE` |
-| `M` | Memory | `PCM`, `ALUResultM` |
-| `W` | Writeback | `ResultW`, `RdW` |
+| `E` | Execute | `PCE`, `ResultSrcE`, `LoadSizeE` |
+| `M` | Memory | `PCM`, `LoadUnsignedM` |
+| `W` | Writeback | `ResultSrcW`, `RdW` |
 
 ##### Control Signal Propagation
 
