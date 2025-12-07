@@ -92,22 +92,9 @@ Where:
 
 ##### Component Delays
 
-The table below shows typical propagation delays for processor components:
+The table (from Harris and Harris book) below shows typical propagation delays for processor components:
 
-| Element | Parameter | Delay (ps) |
-|---------|-----------|------------|
-| Register clk-to-Q | t_pcq | 40 |
-| Register setup | t_setup | 50 |
-| Multiplexer | t_mux | 30 |
-| AND-OR gate | t_AND-OR | 20 |
-| **ALU** | **t_ALU** | **120** |
-| Decoder (control unit) | t_dec | 25 |
-| Extend unit | t_ext | 35 |
-| **Memory read** | **t_mem** | **200** |
-| **Register file read** | **t_RFread** | **100** |
-| Register file setup | t_RFsetup | 60 |
-
-> Components marked in **bold** represent the most significant delays that dominate the critical path.
+![diagram](component_delays.png)
 
 ##### Single-Cycle Processor Performance
 
