@@ -112,10 +112,113 @@ Since we only support **load instructions** (not stores), the superscalar data m
 ### 2.2 Doubling the Common Data Bus Width
 
 
+### 2.2 Doubling the Common Data Bus Width
+
+With load instructions, results can come from **two sources**: the ALUs and the data memory. Since both can produce results in the same cycle, the Common Data Bus must be widened to handle 4 writebacks simultaneously.
+
 #### 2.2.1 ROB Writeback Expansion
 
+##### Previous Design: 2 Writeback Ports
 
----
+In the arithmetic-only implementation, the ROB received results from **2 ALUs**:
+
+```systemverilog
+// Writeback interface (2 ALUs)
+input  logic                  wb1_en,
+input  logic [TAG_BITS-1:0]   wb1_tag,
+input  logic [31:0]           wb1_value,
+
+input  logic                  wb2_en,
+input  logic [TAG_BITS-1:0]   wb2_tag,
+input  logic [31:0]           wb2_value,
+```
+
+##### New Design: 4 Writeback Ports
+
+With memory operations, we add **2 additional ports** for memory results:
+
+```systemverilog
+// Writeback interface from the Execute stage (ALUs)
+input  logic                  wb1_en,
+input  logic [TAG_BITS-1:0]   wb1_tag,      
+input  logic [31:0]           wb1_value,     
+
+input  logic                  wb2_en,
+input  logic [TAG_BITS-1:0]   wb2_tag,       
+input  logic [31:0]           wb2_value,
+
+// Writeback interface from the Memory stage (Loads)
+input  logic                  wb3_en,
+input  logic [TAG_BITS-1:0]   wb3_tag,        
+input  logic [31:0]           wb3_value,      
+
+input  logic                  wb4_en,
+input  logic [TAG_BITS-1:0]   wb4_tag,        
+input  logic [31:0]           wb4_value,
+```
+
+| Port | Source | Description |
+|------|--------|-------------|
+| `wb1` | ALU 1 | First ALU result |
+| `wb2` | ALU 2 | Second ALU result |
+| `wb3` | Memory Port 1 | First load result |
+| `wb4` | Memory Port 2 | Second load result |
+
+##### Writeback Logic Expansion
+
+The sequential writeback logic is extended to handle all 4 ports:
+
+**Before (2 ports):**
+```systemverilog
+always_ff @(posedge clk) begin
+    // ...
+    if (wb1_en) begin
+        value[wb1_tag] <= wb1_value;
+        ready[wb1_tag] <= 1'b1;
+    end
+
+    if (wb2_en) begin
+        value[wb2_tag] <= wb2_value;
+        ready[wb2_tag] <= 1'b1;
+    end
+end
+```
+
+**After (4 ports):**
+```systemverilog
+always_ff @(posedge clk) begin
+    // ...
+    // ALU writebacks
+    if (wb1_en) begin
+        value[wb1_tag] <= wb1_value;
+        ready[wb1_tag] <= 1'b1;
+    end
+
+    if (wb2_en) begin
+        value[wb2_tag] <= wb2_value;
+        ready[wb2_tag] <= 1'b1;
+    end
+
+    // Memory writebacks
+    if (wb3_en) begin
+        value[wb3_tag] <= wb3_value;
+        ready[wb3_tag] <= 1'b1;
+    end
+
+    if (wb4_en) begin
+        value[wb4_tag] <= wb4_value;
+        ready[wb4_tag] <= 1'b1;
+    end
+end
+```
+
+##### No Conflicts Between Ports
+
+Each writeback port writes to a **different ROB entry** (identified by its unique tag). Since:
+- Each in-flight instruction has a unique tag
+- ALU results and memory results correspond to different instructions
+- Tags are assigned sequentially and never reused until commit
+
 
 #### 2.2.2 RUU Writeback Expansion
 
