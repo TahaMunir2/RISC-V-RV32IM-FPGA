@@ -30,7 +30,7 @@ The control shift register is a register of a fixed size, much larger than the r
 
 The Zba instructions are also atomic in the sense that they reduce shifting and adding into 1 instruction. They are called sh1add, sh2add and sh3add, which are shortened versions of shift and add. They operate on the normal registers and not on the CSR registers, and are just a simple way to make programs more efficient.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
 
 ## 2. Implementation
 
