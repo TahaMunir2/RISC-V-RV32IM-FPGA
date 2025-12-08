@@ -808,6 +808,202 @@ In practice, dependencies and structural hazards reduce the effective IPC below 
 
 ### 2.5 Overall Integration
 
+This section describes how all components connect together, with particular focus on the **source operand validity logic** which is the critical decision-making process that determines where each operand comes from and whether the instruction can issue immediately.
+
+#### Modified Core Components
+
+To support 2-way superscalar out-of-order execution, the basic processor components were modified:
+
+##### Register File: 4 Read Ports, 2 Write Ports
+
+```systemverilog
+module sup_regfile (
+    // WRITE PORT 1
+    input  logic [DATA_WIDTH-1:0] WD1,
+    input  logic WE1,
+    input  logic [4:0] AD1W,
+    // WRITE PORT 2
+    input  logic [DATA_WIDTH-1:0] WD2,
+    input  logic WE2,
+    input  logic [4:0] AD2W,
+    // READ PORTS 1-4
+    input  logic [4:0] AD1R, AD2R, AD3R, AD4R,
+    output logic [DATA_WIDTH-1:0] RD1, RD2, RD3, RD4,
+    ...
+);
+```
+
+| Ports | Purpose |
+|-------|---------|
+| 4 Read Ports | 2 source registers × 2 instructions |
+| 2 Write Ports | 2 commits per cycle from ROB |
+
+Writes occur on **negative edge** to allow same-cycle read-after-write .
+
+##### ALU: Simplified (No Comparison Flags)
+
+```systemverilog
+module sup_alu (
+    input  logic [DATA_WIDTH-1:0] ALUop1,
+    input  logic [DATA_WIDTH-1:0] ALUop2,
+    input  logic [3:0]            ALUCtrl,
+    output logic [DATA_WIDTH-1:0] ALUout
+);
+```
+
+Since we only support arithmetic instructions (no branches), the ALU no longer outputs comparison flags (`EQ`, `LT`, `LTU`). Two identical ALUs operate in parallel.
+
+##### Control Unit: Arithmetic Only
+
+```systemverilog
+module sup_control (
+    input  logic [DATA_WIDTH-1:0] instr,
+    output logic [3:0] ALUCtrl,   // ALU operation
+    output logic       ALUSrc,    // 0=register, 1=immediate for operand 2
+    output logic [2:0] ImmSrc,    // Immediate format
+    output logic       ALUsrc2    // 0=register, 1=PC for operand 1
+);
+```
+
+The control unit is simplified to only decode:
+- R-type arithmetic (`ADD`, `SUB`, `AND`, `OR`, `XOR`, `SLT`, `SLTU`, `SLL`, `SRL`, `SRA`)
+- I-type arithmetic (`ADDI`, `ANDI`, `ORI`, `XORI`, `SLTI`, `SLTIU`, `SLLI`, `SRLI`, `SRAI`)
+- Upper immediate (`LUI`, `AUIPC`)
+
+Two identical control units decode both instructions in parallel.
+
+---
+
+#### Source Operand Validity Logic
+
+The most critical part of the integration is determining **where each source operand comes from** and **whether it's available**. This logic runs during the Rename/Decode stage.
+
+##### Decision Tree
+
+For each source register, we follow this decision process:
+
+![diagram](decisiontree.jpg)
+
+##### Implementation
+
+```systemverilog
+module src_operand_validity_logic (
+    input  logic                      rat_has_producer,
+    input  logic [ROB_TAG_WIDTH-1:0]  rat_tag,
+    input  logic                      rob_entry_ready,
+    output logic                      operand_valid,
+    output logic                      fetch_from_regfile
+);
+    always_comb begin
+        if (!rat_has_producer) begin
+            // Case 1: No producer, we fetch from register file
+            operand_valid      = 1'b1;
+            fetch_from_regfile = 1'b1;
+        end
+        else if (rob_entry_ready) begin
+            // Case A: Producer finished, we fetch from ROB
+            operand_valid      = 1'b1;
+            fetch_from_regfile = 1'b0;
+        end
+        else begin
+            // Case B: Producer not finished, we wait for CDB
+            operand_valid      = 1'b0;
+            fetch_from_regfile = 1'b0;  // Don't care
+        end
+    end
+endmodule
+```
+
+##### Value Selection
+
+Based on the validity logic output, we select the operand value:
+
+```systemverilog
+assign value_source1 = source1_selectline ? q1_value : RS1_val;
+
+```
+
+---
+
+#### Special Case: Instruction 2 Depends on Instruction 1
+
+The logic above works for Instruction 1, but **Instruction 2 has a complication**: the RAT and ROB haven't been updated yet with Instruction 1's destination.
+
+Consider this sequence fetched together:
+```asm
+ADD  x5, x1, x2    # Instr1: produces x5
+SUB  x6, x5, x3    # Instr2: needs x5 — but RAT doesn't know about Instr1 yet!
+```
+
+When we look up `x5` in the RAT for Instruction 2, it returns the **old** producer (or none), not Instruction 1. We must add **extra dependency checking**:
+
+```systemverilog
+// Check if Instruction 2's sources depend on Instruction 1's destination
+assign is_rs3_dependent_on_RD1 = (RD1 == RS3);  // RD1 = Instr1's dest
+assign is_rs4_dependent_on_RD1 = (RD1 == RS4);
+```
+
+If there's a dependency, we **bypass** the normal RAT/ROB lookup :
+
+```systemverilog
+// Source 3 (Instruction 2's first source)
+assign value_source3 = is_rs3_dependent_on_RD1 ? 
+                       32'b0 :                          // Value unknown, will come via CDB
+                       (source3_selectline ? q3_value : RS3_val);
+
+assign validity_source3 = is_rs3_dependent_on_RD1 ? 
+                          1'b0 :                        // Not valid — must wait
+                          tmp_validity_source3;
+
+assign tag_source3 = is_rs3_dependent_on_RD1 ? 
+                     (latest_tag - 1) :                 // Use Instr1's tag
+                     tmp_q3_tag;
+```
+
+The key insight: when Instruction 2 depends on Instruction 1, we:
+1. Set `validity = 0` (operand not ready)
+2. Set `tag = Instr1's tag` (so CDB can wake it up)
+3. Set `value = don't care` (will be filled by CDB)
+
+When Instruction 2 depends on Instruction 1, we use `latest_tag - 1` as the producer tag so that when it's paired instruction has executed, it will correctly fill the corresponding operand value in the register update unit.
+
+The RAT assigns tags as:
+- Instruction 1 gets `latest_tag - 1`
+- Instruction 2 gets `latest_tag`
+
+
+---
+
+#### Immediate Operand Handling
+
+For I-type instructions, the second operand is an immediate, not a register. In this case, we **force validity to 1** because we know that the operand contains the right value and we avoid overwritting in the register update unit by the common data bus:
+
+```systemverilog
+assign final_validity_source1 = ALU1Src2 ? 1'b1 : validity_source1;
+assign final_validity_source2 = ALU1Src1 ? 1'b1 : validity_source2;
+assign final_validity_source3 = ALU2Src2 ? 1'b1 : validity_source3;
+assign final_validity_source4 = ALU2Src1 ? 1'b1 : validity_source4;
+```
+
+The muxes select between register values and immediates/PC in the decode/rename stage because we want to store the correct operand in the Register Update Unit (Reservation Station) :
+
+```systemverilog
+// Operand 1: Register value or PC
+mux mux_ALU1_pcVSreg(
+    .in0(value_source1),
+    .in1(PCPlus8D - 8),      // PC value for AUIPC
+    .sel(ALU1Src2),
+    .out(ALU1_op1D)
+);
+
+// Operand 2: Register value or Immediate
+mux mux_ALU1_immVSreg(
+    .in0(value_source2),
+    .in1(ExtImm1D),          // Sign-extended immediate
+    .sel(ALU1Src1),
+    .out(ALU1_op2D)
+);
+```
 
 ---
 
