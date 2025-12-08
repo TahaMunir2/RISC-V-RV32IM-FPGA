@@ -205,12 +205,24 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr_tb.png)
 
 - Line 6: We set x1 to 12345678 and csr[340] to 12345678 with t1 by running csr read and write
-- Line 8: We use csr read and set with t2 which is 0000FFFF to set the bottom 2 bytes to 1 so csr[340] = 1234FFFF
-- Line 10: We use csr read and clear with t3 which is 000000FF to clear the bottom byte to 0 to get csr[340] = 1234FF00
-- Line 11: We use csr read and ser with x0 (0) to just copy csr[340] into a0 so a0 = 1234FF00
+- Line 8: We use csr read and set with t2, which is 0000FFFF to set the bottom 2 bytes to 1, so csr[340] = 1234FFFF
+- Line 10: We use csr read and clear with t3, which is 000000FF to clear the bottom byte to 0 to get csr[340] = 1234FF00
+- Line 11: We use csr read and ser with x0 (0) to just copy csr[340] into a0, so a0 = 1234FF00
 
-Each time we are saving csr[340] into x1, so we can trace the waveforms to check it's actually changing correctly (note: t1 = reg[5], t2 = reg[6], t3 = reg[28]) as shown below:
+Each time we are saving csr[340] into x1, so we can trace the waveforms to check it's actually changing correctly (note: t1 = reg[6], t2 = reg[7], t3 = reg[28]) as shown below:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/gtkwave.png)
 
 ### Zba Testbench
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/shadd_tb.png)
+
+
+We ran the following assembly code to test out the Zba functionality. Notably, we had to add a line at the top of the file to allow the compiler to accept the Zba instructions **`.option arch, +zba`**.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_gtkwave.png)
+
+
+As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each operation takes 1 clock cycle, whereas without these instructions it would be spread out over 2 cycles.
+
+
