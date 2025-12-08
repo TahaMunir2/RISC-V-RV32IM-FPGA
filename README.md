@@ -38,6 +38,7 @@ parameter CSR_WIDTH = 4096
 - **`REGFILE_WIDTH = 4096`**: Standard number of Control Status Registers in an ideal RV32I implementation
 - **`ADDRESS_WIDTH = 12`**: 2^12 = 4096 hence there are 12 address bits.
 
+
 ### Initialisation
 
 ```systemverilog
@@ -47,6 +48,7 @@ parameter CSR_WIDTH = 4096
 ```
 - **`temp`**: A variable to temporarily hold the new value of the CSR, as we have a synchronous write
 - **`dout = csr_array[addr]`**: We first assign the initial value of the CSR to be stored into the destination register.
+
 
 ### Zicsr Logic
 
@@ -66,6 +68,8 @@ always_comb begin
 - **`2'b01: temp =  wd`**: CSRRW stands for **Control Status Register Read and Write**, and you simply **read** the value into rd and **write** the value of either the imm or RS1 into the CSR.
 - **`2'b10: temp = temp | wd`**: **CSRRS stands for Control Status Register Read and Set**, and you do the same **read** as before but for writing, you go through all the bits in wd and if they are high than the corresponding bit in temp will also be **set** (the rest of the bits are untouched), this can be simplified into an OR operation.
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
+
+
 
 ### 2.1.2 Decoder
 
@@ -111,6 +115,7 @@ We had to update the control module to be able to handle CSR instructions.
     | **110** | CSRRSI |
     | **111** | CSRRCI |
 
+
 ### 2.1.3 Immediate MUX
 
 We place a MUX before the CSR module to determine the value of **`wd`**.
@@ -120,7 +125,10 @@ We place a MUX before the CSR module to determine the value of **`wd`**.
 | 0 | RS1 | CSRRW/CSRRS/CSRRC |
 | 1 | 0-Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
 
+
 ### 2.1.4 Sign Extension
+
+
 
 
 
