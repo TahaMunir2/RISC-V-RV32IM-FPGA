@@ -387,7 +387,16 @@ We also note that since execution does not occur in order, the transmission of d
 
 ##### Commit: Retiring Instructions In Order
 
-Instructions commit from the `head` in program order. Only entries with `ready=1` can commit. Up to 2 instructions can commit per cycle.
+Instructions commit from the `head` in program order. 
+
+Only entries with `ready=1` and `commit = 0` (it has not yet been commited) can commit.
+
+The Re-Order Buffer commits up to 2 instructions per cycle, the number of commits per cycle depends on the number of ready instructions in the buffer:
+- No instructions ready : 0 instrutcions commmited
+- 1 instruction ready (even though the other instructions might be valid, here we only consider the ones that are ready) : 1 instruction commited
+- 2 or more instructions ready : exactly 2 instructions commited
+
+
 
 
 ### 2.3 Register Update Unit (RUU)
