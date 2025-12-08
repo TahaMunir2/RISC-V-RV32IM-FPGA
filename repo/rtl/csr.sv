@@ -1,7 +1,7 @@
 module csr #( 
     parameter ADDRESS_WIDTH = 12,
     parameter DATA_WIDTH = 32,
-    parameter REGFILE_WIDTH = 4096
+    parameter CSR_WIDTH = 4096
 )(
     input logic clk,
     input logic [1:0] CSR_OP,
@@ -12,8 +12,8 @@ module csr #(
 );
 
     logic[DATA_WIDTH-1:0] temp;
-    logic[DATA_WIDTH-1:0] regfile_array [REGFILE_WIDTH-1:0];
-    assign dout = regfile_array[addr];
+    logic[DATA_WIDTH-1:0] csr_array [CSR_WIDTH-1:0];
+    assign dout = csr_array[addr];
 
     always_comb begin
         temp = dout;
@@ -26,7 +26,7 @@ module csr #(
     end
     
     always_ff @(negedge clk) begin
-        if(en) regfile_array[addr] <= temp;
+        if(en) csr_array[addr] <= temp;
 
     end
 
