@@ -172,7 +172,7 @@ module l2_cache #(
         write_back_data_next = '0;
         way = '0;
         way_rd = '0;
-        clean = 1;
+        clean = 0;
         tag_bits = '0;
         set = '0;
         block_offset = '0;
@@ -216,10 +216,10 @@ module l2_cache #(
         valid2 = cache[set_rd].block2.valid;
         valid3 = cache[set_rd].block3.valid;
 
-        hit0_wb = (cache[set_wb].block0.tag == tag_bits_wb && cache[set_wb].block0.valid && fetch);
-        hit1_wb = (cache[set_wb].block1.tag == tag_bits_wb && cache[set_wb].block1.valid && fetch);
-        hit2_wb = (cache[set_wb].block2.tag == tag_bits_wb && cache[set_wb].block2.valid && fetch);
-        hit3_wb = (cache[set_wb].block3.tag == tag_bits_wb && cache[set_wb].block3.valid && fetch);
+        hit0_wb = (cache[set_wb].block0.tag == tag_bits_wb && cache[set_wb].block0.valid);
+        hit1_wb = (cache[set_wb].block1.tag == tag_bits_wb && cache[set_wb].block1.valid);
+        hit2_wb = (cache[set_wb].block2.tag == tag_bits_wb && cache[set_wb].block2.valid);
+        hit3_wb = (cache[set_wb].block3.tag == tag_bits_wb && cache[set_wb].block3.valid);
         miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
 
         if (l1write && !l1write_buffer) begin

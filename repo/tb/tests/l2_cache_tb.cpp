@@ -63,12 +63,12 @@ protected:
     }
 };
 
-/**
- * Basic I-cache style fetch:
- *  - cold miss: no ready_i
- *  - memory provides line_from_mem + ready
- *  - hit: ready_i asserted again on same address
- */
+// Basic I-cache fetch
+// First ready_i results in a miss
+// L2 cache writes in line_from_mem when ready = 1
+// L2 cache should assert ready_i after writing and hitting on the subsequent cycle
+// Data_out should match data written in from line_from_mem
+
 TEST_F(L2CacheTestbench, InstructionFetchMissAndHit) {
     initializeInputs();
 
@@ -110,12 +110,12 @@ TEST_F(L2CacheTestbench, InstructionFetchMissAndHit) {
         << "I-fetch should return the pattern written into line_from_mem.";
 }
 
-/**
- * Basic D-cache style fetch:
- *  - cold miss -> ready_d = 0
- *  - memory provides line_from_mem + ready
- *  - hit -> ready_d = 1, data_out correct
- */
+// Basic D-cache fetch
+// First ready_d results in a miss
+// L2 cache writes in line_from_mem when ready = 1
+// L2 cache should assert ready_d after writing and hitting on the subsequent cycle
+// Data_out should match data written in from line_from_mem
+
 TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
     initializeInputs();
 
@@ -151,14 +151,10 @@ TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
         << "D-fetch should return the pattern written into line_from_mem.";
 }
 
-/**
- * Simple L1 write-back into L2 and then forwarded to memory.
- *
- *  - Fill a line through D-fetch
- *  - L1 writes back modified data for that address
- *  - L2 should assert wb_ready_d when it accepts the write-back
- *  - When wb_ready (memory ready), L2 should assert write_back_en
- */
+// Simple L1 write-back into L2 and then forwarded to memory.
+// L1 writes to L2, but misses on the writeback
+// L2 should assert wb_ready_d when it succesfully accepts the write back into the buffer
+// When wb_ready, L2 should write the L1 writeback directly to main mem
 TEST_F(L2CacheTestbench, L1WriteBackForwardToMemory) {
     initializeInputs();
 
@@ -208,21 +204,16 @@ TEST_F(L2CacheTestbench, L1WriteBackForwardToMemory) {
     runSimulation(1);
 }
 
-/**
- * Very basic dirty eviction scenario:
- *  - Fill one line and mark it dirty by L1 write-back
- *  - Then request a different tag mapping to same set
- *  - Expect L2 to assert write_back_en at some point (eviction)
- *
- * This is high-level; we're not checking exact LRU victim, just that
- * a dirty line eventually gets written back.
- */
+// Basic dirty eviction scenario:
+// Fill one line and mark it dirty by L1 write-back
+// Then request a different tag mapping to same set
+// And make sure that the correct victim is chosen (using LRU logic)
 TEST_F(L2CacheTestbench, DirtyEvictionCausesWriteBack) {
     initializeInputs();
 
     uint32_t base = 0x00000000;
     uint32_t a0   = base | 0x00000000;
-    uint32_t a1   = base | 0x10000000; // different tag, same set (assuming)
+    uint32_t a1   = base | 0x10000000; // different tag, same set
     uint32_t a2   = base | 0x20000000;
     uint32_t a3   = base | 0x30000000;
     uint32_t a4   = base | 0x40000000;
@@ -246,38 +237,94 @@ TEST_F(L2CacheTestbench, DirtyEvictionCausesWriteBack) {
     // Make a1 dirty via L1 write-back
     setL1WriteBackData4(0xBBBB0001, 0xBBBB0002, 0xBBBB0003, 0xBBBB0004);
     top->l1write_back_en   = 1;
-    top->l1write_back_addr = a1;
+    top->l1write_back_addr = a0;
     top->fetch_d           = 1;
 
     runSimulation(1);
 
+    // Testing wb_ready_d assertion
     EXPECT_EQ(top->wb_ready_d, 1)
-        << "L2 should accept dirty L1 write-back before eviction.";
+        << "L2 should accept dirty L1 write-back.";
+
+    runSimulation(1);
+
+    // Testing wb_ready_d deassertion/not asserting when wb buffer full
+    EXPECT_EQ(top->wb_ready_d, 0)
+        << "L2 should not accept dirty L1 write-back  if L1wb_buffer full.";    
 
     top->l1write_back_en = 0;
     runSimulation(1);
 
-    // Now force a new miss in same set -> eviction of some way
+    top->fetch_d = 0;
+    runSimulation(1); // Let the l1 wb buffer empty and write the dirty value
+
     top->fetch_d = 1;
+    top->addr_d  = a0;
+
+    runSimulation(1);
+
+    EXPECT_EQ(top->ready_d, 1)
+        << "L2 should hit and assert ready_d";
+
+    EXPECT_EQ(top->data_out[0], 0xBBBB0001)
+        << "L2 should output correct data.";
+
+    // Now make it so that data in a1 is least recently used
+    top->addr_d = a1;
+    runSimulation(1);
+
+    top->addr_d = a2;
+    runSimulation(1);
+
+    top->addr_d = a3;
+    runSimulation(1);
+
+    // Now force a new miss in same set -> eviction of some way
     top->addr_d  = a4;
-    setLineFromMemUniform(0xEEE00000);
-    top->ready = 1;
     top->wb_ready = 1;
 
-    bool saw_writeback = false;
-    for (int i = 0; i < 8; ++i) {
-        runSimulation(1);
-        if (top->write_back_en) {
-            saw_writeback = true;
-            break;
-        }
-    }
+    runSimulation(1); // Fill the L2 wb buffer
 
-    EXPECT_TRUE(saw_writeback)
+    runSimulation(1);
+
+    // Testing to see if L2 asserts write_back_en and 
+    // That the LRU block has been chosen
+    // write_back_data should be the first 4 words in the dirty evicted block
+    EXPECT_EQ(top->write_back_en, 1)
         << "Dirty eviction should assert write_back_en when main mem asserts wb_ready.";
 
     top->ready = 0;
+
+    EXPECT_EQ(top->write_back_data[0], 0xBBBB0001)
+        << "Should write back correct data to main mem.";
+
+    setLineFromMemUniform(0xEEE00000);
+    top->ready = 1;
+
     runSimulation(1);
+
+
+    // Testing to see if L2 still asserts write_back_en and writes back the last 4 words in the dirty evicted block
+    EXPECT_EQ(top->write_back_en, 1)
+        << "Dirty eviction should assert write_back_en when main mem asserts wb_ready.";
+
+    EXPECT_EQ(top->write_back_data[0], 0xAAA00000)
+        << "Should write back correct data to main mem.";        
+    
+    top->ready = 0;
+
+    runSimulation(1);
+    // Testing to see if the L2 cache deasserts write_back_en when all dirty values
+    // In the evicted block have been written back
+    EXPECT_EQ(top->write_back_en, 0)
+        << "L2 cache should deassert write_back_en as L2wb_buffer should be empty now";
+
+    // Testing to see if line_from_mem has been correctly filled into the L2 cache
+    EXPECT_EQ(top->ready_d, 1)
+        << "L2 should hit and assert ready_d"; 
+        
+    EXPECT_EQ(top->data_out[0], 0xEEE00000)
+        << "L2 should output correct data.";
 }
 
 int main(int argc, char **argv) {

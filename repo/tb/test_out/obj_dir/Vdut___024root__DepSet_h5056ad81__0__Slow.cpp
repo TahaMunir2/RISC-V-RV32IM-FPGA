@@ -159,7 +159,7 @@ VL_ATTR_COLD void Vdut___024root___settle__TOP__1(Vdut___024root* vlSelf) {
     vlSelf->l2_cache__DOT__write_back_data_next[3U] = 0U;
     vlSelf->l2_cache__DOT__way = 0U;
     vlSelf->l2_cache__DOT__way_rd = 0U;
-    vlSelf->l2_cache__DOT__clean = 1U;
+    vlSelf->l2_cache__DOT__clean = 0U;
     vlSelf->l2_cache__DOT__tag_bits = 0U;
     vlSelf->l2_cache__DOT__set = 0U;
     vlSelf->l2_cache__DOT__block_offset = 0U;
@@ -228,70 +228,66 @@ VL_ATTR_COLD void Vdut___024root___settle__TOP__1(Vdut___024root* vlSelf) {
     vlSelf->l2_cache__DOT__valid3 = (1U & (vlSelf->l2_cache__DOT__cache
                                            [vlSelf->l2_cache__DOT__set_rd][0x22U] 
                                            >> 0x13U));
-    vlSelf->l2_cache__DOT__hit0_wb = ((((0x7ffffU & 
-                                         vlSelf->l2_cache__DOT__cache
+    vlSelf->l2_cache__DOT__hit0_wb = (((0x7ffffU & 
+                                        vlSelf->l2_cache__DOT__cache
+                                        [(0xffU & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                                   >> 5U))][8U]) 
+                                       == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                           >> 0xdU)) 
+                                      & (vlSelf->l2_cache__DOT__cache
                                          [(0xffU & 
                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                            >> 5U))][8U]) 
-                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                            >> 0xdU)) 
-                                       & (vlSelf->l2_cache__DOT__cache
-                                          [(0xffU & 
-                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                             >> 5U))][8U] 
-                                          >> 0x14U)) 
-                                      & (IData)(vlSelf->l2_cache__DOT__fetch));
-    vlSelf->l2_cache__DOT__hit1_wb = ((((0x7ffffU & 
-                                         ((vlSelf->l2_cache__DOT__cache
-                                           [(0xffU 
-                                             & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                                >> 5U))][0x11U] 
-                                           << 0xbU) 
-                                          | (vlSelf->l2_cache__DOT__cache
-                                             [(0xffU 
-                                               & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                                  >> 5U))][0x10U] 
-                                             >> 0x15U))) 
-                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                            >> 0xdU)) 
-                                       & (vlSelf->l2_cache__DOT__cache
+                                            >> 5U))][8U] 
+                                         >> 0x14U));
+    vlSelf->l2_cache__DOT__hit1_wb = (((0x7ffffU & 
+                                        ((vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                              >> 5U))][0x11U] 
-                                          >> 9U)) & (IData)(vlSelf->l2_cache__DOT__fetch));
-    vlSelf->l2_cache__DOT__hit2_wb = ((((0x7ffffU & 
-                                         (vlSelf->l2_cache__DOT__cache
-                                          [(0xffU & 
-                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                             >> 5U))][0x19U] 
-                                          >> 0xaU)) 
-                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                            >> 0xdU)) 
-                                       & (vlSelf->l2_cache__DOT__cache
-                                          [(0xffU & 
-                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                             >> 5U))][0x19U] 
-                                          >> 0x1eU)) 
-                                      & (IData)(vlSelf->l2_cache__DOT__fetch));
-    vlSelf->l2_cache__DOT__hit3_wb = ((((0x7ffffU & 
-                                         ((vlSelf->l2_cache__DOT__cache
-                                           [(0xffU 
-                                             & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                                >> 5U))][0x22U] 
-                                           << 1U) | 
-                                          (vlSelf->l2_cache__DOT__cache
-                                           [(0xffU 
-                                             & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                                >> 5U))][0x21U] 
-                                           >> 0x1fU))) 
-                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
-                                            >> 0xdU)) 
-                                       & (vlSelf->l2_cache__DOT__cache
+                                          << 0xbU) 
+                                         | (vlSelf->l2_cache__DOT__cache
+                                            [(0xffU 
+                                              & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                                 >> 5U))][0x10U] 
+                                            >> 0x15U))) 
+                                       == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                           >> 0xdU)) 
+                                      & (vlSelf->l2_cache__DOT__cache
+                                         [(0xffU & 
+                                           (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 5U))][0x11U] 
+                                         >> 9U));
+    vlSelf->l2_cache__DOT__hit2_wb = (((0x7ffffU & 
+                                        (vlSelf->l2_cache__DOT__cache
+                                         [(0xffU & 
+                                           (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 5U))][0x19U] 
+                                         >> 0xaU)) 
+                                       == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                           >> 0xdU)) 
+                                      & (vlSelf->l2_cache__DOT__cache
+                                         [(0xffU & 
+                                           (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 5U))][0x19U] 
+                                         >> 0x1eU));
+    vlSelf->l2_cache__DOT__hit3_wb = (((0x7ffffU & 
+                                        ((vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                              >> 5U))][0x22U] 
-                                          >> 0x13U)) 
-                                      & (IData)(vlSelf->l2_cache__DOT__fetch));
+                                          << 1U) | 
+                                         (vlSelf->l2_cache__DOT__cache
+                                          [(0xffU & 
+                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                             >> 5U))][0x21U] 
+                                          >> 0x1fU))) 
+                                       == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                           >> 0xdU)) 
+                                      & (vlSelf->l2_cache__DOT__cache
+                                         [(0xffU & 
+                                           (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 5U))][0x22U] 
+                                         >> 0x13U));
     vlSelf->l2_cache__DOT__miss_wb = (1U & (~ ((((IData)(vlSelf->l2_cache__DOT__hit0_wb) 
                                                  | (IData)(vlSelf->l2_cache__DOT__hit1_wb)) 
                                                 | (IData)(vlSelf->l2_cache__DOT__hit2_wb)) 
