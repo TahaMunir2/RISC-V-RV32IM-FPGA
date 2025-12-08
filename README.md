@@ -22,13 +22,75 @@
 
 ## 1. Overview
 
-<!-- TODO: 
-- Motivation for out-of-order execution
-- Superscalar concept (2 ALUs, 2 instructions fetched per cycle)
-- Tomasulo algorithm introduction
-- Scope limitations (arithmetic only: no branch, jump, load, store)
-- Key benefits: reduced stalls, improved throughput
--->
+### Superscalar: Breaking the CPI Barrier
+
+A conventional pipelined processor achieves a **CPI (Cycles Per Instruction) of 1 or above** (also limited by hazards and dependencies). A **superscalar processor** breaks this barrier by duplicating execution hardware (in our case the only functional unit to duplicate is the ALU, but for processors containing multiple functional units of different types we duplicate all of them), enabling **multiple instructions to complete per cycle**.
+
+Our implementation is a **2-way superscalar** processor featuring:
+- **2 instructions fetched** per cycle
+- **2 ALUs** operating in parallel
+- **Dual-ported register file** to support simultaneous reads and writes
+
+To keep both ALUs busy, two instructions must be issued every clock cycle. This requires duplicating internal hardware: register file ports, data paths, and control logic.
+
+### The Problem: Data Dependencies
+
+Superscalar execution introduces a critical challenge: **data hazards are amplified**.
+
+When two instructions are fetched together, they may depend on each other or on recently issued instructions. In an **in-order superscalar** processor, a dependent instruction **blocks all subsequent instructions** from executing even if they are independent.
+
+Let's consider the following assembly code to illustrate our purpose:
+
+```asm
+ADD  x1, x2, x3    # Produces x1
+SUB  x4, x1, x5    # Depends on x1, must wait
+AND  x6, x7, x8    # Independent, could execute, but is blocked
+```
+
+In an in-order design, `AND` cannot be issued until `SUB` is issued, even though `AND` has no dependency.
+
+### The Solution: Out-of-Order Execution
+
+**Out-of-order execution** solves this by allowing independent instructions to **bypass** stalled ones.
+
+The processor fetches instructions into a buffer, analyzes their dependencies, and issues them **not in program order**, but in an order that **maximizes ALU utilization** while respecting true data dependencies.
+
+This means:
+- Instructions **execute** out of order (when operands are ready), decoding and execution are interfaced by the Register Update Unit
+- Instructions **commit** in order (preserving program correctness), execution and commiting into the register file are interfaced by the Re-Order Buffer
+
+### The Tomasulo Algorithm
+
+Our implementation is based on **Tomasulo's algorithm**, originally developed for the IBM System/360 Model 91. It introduces:
+
+| Component | Purpose |
+|-----------|---------|
+| **Register Alias Table (RAT)** | Renames registers to eliminate WAR/WAW hazards |
+| **Re-Order Buffer (ROB)** | Tracks instructions for in-order commit |
+| **Register Update Unit (RUU)** | Holds instructions waiting for operands (reservation stations) |
+| **Common Data Bus (CDB)** | Broadcasts results to wake up dependent instructions |
+
+### Instruction Flow
+
+```
+Fetch → Decode/Rename → Dispatch → Issue → Execute → Writeback → Commit
+              (RAT)       (RUU)    (RUU)   (ALUs)     (CDB)       (ROB)
+```
+
+1. **Fetch**: Retrieve 2 instructions per cycle from instruction memory
+2. **Decode/Rename**: Decode instructions, rename destination registers via RAT, allocate ROB entries
+3. **Dispatch**: Place instructions into RUU with source operand tags/values
+4. **Issue**: When all operands ready, select instructions and send to ALUs (out of order)
+5. **Execute**: ALUs compute results
+6. **Writeback**: Broadcast results on CDB; wake up dependent instructions in RUU
+7. **Commit**: Retire instructions in program order from ROB head; update architectural register file
+
+### Scope
+
+This implementation demonstrates the core out-of-order machinery using **arithmetic instructions only** (R-type and I-type ALU operations, including `LUI`). The design handles all three types of data hazards: 
+Read After Write (RAW) , Write After Read (WAR), Write After Write (WAW) hazards via register renaming.
+
+Load, store, branch, and jump instructions introduce additional complexity such as memory disambiguation and speculative execution and will be explored in further branches.
 
 ---
 
