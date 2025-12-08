@@ -1,3 +1,20 @@
+# Zicsr and Zba Extensions
+
+## Table of Contents
+- [1. Overview](#1-overview)
+
+
+---
+
+## 1. Overview
+
+We decided to implement 2 new extensions, the Zicsr extension, which entailed adding a Control Shift Register module and 6 new instructions, as well as the Zba extension, which introduced 3 new instructions used for Bit-Manipulation.
+
+The control shift register is a register of a fixed size, much larger than the register we use in the reg file module, and has special registers with each register having a special name, purpose and way of handling, unlike the general-purpose registers we use in regfile. The registers are used for a variety of things, such as handling interrupts (as discussed in the Interrupts and FPGA branch), privilege levels, measuring time/performance and identifying hardware, just to name a few. The Zicsr instructions come
+
+
+
+
 Testbench info:
 
 We set x1 to 12345678 and csr[340] to 12345678 with t1 by running csr read and write
