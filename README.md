@@ -195,50 +195,218 @@ Key points:
 
 ### 2.2 Re-Order Buffer (ROB)
 
-<!-- TODO:
-- Purpose: maintain program order for in-order commit
-- Circular buffer structure
-- Entry contents (valid, ready, value, destination register)
-- Allocation, completion, and commit operations
--->
+#### Purpose
 
----
+The Re-Order Buffer is a central module in the implementation. 
+
+It interacts in three different stages: 
+1. **Decode/Rename** : it has to keep track of all the instructions fetched because it retains the program order
+2. **Execution** : after execution results are saved in the buffer
+3. **Commit** : It commits these results in program order to the register file (taking values asssigned to producer register and writing to the architectural registers)
+
+It serves three critical functions:
+
+1. **Tracks all in-flight instructions** in program order
+2. **Stores results** of completed instructions until they can be committed
+3. **Ensures in-order commit** — instructions retire at the head in strict program order, preserving architectural correctness
+
+#### Structure
+
+The ROB is implemented as a circular buffer with 64 entries:
+
+```systemverilog
+parameter DEPTH    = 64,
+parameter TAG_BITS = $clog2(DEPTH)  // 6 bits
+```
+
+Each entry contains:
+
+| Field | Width | Description |
+|-------|-------|-------------|
+| `dest_reg` | 5 bits | Destination architectural register (x0–x31) |
+| `value` | 32 bits | Computed result (filled on writeback) |
+| `ready` | 1 bit | Set when execution completes; entry can commit |
+
+```systemverilog
+logic [4:0]   dest_reg [DEPTH];   // Destination register
+logic [31:0]  value    [DEPTH];   // Result value
+logic         ready    [DEPTH];   // Ready to commit flag
+```
+
+#### Interfaces
+
+##### Query Interface (4 ports)
+
+When the RAT indicates a register has an in-flight producer, we query the ROB to check if the result is already available:
+
+```systemverilog
+input  logic [TAG_BITS-1:0] q1_tag,    // Query tag
+output logic                q1_ready,  // Is result ready?
+output logic [31:0]         q1_value   // Result value (if ready)
+```
+
+Four query ports support looking up source operands for 2 instructions (2 sources each):
+
+```systemverilog
+assign q1_ready = ready[q1_tag];
+assign q1_value = value[q1_tag];
+// ... same for q2, q3, q4
+```
+
+##### Allocation Interface (2 ports)
+
+Two instructions can be allocated per cycle:
+
+```systemverilog
+// Instruction 1
+input  logic                alloc1_en,    // Allocate enable
+input  logic [4:0]          alloc1_rd,    // Destination register
+input  logic [TAG_BITS-1:0] alloc1_tag,   // Assigned ROB index
+
+// Instruction 2
+input  logic                alloc2_en,
+input  logic [4:0]          alloc2_rd,
+input  logic [TAG_BITS-1:0] alloc2_tag,
+```
+
+On allocation:
+- `dest_reg[tag]` is set to the destination register
+- `ready[tag]` is cleared (instruction not yet complete)
+- `tail` advances by 1 or 2 depending on how many instructions are allocated
+
+##### Writeback Interface (2 ports)
+
+Two results can be written back per cycle (from 2 ALUs via CDB):
+
+```systemverilog
+input  logic                wb1_en,
+input  logic [TAG_BITS-1:0] wb1_tag,     // Which ROB entry completed
+input  logic [31:0]         wb1_value,   // Computed result
+
+input  logic                wb2_en,
+input  logic [TAG_BITS-1:0] wb2_tag,
+input  logic [31:0]         wb2_value,
+```
+
+On writeback:
+- `value[tag]` is updated with the result
+- `ready[tag]` is set to 1
+
+##### Commit Interface (2 ports)
+
+Up to two instructions can commit per cycle (in order from head):
+
+```systemverilog
+output logic                  commit1_valid,  // Head entry ready?
+output logic [4:0]            commit1_rd,     // Destination register
+output logic [31:0]           commit1_value,  // Value to write
+output logic [TAG_BITS-1:0]   commit1_tag,    // Tag (to free RUU entry)
+input  logic                  commit1_en,     // Commit acknowledged
+
+// Same for commit2 (head + 1)
+```
+
+#### Pointers
+
+In this module, we implement signals serving as pointers, so that we can track the oldest instruction (ready to commit) and the next free slot (ready for allocation) without searching through the entire buffer.
+
+```systemverilog
+logic [TAG_BITS-1:0] head;  // Oldest in-flight instruction (next to commit)
+logic [TAG_BITS-1:0] tail;  // Next free slot (next to allocate)
+logic                full_flag;
+```
+
+- **`head`**: Points to the oldest instruction — the next candidate for commit
+- **`tail`**: Points to the next free slot for allocation
+
+#### Commit Logic
+
+Commits happen **strictly in order** from the head:
+
+```systemverilog
+assign commit1_valid = !rob_empty && ready[head];
+assign commit1_rd    = dest_reg[head];
+assign commit1_value = value[head];
+assign commit1_tag   = head;
+```
+
+For the second commit slot, the condition is a bit trickier and requires a different manipulation of the pointers siganls:
+1. The first commit is valid (we cannot skip the head)
+
+2. We check that there is a second entry in the buffer:
+The `tail` pointer marks the first *empty* slot, valid entries exist between `head` and `tail` (with `tail` not included in the interval). If `head_next == tail`, we've reached the empty region for this second commit, meaning only one instruction can potentialy be commited (so there are no second valid instrcution in the buffer that can potentially be commited). 
+On the other hand, if `head_next != tail`, there is at least one more valid entry at `head+1` that can potentially commit.
+
+3. That entry is also ready (execution has completed)
+
+```systemverilog
+logic [TAG_BITS-1:0] head_next;
+assign head_next = head + 1'b1;
+
+assign commit2_valid =
+    commit1_valid &&                          // First must be valid
+    (head_next != tail) &&     // Second entry exists
+    ready[head_next];                         // Second is ready
+```
+
+#### Sequential Operations :
+
+```systemverilog
+always_ff @(posedge clk) begin
+    if (rst) begin
+        head      <= 6'b000001;
+        tail      <= 6'b000001;
+        full_flag <= 1'b0;
+        // Clear all entries...
+    end else begin
+        // Allocation: advance tail by 1 or 2
+        // Writeback: set ready[tag] = 1, value[tag] = result
+        // Commit: advance head by 1 or 2, clear ready bits
+    end
+end
+```
+
+The ROB performs three sequential operations: **Allocation**, **Writeback**, and **Commit**. Each is illustrated below.
+
+##### Allocation: Adding New Instructions
+
+When instructions are dispatched, they are allocated at the `tail` pointer. The `tail` advances by 1 or 2 depending on how many instructions are allocated.
+
+![diagram](rob-allocation.png)
+
+In this diagram, we clearly observe how the tail pointer advances in the buffer at allocation.
+
+##### Writeback: Marking Instructions Complete
+
+When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`.
+
+![diagram](rob-writeback.png)
+
+In this diagram, we clearly observe how the common data bus transmits the results of each execution which are allocated to specific tags in the Re-Order Buffer.
+We also note that since execution does not occur in order, the transmission of data in the Re-Order Buffer will not necessarly follow the program order.
+
+##### Commit: Retiring Instructions In Order
+
+Instructions commit from the `head` in program order. Only entries with `ready=1` can commit. Up to 2 instructions can commit per cycle.
+
 
 ### 2.3 Register Update Unit (RUU)
 
-<!-- TODO:
-- Also known as reservation stations
-- Purpose: hold instructions waiting for operands
-- Operand wake-up via Common Data Bus (CDB)
-- Issue logic: select ready instructions for execution
--->
 
 ---
 
 ### 2.4 Pipelined Design
 
-<!-- TODO:
-- Pipeline stage division based on component delays
-- Optimization for efficiency
-- Timing considerations between stages
--->
 
 ---
 
 ### 2.5 Overall Integration
 
-<!-- TODO:
-- How RAT, ROB, RUU, and ALUs connect
-- Instruction flow: Fetch → Decode/Rename → Issue → Execute → Writeback → Commit
-- Common Data Bus (CDB) broadcasting
-- Out-of-order execution with in-order commit
--->
 
 ---
 
 ## 3. Schematic
 
-<!-- TODO: Circuit diagram showing all components and connections -->
 
 ---
 
@@ -248,48 +416,31 @@ Key points:
 
 #### 4.1.1 RAT Testing
 
-<!-- TODO: RAT unit test cases and results -->
+
 
 ---
 
 #### 4.1.2 ROB Testing
 
-<!-- TODO: ROB unit test cases and results -->
 
 ---
 
 #### 4.1.3 RUU Testing
 
-<!-- TODO: RUU unit test cases and results -->
 
 ---
 
 ### 4.2 Assembly Test Programs
 
-<!-- TODO:
-- Test programs designed to verify out-of-order behavior
-- RAW, WAR, WAW hazard scenarios
-- Dependency chains and parallel execution
--->
 
 ---
 
 ### 4.3 Results
 
-<!-- TODO:
-- Test outcomes
-- Waveforms demonstrating out-of-order execution
-- Performance observations
--->
 
 ---
 
 ## 5. References
 
-<!-- TODO:
-- Tomasulo's algorithm papers/resources
-- Harris & Harris textbook
-- Other references used
--->
 
 ---
