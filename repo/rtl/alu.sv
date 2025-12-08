@@ -58,9 +58,9 @@ module alu#(
         5'b1100: ALUout = unsigned_mult[31:0]; //MUL
         5'b1101: ALUout = signed_mult[63:32]; //MULH
         5'b1110:
-            ALUout = unsigned_mult[63:32]; //MULHU
-        5'b1111:
             ALUout = signed_unsigned_mult[63:32]; //MULHSU
+        5'b1111:
+            ALUout = unsigned_mult[63:32]; //MULHU
         5'b10000: begin //DIV
             if (ALUop2 == 0) begin
                 ALUout = -1;
