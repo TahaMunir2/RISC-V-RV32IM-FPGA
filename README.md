@@ -102,21 +102,21 @@ We had to update the control module to be able to handle CSR instructions.
 - For the non-immediate instructions, we can simply just do **`RegWrite = 1'b1`** as we only need to write into the destination register
 - We control the sign extension done on the 5-bit immediate by **`ImmSrc`** for the I-type CSR instructions, with them reserving the code **`3'b101`**.
 
-| funct3 | Instruction |
-|--------|-------------|
-| **001** | CSRRW |
-| **010** | CSRRS |
-| **011** | CSRRC |
-| **101** | CSRRWI |
-| **110** | CSRRSI |
-| **111** | CSRRCI |
+    | funct3 | Instruction |
+    |--------|-------------|
+    | **001** | CSRRW |
+    | **010** | CSRRS |
+    | **011** | CSRRC |
+    | **101** | CSRRWI |
+    | **110** | CSRRSI |
+    | **111** | CSRRCI |
 
 ### 2.1.3 Immediate MUX
 
-| ALUSrc3 | Output | Insutrctions |
-|---------|--------|-----------|
-| 0 | RS1 | CSRRW/CSRRS/CSRRC |
-| 1 | 0 Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
+    | ALUSrc3 | Output | Insutrctions |
+    |---------|--------|-----------|
+    | 0 | RS1 | CSRRW/CSRRS/CSRRC |
+    | 1 | 0 Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
 
 
 
