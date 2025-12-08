@@ -26,18 +26,18 @@ module main_memory #(
     logic [DATA_WIDTH-1:0]    gpio; // gpio memory address
 
 
-    logic RAM_TOP;
-    logic ROM_BASE;
-    logic ROM_TOP; 
+    logic [DATA_WIDTH-1:0] RAM_TOP;
+    logic [DATA_WIDTH-1:0] ROM_BASE;
+    logic [DATA_WIDTH-1:0] ROM_TOP; 
     
     assign RAM_TOP = RAM_SIZE - 1; 
     assign ROM_BASE = 32'hBFC00000;
     assign ROM_TOP = 32'hBFC00FFF;
 
     initial begin
-        irq_reg_1000 = 32'h0;
-        irq_reg_1004 = 32'h0;
-        irq_reg_2000 = 32'h0;
+        timer_bottom = 32'h0;
+        timer_top = 32'h0;
+        gpio = 32'h0;
         
         $readmemh("gaussian.mem", ram_array);
         $readmemh("program.hex", rom_array);
