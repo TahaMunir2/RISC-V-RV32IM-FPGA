@@ -18,9 +18,30 @@ The Zba instructions are also atomic in the sense that they reduce shifting and 
 
 ## 2. Implementation
 
-## 2.1 Control Status Registers
+### 2.1 Control Status Registers
 
-We define a module called
+We define a module called CSR, which will go in the execution stage of the pipeline. 
+
+*Diagram showing CSR*
+
+### Parameters
+
+```systemverilog
+parameter ADDRESS_WIDTH = 12,
+parameter DATA_WIDTH = 32,
+parameter CSR_WIDTH = 4096
+```
+
+- **`REGFILE_WIDTH = 4096`**: Standard number of Control Status Registers in an ideal RV32I implementation
+- **`ADDRESS_WIDTH = 12`**: 2^12 = 4096 hence there are 12 address bits.
+
+### Initialisation
+
+```systemverilog
+  logic[DATA_WIDTH-1:0] temp;
+  logic[DATA_WIDTH-1:0] csr_array [CSR_WIDTH-1:0];
+  assign dout = csr_array[addr];
+```
 
 
 Testbench info:
