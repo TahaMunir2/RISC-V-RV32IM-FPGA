@@ -132,7 +132,7 @@ We had to update the control module to be able to handle CSR instructions.
 
 We place a MUX before the CSR module to determine the value of **`wd`**.
 
-| ALUSrc3 | Output | Insutrctions |
+| ALUSrc3 | Output | Instructions |
 |---------|--------|--------------|
 | 0 | RS1 | CSRRW/CSRRS/CSRRC |
 | 1 | 0-Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
