@@ -13,7 +13,7 @@
         - [Decoder](#decoder-1)
         - [ALU](#alu)
     - [2.3 Top-Level Integration](#23-top-level-integration)
-- [3. Final Circuit Schematic](#3-final-circuit-schematic)
+- [3. Schematic](#3-schematic)
 - [4. Testing and Verification](#4-testing-and-verification)
     - [Zicsr Testbench](#zicsr-testbench)
     - [Zba Testbench](#zba-testbench)
@@ -208,7 +208,7 @@ The main challenge was working out where to put this new CSR module. It made the
 ```
 Beyond this, we only needed to add a few lines to the Hazard unit for the CSR addresses and enables, and one new line out of the control unit called **`csr_type`**.
 
-## 3 Final Circuit Schematic
+## 3 Schematic
 
 ## 4 Testing and Verification
 
