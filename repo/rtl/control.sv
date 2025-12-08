@@ -576,10 +576,10 @@ assign imm_11_5 = instr[31:25];
                         MemWrite  = 0;
                         ALUsrc2   = 0;
                     end
-                    //MULHU
+                    //MULHSU
                     else if (funct7 == 7'b0000001)begin
                         RegWrite  = 1;
-                        ALUCtrl   = 5'b1110; //MULHU
+                        ALUCtrl   = 5'b1110; //MULHSU
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
                         Branch     =0;
@@ -608,10 +608,10 @@ assign imm_11_5 = instr[31:25];
                         ALUsrc2   = 0;
                     end
 
-                    //MULHSU
+                    //MULHU
                     else if (funct7 == 7'b0000001)begin
                         RegWrite  = 1;
-                        ALUCtrl   = 5'b1111; //MULHSU
+                        ALUCtrl   = 5'b1111; //MULHU
                         ALUSrc    = 0;
                         ImmSrc    = 3'b000;
                         Branch     =0;
