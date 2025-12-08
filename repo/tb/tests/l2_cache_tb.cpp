@@ -7,7 +7,6 @@
 
 unsigned int ticks = 0;
 
-// Helper: your base Testbench probably typedefs Vdut as the top.
 class L2CacheTestbench : public Testbench {
 protected:
     void initializeInputs() override {
@@ -18,8 +17,6 @@ protected:
         top->addr_i            = 0;
         top->addr_d            = 0;
 
-        // Wide signals: line_from_mem is VlWide<8> (256 bits)
-        //               l1write_back_data is VlWide<4> (128 bits)
         for (int i = 0; i < 8; ++i) {
             top->line_from_mem[i] = 0;
         }
@@ -33,17 +30,12 @@ protected:
         top->wb_ready          = 0;
     }
 
-    // Convenience helpers for tests:
-
-    // Fill the entire 8-word L2 line with the same 32-bit pattern.
     void setLineFromMemUniform(uint32_t word) {
         for (int i = 0; i < 8; ++i) {
             top->line_from_mem[i] = word;
         }
     }
 
-    // Fill the first 4 words of line_from_mem with explicit values
-    // (useful if you care about word positions).
     void setLineFromMem4(uint32_t w0, uint32_t w1, uint32_t w2, uint32_t w3) {
         top->line_from_mem[0] = w0;
         top->line_from_mem[1] = w1;
@@ -54,7 +46,6 @@ protected:
         }
     }
 
-    // L1 write-back data is 4 words (128 bits)
     void setL1WriteBackData4(uint32_t w0, uint32_t w1, uint32_t w2, uint32_t w3) {
         top->l1write_back_data[0] = w0;
         top->l1write_back_data[1] = w1;
