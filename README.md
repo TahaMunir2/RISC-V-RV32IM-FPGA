@@ -91,13 +91,107 @@ Load, store, branch, and jump instructions introduce additional complexity such 
 
 ### 2.1 Register Alias Table (RAT)
 
-<!-- TODO:
-- Purpose: register renaming to eliminate WAR and WAW hazards
-- Maps architectural registers to physical tags (ROB entries)
-- Interface and implementation details
--->
+#### Purpose
 
----
+The Register Alias Table eliminates **false dependencies** (WAR and WAW hazards) through **register renaming**. Instead of tracking architectural register names (x0–x31), the RAT maps each register to a **producer tag** which is a unique identifier for the instruction that will produce the register's value.
+
+This allows multiple instructions targeting the same architectural register to coexist in the pipeline without conflicts.
+
+#### How It Works
+
+When an instruction writes to a register, it is assigned a unique **producer ID** (tag). Any subsequent (subsequent in terms of program order) instruction that reads from that register will receive this tag instead of the actual value, allowing it to:
+- Wait for the producing instruction to complete
+- Receive the value via the Common Data Bus (CDB) when it becomes available
+
+#### Parameters
+
+```systemverilog
+parameter NREGS     = 32,   // Number of architectural registers (x0–x31)
+parameter PROD_BITS = 6     // Tag width (supports up to 64 in-flight instructions)
+```
+
+The 6-bit tag width was chosen to match the **ROB depth of 64 entries**. Since each in-flight instruction occupies one ROB entry, 6 bits (`2^6 = 64`) provides enough unique tags to identify all possible instructions in the pipeline. This keeps the tag field compact (in order to reduce delays incurred by the accessing a table) while supporting sufficient instruction-level parallelism for our 2-way superscalar design.
+
+#### Storage
+
+```systemverilog
+logic [PROD_BITS-1:0] rat_table [NREGS];      // Maps each register to its latest producer tag
+logic [PROD_BITS-1:0] producer_counter;       // Generates unique tags for new instructions
+```
+
+- **`rat_table`**: Array of 32 entries, one per architectural register. Each entry holds the tag of the instruction that will produce that register's value.
+- **`producer_counter`**: A monotonically increasing counter that assigns unique tags to new instructions.
+
+#### Interface
+
+##### Destination Register Renaming (2 instructions per cycle)
+
+| Signal | Direction | Description |
+|--------|-----------|-------------|
+| `inst1_rd` | Input | Destination register of instruction 1 |
+| `inst1_prod_id` | Output | Assigned tag for instruction 1 |
+| `inst2_rd` | Input | Destination register of instruction 2 |
+| `inst2_prod_id` | Output | Assigned tag for instruction 2 |
+
+##### Source Register Lookup (4 source registers for 2 instructions)
+
+| Signal | Direction | Description |
+|--------|-----------|-------------|
+| `rs1`, `rs2` | Input | Source registers of instruction 1 |
+| `rs1_prod_id`, `rs2_prod_id` | Output | Producer tags for instruction 1's sources |
+| `rs3`, `rs4` | Input | Source registers of instruction 2 |
+| `rs3_prod_id`, `rs4_prod_id` | Output | Producer tags for instruction 2's sources |
+
+#### Tag Assignment
+
+Each cycle, two new instructions receive consecutive tags:
+
+```systemverilog
+assign inst1_prod_id = producer_counter - 6'b000001;  // Tag N-1
+assign inst2_prod_id = producer_counter;               // Tag N
+```
+
+Instruction 1 (older) gets `producer_counter - 1`, instruction 2 (younger) gets `producer_counter`. This ensures program order is encoded in the tag values.
+
+#### Source Lookup (Combinational)
+
+```systemverilog
+assign rs1_prod_id = rat_table[rs1];
+assign rs2_prod_id = rat_table[rs2];
+assign rs3_prod_id = rat_table[rs3];
+assign rs4_prod_id = rat_table[rs4];
+```
+
+For each source register, the RAT immediately returns the tag of the instruction that will produce its value.
+
+#### RAT Update (Sequential)
+
+```systemverilog
+always_ff @(posedge clk) begin
+    if (rst) begin
+        producer_counter <= 6'b000000;
+        for (int i = 0; i < NREGS; i++)
+            rat_table[i] <= '0;
+    end else begin
+        // Update RAT for instruction 1
+        if (inst1_rd != 5'd0)
+            rat_table[inst1_rd] <= producer_counter - 6'b000001;
+        
+        // Update RAT for instruction 2
+        if (inst2_rd != 5'd0)
+            rat_table[inst2_rd] <= producer_counter;
+        
+        // Increment counter by 2 (for 2 instructions)
+        producer_counter <= producer_counter + 2;
+    end
+end
+```
+
+Key points:
+- **Register x0 is never renamed**: Writes to x0 are ignored (`inst_rd != 5'd0`)
+- **Counter increments by 2**: Since we process 2 instructions per cycle
+- **RAT entries are overwritten**: Only the latest producer matters
+
 
 ### 2.2 Re-Order Buffer (ROB)
 
