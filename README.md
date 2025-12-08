@@ -65,25 +65,18 @@ Our implementation is based on **Tomasulo's algorithm**, originally developed fo
 
 | Component | Purpose |
 |-----------|---------|
-| **Register Alias Table (RAT)** | Renames registers to eliminate WAR/WAW hazards |
+| **Register Alias Table (RAT)** | Renames registers to eliminate data hazards |
 | **Re-Order Buffer (ROB)** | Tracks instructions for in-order commit |
-| **Register Update Unit (RUU)** | Holds instructions waiting for operands (reservation stations) |
+| **Register Update Unit (RUU)** | Holds instructions waiting for operands to be ready and can issue any instruction ready to execute disregarding the original program order (reservation stations) |
 | **Common Data Bus (CDB)** | Broadcasts results to wake up dependent instructions |
 
 ### Instruction Flow
 
-```
-Fetch → Decode/Rename → Dispatch → Issue → Execute → Writeback → Commit
-              (RAT)       (RUU)    (RUU)   (ALUs)     (CDB)       (ROB)
-```
-
 1. **Fetch**: Retrieve 2 instructions per cycle from instruction memory
 2. **Decode/Rename**: Decode instructions, rename destination registers via RAT, allocate ROB entries
-3. **Dispatch**: Place instructions into RUU with source operand tags/values
-4. **Issue**: When all operands ready, select instructions and send to ALUs (out of order)
-5. **Execute**: ALUs compute results
-6. **Writeback**: Broadcast results on CDB; wake up dependent instructions in RUU
-7. **Commit**: Retire instructions in program order from ROB head; update architectural register file
+3. **Dispatch/Issue**: Place instructions into RUU with source operand tags/values; when all operands are ready, issue to ALUs (out of order)
+4. **Execute**: ALUs compute results; results are broadcast on the CDB to wake up dependent instructions and written to the corresponding ROB entry
+5. **Commit**: Retire instructions in program order from ROB head; update architectural register file
 
 ### Scope
 
