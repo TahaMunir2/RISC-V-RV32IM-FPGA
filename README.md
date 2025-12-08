@@ -635,6 +635,152 @@ Indeed, this strategy of writing back at the negative edge eliminates the delay 
 
 ### 2.4 Pipelined Design
 
+#### Overview
+
+To maximize throughput, we divide the processor into **5 pipeline stages**, each designed to complete within a similar time budget. The clock period is determined by the **slowest stage**, so balancing stage delays is critical for performance.
+
+#### Component Delays
+
+The following table (from Harris and Harris) shows typical propagation delays:
+
+![diagram](component_delays.png)
+
+---
+
+#### Pipeline Stages and Timing Analysis
+
+##### Stage 1: Fetch (F)
+
+**Operations:**
+- Read 2 instructions from instruction memory using PC
+- Compute PC + 8 for next fetch
+
+**Components in critical path:**
+```
+t_pcq + t_mem + t_setup
+= 40 + 200 + 50
+= 290 ps
+```
+
+> Note: The instruction memory is implemented as a dual-port memory (or 64-bit wide memory), allowing two instructions to be fetched in parallel within a single t_mem = 200 ps access.
+> 
+---
+
+##### Stage 2: Rename/Decode (D)
+
+**Operations:**
+- Decode both instructions (control unit)
+- Sign-extend immediates
+- Read 4 source registers from register file
+- Query RAT for producer tags (4 lookups)
+- Query ROB for operand values (4 lookups)
+- Determine operand validity
+- Select operand sources via muxes
+
+**Components in critical path:**
+```
+t_pcq + t_dec + t_RFread + t_mux + t_setup
+= 40 + 25 + 100 + 30 + 50
+= 245 ps
+```
+
+However, the RAT/ROB queries and validity logic run in parallel with register file reads:
+```
+RAT lookup + ROB lookup + validity logic + mux:
+t_pcq + t_RAT + t_ROB + t_AND-OR + t_mux + t_setup
+≈ 40 + 30 + 30 + 20 + 30 + 50
+= 200 ps
+```
+
+The register file read path dominates, so: **245 ps**
+
+---
+
+##### Stage 3: Dispatch/Issue (Iss)
+
+**Operations:**
+- Insert entries into RUU (dispatch)
+- Scan RUU for ready instructions (issue selection)
+- Output operands and control signals for ready instructions
+
+**Components in critical path:**
+
+The issue logic scans all 64 RUU entries to find ready instructions. This is a priority encoder over valid & ready bits:
+```
+t_pcq + t_RUU_scan + t_mux + t_setup
+= 40 + (64 × t_AND-OR) + 30 + 50
+```
+
+In practice, the scan is implemented as combinational logic with depth proportional to log(DEPTH):
+```
+≈ 40 + 6 × 20 + 30 + 50
+= 240 ps
+```
+
+---
+
+##### Stage 4: Execute + Writeback to ROB (E)
+
+**Operations:**
+- ALU computation (2 ALUs in parallel)
+- Broadcast results on CDB
+- Write results to ROB entries
+
+**Components in critical path:**
+```
+t_pcq + t_ALU + t_ROB_write + t_setup
+= 40 + 120 + 30 + 50
+= 240 ps
+```
+
+The CDB broadcast to RUU (wake-up) happens on the **negative edge**, so it doesn't add to this stage's delay.
+
+---
+
+##### Stage 5: Commit (W)
+
+**Operations:**
+- Read 2 entries from ROB head
+- Write up to 2 results to architectural register file
+- Free corresponding RUU entries
+
+**Components in critical path:**
+```
+t_pcq + t_ROB_read + t_RFsetup
+= 40 + 30 + 60
+= 130 ps
+```
+
+---
+
+#### Pipeline Summary
+
+| Stage | Name | Operations | Critical Path Delay |
+|-------|------|------------|---------------------|
+| **F** | Fetch | Read 2 instructions from memory | **290 ps** |
+| **D** | Rename/Decode | Decode, read registers, RAT/ROB lookup | 245 ps |
+| **Iss** | Dispatch/Issue | Insert to RUU, select ready instructions | 240 ps |
+| **E** | Execute | ALU computation, write to ROB | 240 ps |
+| **W** | Commit | Write to register file, free RUU | 130 ps |
+
+**Clock Period = max(all stages) = 290 ps** (limited by Fetch stage)
+
+---
+
+#### Performance Comparison
+
+| Metric | Single-Cycle | 5-Stage Pipelined OoO |
+|--------|--------------|----------------------|
+| Clock Period | ~750 ps | **290 ps** |
+| CPI | 1.0 | < 1.0 (superscalar) |
+| Instructions/Cycle | 1 | very close to 2 |
+
+**Theoretical Speedup:**
+- Clock speedup: 750 / 290 = **2.6×**
+- Superscalar factor: up to **2×** (2 ALUs)
+- Combined potential: up to **5.2×** throughput improvement
+
+In practice, dependencies and structural hazards reduce the effective IPC below 2.0, but the out-of-order execution minimizes stalls compared to an in-order superscalar design.
 
 ---
 
