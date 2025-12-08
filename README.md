@@ -1,37 +1,32 @@
-RV32M Extension Integration (Multiplier / Divider Unit)
+RV32M Extension (Multiply / Divide Unit)
 
-This section documents the incremental modifications required to extend our existing pipelined RV32I CPU to support the full RV32M base extension, consisting of eight additional R-type multiply/divide instructions. These changes were limited to the ALU, Control Unit, and testing infrastructure, without modifying pipeline organization, branch prediction, or other datapath blocks.
+This section documents our extension from RV32I → RV32IM, adding full support for the eight instructions defined in the RV32M standard. Only the ALU and Control Unit were modified. No changes were required to our pipeline, forwarding, memory subsystem, or branch logic.
 
-1. ALU Extension for M Instructions
+🔧 ALU Extensions
 
-The ALU was expanded with logic to compute 64-bit intermediate products and support signed and unsigned division/remainder. Three internal multiplication signals are computed:
+We expanded the ALU to include a 64-bit multiplication datapath and signed/unsigned division and remainder units. Three internal multiplication signals are computed:
 
-signed_mult = $signed(rs1) * $signed(rs2)
+signed_mult           = $signed(rs1) * $signed(rs2);
+unsigned_mult         = $unsigned(rs1) * $unsigned(rs2);
+signed_unsigned_mult  = $signed(rs1) * $unsigned(rs2);
 
-unsigned_mult = $unsigned(rs1) * $unsigned(rs2)
 
-signed_unsigned_mult = $signed(rs1) * $unsigned(rs2)
+Only the appropriate 32-bit segment is written to ALUout. Division and remainder also implement all ISA-mandated corner cases, including division by zero and −2³¹ ÷ −1.
 
-Only the appropriate 32-bit subset is written to ALUout depending on the instruction. Division and remainder additionally implement corner-case behavior required by the ISA, such as division by zero and INT32 overflow (when −2³¹ / −1).
-
-1.1 Implemented Operations
-Instruction	Behavior (32-bit result)
+📌 Instruction Behaviors
+Instruction	Description
 MUL	Low 32 bits of signed × signed
 MULH	High 32 bits of signed × signed
 MULHSU	High 32 bits of signed × unsigned
 MULHU	High 32 bits of unsigned × unsigned
-DIV	Signed quotient with special case: −2³¹ ÷ −1 = −2³¹; division by zero → −1
-DIVU	Unsigned quotient; division by zero → 0xFFFFFFFF
-REM	Signed remainder; division by zero → rs1; special case −2³¹ % −1 = 0
-REMU	Unsigned remainder; division by zero → rs1
+DIV	Signed division, handles overflow & divide-by-zero
+DIVU	Unsigned division, divide-by-zero → 0xFFFFFFFF
+REM	Signed remainder, divide-by-zero → dividend
+REMU	Unsigned remainder, divide-by-zero → dividend
+🧠 Control Unit Integration
 
-These operations were encoded into the ALU control signal (ALUCtrl) using newly assigned 5-bit values.
+All M-extension instructions occur under the R-type opcode 0110011, uniquely identified by funct7 = 0000001.
 
-2. Control Unit Extensions
-
-The control unit was extended to decode the R-type instructions with funct7 = 0000001, which uniquely identifies operations from the RV32M extension. The existing R-type decode path was reused, with additional cases added under OPC_OP (opcode 0110011).
-
-2.1 Decode Rules
 funct3	funct7	Instruction	ALUCtrl
 000	0000001	MUL	1100
 001	0000001	MULH	1101
@@ -42,20 +37,154 @@ funct3	funct7	Instruction	ALUCtrl
 110	0000001	REM	10010
 111	0000001	REMU	10011
 
-All M instructions:
+🔹 No pipeline changes were required.
+🔹 All instructions are still R-type, write back normally, and use existing forwarding logic.
 
-Remain R-type
+🧪 ALU M-Extension Testing
 
-Use register operands only (ALUSrc = 0)
+We extended alu_tb.cpp with exhaustive tests covering both valid and corner-case results.
 
-Write results to the register file (RegWrite = 1)
+ALU Test: MUL (Low 32-bit Product)
 
-Do not affect branching, memory, or PC control signals
+Purpose
+Verifies that the ALU returns the lower 32 bits of a full 64-bit multiplication.
 
-No additional hazard logic was required because the multiplier/divider executes fully inside the ALU stage and writes back normally. Forwarding paths already handle RAW dependencies.
+Test Case (ALUTest3)
 
-3. Testing the M Extension
+ALUCtrl = MUL
+ALUop1  = 5
+ALUop2  = 4
+Expected ALUout = 20
 
-We validated correctness at the unit level using GoogleTest-based C++ testbenches. The file alu_tb.cpp was expanded to exhaustively test all M instructions, including negative operands, mixed signed/unsigned multiplication, division overflow, and division-by-zero behavior.
 
-3.1 Example Test Cases
+What It Tests
+
+32-bit signed × signed multiplication
+
+Truncation to low 32 bits
+
+Correctness of basic multiplication behavior
+
+ALU Test: MULH (High 32-bit Signed×Signed Product)
+
+Purpose
+Checks that MULH yields the upper word of a signed 64-bit multiplication.
+
+Test Case (ALUTest4)
+
+ALUCtrl = MULH
+ALUop1  = 0x0FFF0000
+ALUop2  = 256
+Expected ALUout = 0x0000000F
+
+
+What It Tests
+
+Signed interpretation of both operands
+
+Extraction of bits [63:32] from the 64-bit product
+
+Correct handling of large positive products
+
+ALU Test: MULH (Negative Operand Case)
+
+Purpose
+Validates MULH behavior with negative values.
+
+Test Case (ALUTest5)
+
+ALUCtrl = MULH
+ALUop1  = 0xFFFFFFF0   # -16
+ALUop2  = 0xFFFFFFF0   # -16
+Expected ALUout = 0x00000000
+
+
+What It Tests
+
+Signed multiplication of two negatives
+
+High word drops to zero when full product fits in 32 bits
+
+ALU Test: DIV (Signed Division)
+
+Purpose
+Confirms the correct quotient for signed division.
+
+Test Case (ALUTest6)
+
+ALUCtrl = DIV
+ALUop1  = 0xFFFFFFF0   # -16
+ALUop2  = 0xFFFFFFF0   # -16
+Expected ALUout = 1
+
+
+What It Tests
+
+Signed division semantics
+
+Negative ÷ Negative → Positive
+
+Proper sign extension
+
+ALU Test: REM (Signed Remainder)
+
+Purpose
+Validates signed remainder semantics, especially with negative values.
+
+Test Case (ALUTest7)
+
+ALUCtrl = REM
+ALUop1  = 0xFFFFFFFD   # -3
+ALUop2  = 0xFFFFFFFE   # -2
+Expected ALUout = 0xFFFFFFFF   # -1
+
+
+What It Tests
+
+Remainder follows dividend sign (ISA rule)
+
+Correct signed behavior on negative modulo
+
+Exact edge-case handling
+
+ALU Test: REMU (Unsigned Remainder)
+
+Purpose
+Verifies the remainder result using unsigned interpretation.
+
+Test Case (ALUTest8)
+
+ALUCtrl = REMU
+ALUop1  = 0xFFFFFFFD   # 4294967293
+ALUop2  = 0xFFFFFFFE   # 4294967294
+Expected ALUout = 0xFFFFFFFD
+
+
+What It Tests
+
+Unsigned interpretation of both operands
+
+Remainder must be in range [0, divisor)
+
+No sign extension applied
+
+ALU Test: MULHSU (High 32-bit Signed×Unsigned Product)
+
+Purpose
+Checks the mixed-signed behavior unique to MULHSU.
+
+Test Case (ALUTest9)
+
+ALUCtrl = MULHSU
+ALUop1  = 0xFFFFFFFF   # -1 (signed)
+ALUop2  = 0x00000002   # 2  (unsigned)
+Expected ALUout = 0xFFFFFFFF   # high part of (-2)
+
+
+What It Tests
+
+Mixed signed/unsigned multiplication
+
+High 32-bit extraction from 64-bit result
+
+Proper handling of negative × positive product
