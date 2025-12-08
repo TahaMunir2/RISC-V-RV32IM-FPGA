@@ -728,16 +728,31 @@ In practice, the scan is implemented as combinational logic with depth proportio
 
 **Components in critical path:**
 ```
-t_pcq + t_ALU + t_ROB_write + t_setup
-= 40 + 120 + 30 + 50
-= 240 ps
+t_pcq + t_ALU + t_setup
+= 40 + 120 + 50
+= 210 ps
 ```
+
+The ROB write is a register array write, so we use t_setup.
 
 The CDB broadcast to RUU (wake-up) happens on the **negative edge**, so it doesn't add to this stage's delay.
 
 ---
 
-##### Stage 5: Commit (W)
+##### Note: Implicit Pipelining Between Execute and Commit
+
+There is **no explicit pipeline register** between the Execute (E) and Commit (C) stages. However, pipelining is still correctly maintained because:
+
+- **Execute stage** writes results to ROB on the **positive edge**
+- **Commit stage** reads from ROB head and writes to the register file on the **positive edge**
+
+Since the ROB is a buffer **with separate head and tail pointers**, these operations target **different entries**.
+
+As a result, while a pair of instruction is being written to the Re-Order Buffer another pair of instruction is being commited into the register file.
+
+---
+
+##### Stage 5: Commit (C)
 
 **Operations:**
 - Read 2 entries from ROB head
@@ -761,7 +776,7 @@ t_pcq + t_ROB_read + t_RFsetup
 | **D** | Rename/Decode | Decode, read registers, RAT/ROB lookup | 245 ps |
 | **Iss** | Dispatch/Issue | Insert to RUU, select ready instructions | 240 ps |
 | **E** | Execute | ALU computation, write to ROB | 240 ps |
-| **W** | Commit | Write to register file, free RUU | 130 ps |
+| **C** | Commit | Write to register file, free RUU | 130 ps |
 
 **Clock Period = max(all stages) = 290 ps** (limited by Fetch stage)
 
@@ -769,17 +784,24 @@ t_pcq + t_ROB_read + t_RFsetup
 
 #### Performance Comparison
 
-| Metric | Single-Cycle | 5-Stage Pipelined OoO |
-|--------|--------------|----------------------|
-| Clock Period | ~750 ps | **290 ps** |
+For a fair comparison, we consider a single-cycle arithmetic-only processor (no load/store), where the single cycle clock cycle can be calculated as follow:
+
+```
+Tc_single_arith = t_pcq + t_mem + t_RFread + t_ALU + t_mux + t_RFsetup
+                = 40 + 200 + 100 + 120 + 30 + 60
+                = 550 ps
+```
+
+| Metric | Single-Cycle (Arith Only) | 5-Stage Pipelined OoO |
+|--------|---------------------------|----------------------|
+| Clock Period | ~550 ps | **290 ps** |
 | CPI | 1.0 | < 1.0 (superscalar) |
-| Instructions/Cycle | 1 | very close to 2 |
+| Instructions/Cycle | 1 | Very close to 2 |
 
 **Theoretical Speedup:**
-- Clock speedup: 750 / 290 = **2.6×**
+- Clock speedup: 550 / 290 = **1.9×**
 - Superscalar factor: up to **2×** (2 ALUs)
-- Combined potential: up to **5.2×** throughput improvement
-
+- Combined potential: up to **3.8×** throughput improvement
 In practice, dependencies and structural hazards reduce the effective IPC below 2.0, but the out-of-order execution minimizes stalls compared to an in-order superscalar design.
 
 ---
