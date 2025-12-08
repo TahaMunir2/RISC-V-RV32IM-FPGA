@@ -662,7 +662,7 @@ t_pcq + t_mem + t_setup
 = 290 ps
 ```
 
-> Note: The instruction memory is implemented as a dual-port memory (or 64-bit wide memory), allowing two instructions to be fetched in parallel within a single t_mem = 200 ps access.
+> Note: The instruction memory is implemented as a dual-port memory, allowing two instructions to be fetched in parallel within a single t_mem = 200 ps access.
 > 
 ---
 
