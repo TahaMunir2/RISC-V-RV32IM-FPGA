@@ -107,7 +107,7 @@ module robdual #(
   // Second commit slot (head+1), only if first is valid & queue not effectively empty
   assign commit2_valid =
       commit1_valid &&                              // must be able to commit head
-      ( (head_next != tail) || full_flag ) &&       // there is a second entry
+      (head_next != tail) &&       // there is a second entry
       ready[head_next];                             // and it's ready
 
   assign commit2_rd    = dest_reg[head_next];
