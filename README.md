@@ -24,7 +24,7 @@ The Zba instructions are also atomic in the sense that they reduce shifting and 
 
 ### 2.1 Zicsr
 
-#### 2.1.1 Control Status Register
+#### Control Status Register
 
 We define a module called CSR, which will go in the execution stage of the pipeline. 
 
@@ -72,7 +72,7 @@ always_comb begin
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
 
 
-#### 2.1.2 Decoder
+#### Decoder
 
 We had to update the control module to be able to handle CSR instructions.
 
@@ -116,7 +116,7 @@ We had to update the control module to be able to handle CSR instructions.
     | **110** | CSRRSI |
     | **111** | CSRRCI |
 
-#### 2.1.3 Immediate MUX
+#### Immediate MUX
 
 We place a MUX before the CSR module to determine the value of **`wd`**.
 
@@ -126,7 +126,7 @@ We place a MUX before the CSR module to determine the value of **`wd`**.
 | 1 | 0-Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
 
 
-#### 2.1.4 Sign Extension
+#### Sign Extension
 
 We also added this case in the Sign Extension module to deal with the 5-bit unsigned immediate.
 
@@ -136,13 +136,24 @@ We also added this case in the Sign Extension module to deal with the 5-bit unsi
     end
 ```
 
+#### Hazard Unit
+
+We need to add brand new Hazard logic for this new CSR module. Now, since we are atomically reading and writing, the simplest way of dealing with forwarding is to implement stalls if there are any data dependencies. 
+
+```systemverilog
+assign csrStall = (|csr_typeD) && ( // check if the current instruction is csr type
+                    ( (|csr_typeE) && (csr_addrE == csr_addrD)) || // check if the one before was csr and had data dependancies
+                        ( (|csr_typeM) && (csr_addrM == csr_addrD)) ||  // check if the one in memory stage was csr and had data dependancies
+                            ( (|csr_typeW) && (csr_addrW == csr_addrD)) // check the one in writeback
+                    );
+```
+
+And then we can keep our current stall logic and just OR **`wStall`** with **`csrStall`**.
+
 ### 2.2 Zba
 
+#### Decoder:
 
-
-#### 2.2.1 Decoder:
-
-For Zba instructions, all we had to do was set RegWrite and assign new ALUCtrl signals for each instruction.
 
 ```systemverilog
 else if (funct7 == 7'b0010000) begin // sh1add
@@ -151,13 +162,15 @@ else if (funct7 == 7'b0010000) begin // sh1add
                     end         
 ```
 
+For Zba instructions, all we had to do was set RegWrite and assign new ALUCtrl signals for each instruction.
+
 | funct7 | funct3 | Instruction |
 | :--- | :--- | :--- |
 | 0010000 | 010 | sh1add |
 | 0010000 | 100 | sh2add |
 | 0010000 | 110 | sh3add |
 
-#### 2.2.2 ALU:
+#### ALU:
 
 These were the only changes we had to make for the Zba instructions in the ALU, with **`<<`** meaning shift left.
 
@@ -167,6 +180,24 @@ These were the only changes we had to make for the Zba instructions in the ALU, 
         5'b10110: ALUout = (ALUop1 << 3) + ALUop2; // sh3add
 ```
 
+### 2.3 Top-Level Integration
+
+The main challenge was working out where to put this new CSR module. It made the most sense to integrate it into the Execute stage with the ALU, as it also operates on the regular registers, so we would not need to change any of the forwarding logic, as it is essentially an extended version of the ALU, but with its own register that only it deals with.
+
+```systemverilog
+    csr csr ( // belongs in the execute stage
+        .clk(clk),
+        .CSR_OP(csr_typeE),
+        .addr(csr_addrE),
+        .en(|csr_typeE), // as all csr_type instructions have write in them and none correspond to 00
+        .wd(CSR_write),
+        .dout(CSR_read)
+    );
+```
+
+## Final Circuit Schematic
+
+Beyond this, we only needed to add a few lines to the Hazard unit for the CSR addresses and enables, and one new line out of the control unit called **`csr_type`**.
 
 Testbench info:
 
