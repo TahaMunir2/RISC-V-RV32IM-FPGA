@@ -64,7 +64,7 @@ protected:
 };
 
 // Basic I-cache fetch
-// First ready_i results in a miss
+// First fetch_i results in a miss
 // L2 cache writes in line_from_mem when ready = 1
 // L2 cache should assert ready_i after writing and hitting on the subsequent cycle
 // Data_out should match data written in from line_from_mem
@@ -85,6 +85,10 @@ TEST_F(L2CacheTestbench, InstructionFetchMissAndHit) {
         << "L2 should not assert ready_i on first access to a cold line (miss).";
     EXPECT_EQ(top->write_back_en, 0)
         << "No write-back expected on a simple read miss.";
+    EXPECT_EQ(top->main_mem_fetch, 1)
+        << "L2 should assert fetch request on main mem on a miss";
+    EXPECT_EQ(top->main_mem_addr, addrI)
+        << "L2 should assert fetch request using addrI";
 
     // Memory returns a line: fill all words with a known pattern
     setLineFromMemUniform(0xCAFEBABE);
@@ -102,16 +106,12 @@ TEST_F(L2CacheTestbench, InstructionFetchMissAndHit) {
     EXPECT_EQ(top->ready_i, 1)
         << "L2 should hit on the same I address after fill.";
 
-    // If data_out is wide (VlWide<4>), check a single word:
-    //   data_out[0] is least-significant 32 bits.
-    // We can’t EXPECT_EQ(top->data_out, int) because data_out is VlWide<4>.
-    uint32_t word0 = top->data_out[0];
-    EXPECT_EQ(word0, 0xCAFEBABE)
+    EXPECT_EQ(top->data_out[0], 0xCAFEBABE)
         << "I-fetch should return the pattern written into line_from_mem.";
 }
 
 // Basic D-cache fetch
-// First ready_d results in a miss
+// First fetch_d results in a miss
 // L2 cache writes in line_from_mem when ready = 1
 // L2 cache should assert ready_d after writing and hitting on the subsequent cycle
 // Data_out should match data written in from line_from_mem
@@ -130,6 +130,10 @@ TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
 
     EXPECT_EQ(top->ready_d, 0)
         << "L2 should not assert ready_d on first access (miss).";
+    EXPECT_EQ(top->main_mem_fetch, 1)
+        << "L2 should assert fetch request on main mem on a miss";
+    EXPECT_EQ(top->main_mem_addr, addrD)
+        << "L2 should assert fetch request using addrD";
 
     // Memory returns a different pattern
     setLineFromMemUniform(0x12345678);
@@ -146,9 +150,64 @@ TEST_F(L2CacheTestbench, DataFetchMissAndHit) {
     EXPECT_EQ(top->ready_d, 1)
         << "L2 should hit on the same D address after fill.";
 
-    uint32_t word0 = top->data_out[0];
-    EXPECT_EQ(word0, 0x12345678)
+    EXPECT_EQ(top->data_out[0], 0x12345678)
         << "D-fetch should return the pattern written into line_from_mem.";
+}
+
+// Testing arbiter logic (both fetch_d and fetch_i asserted)
+// First fetch results in a miss
+// L2 should prioritise fetch_d over fetch_i
+// L2 cache should assert ready_d first then process the fetch_i request
+// Data_out should match data written in from line_from_mem
+
+TEST_F(L2CacheTestbench, IandDFetchMissAndHit) {
+    initializeInputs();
+
+    uint32_t addrI = 0xF0000000;
+    uint32_t addrD = 0x0F000000;
+
+    top->fetch_i = 1;
+    top->fetch_d = 1;
+    top->addr_i  = addrI;
+    top->addr_d  = addrD;
+    top->ready   = 0;
+
+    runSimulation(1);
+
+    EXPECT_EQ(top->ready_i, 0)
+        << "L2 should not assert ready_i on first access to a cold line (miss).";
+    EXPECT_EQ(top->ready_d, 0)
+        << "L2 should not assert ready_d on first access to a cold line (miss).";
+    EXPECT_EQ(top->main_mem_fetch, 1)
+        << "L2 should assert fetch request on main mem on a miss";
+    EXPECT_EQ(top->main_mem_addr, addrD)
+        << "L2 should assert fetch request using addrD";
+
+    // Memory returns a line: fill all words with a known pattern
+    setLineFromMemUniform(0xABCD0000);
+    top->ready = 1;
+
+    runSimulation(1);
+
+    EXPECT_EQ(top->ready_i, 0)
+        << "L2 should not assert ready_i on the same cycle when memory has provided the line.";
+    EXPECT_EQ(top->ready_d, 0)
+        << "L2 should not assert ready_d on the same cycle when memory has provided the line.";
+
+    // Deassert ready, then hit again on same address
+    top->ready = 0;
+    runSimulation(1);
+
+    EXPECT_EQ(top->ready_d, 1)
+        << "L2 should hit and assert ready_d after fill.";
+    EXPECT_EQ(top->ready_i, 0)
+        << "L2 should not assert ready_i as only fetch_d request is being processed currently.";
+    EXPECT_EQ(top->data_out[0], 0xABCD0000)
+        << "D-fetch should return the pattern written into line_from_mem.";
+
+    top->fetch_d = 0;
+
+    // Now L2 should process the I fetch (already tested before)
 }
 
 // Simple L1 write-back into L2 and then forwarded to memory.
