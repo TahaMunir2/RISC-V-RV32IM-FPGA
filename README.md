@@ -22,7 +22,7 @@ The Zba instructions are also atomic in the sense that they reduce shifting and 
 
 We define a module called CSR, which will go in the execution stage of the pipeline. 
 
-![diagram]([https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg))
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg)
 
 ### Parameters
 
