@@ -42,7 +42,7 @@ The core Tomasulo-based infrastructure remains unchanged:
 To integrate loads while minimizing changes to the existing architecture:
 
 - **Re-Using already existing signals in decode** : For a load instruction we ignore RS2 and use only RS1, we also calculate the offset in this stage so that we can store the correct operand in the Register Update Unit
-- **Add memory stage**: After address calculation, loads access data memory in a subsequent stage
+- **Add memory stage To the Pipeline Architecture**: After address calculation, loads access data memory in a subsequent stage
 - **Double CDB width**: The ROB and RUU now accept 4 writeback inputs (2 from ALUs, 2 from memory) instead of 2
 
 The following sections detail each modification. For understanding the base Tomasulo implementation, refer to the previous branch documentation.
