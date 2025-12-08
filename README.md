@@ -53,6 +53,59 @@ The following sections detail each modification. For understanding the base Toma
 
 ### 2.1 Adapting Data Memory for Superscalar
 
+#### Original Data Memory (Single-Port)
+
+The original data memory module from the pipelined processor supports **one read and one write** per cycle:
+
+```systemverilog
+module datamem (
+    input  logic                     MemWrite,
+    input  logic [ADDRESS_WIDTH-1:0] WD,
+    input  logic [1:0]               SizeWrite,
+    input  logic [ADDRESS_WIDTH-1:0] A, 
+    input  logic [1:0]               LoadSize,
+    input  logic                     LoadUnsigned,
+    input  logic                     clk,
+    output logic [DATA_WIDTH-1:0]    dout
+);
+```
+
+This is insufficient for our 2-way superscalar processor where **two load instructions may execute simultaneously**.
+
+#### Superscalar Data Memory (Dual-Port)
+
+The adapted memory module provides **two independent read ports**:
+
+```systemverilog
+module sup_datamem (
+    // Port 1
+    input  logic [ADDRESS_WIDTH-1:0] A1, 
+    input  logic [1:0]               LoadSize1,
+    input  logic                     LoadUnsigned1,
+    output logic [DATA_WIDTH-1:0]    dout1,
+    
+    // Port 2
+    input  logic [ADDRESS_WIDTH-1:0] A2,
+    input  logic [1:0]               LoadSize2,
+    input  logic                     LoadUnsigned2,
+    output logic [DATA_WIDTH-1:0]    dout2
+);
+```
+
+#### Load Type Encoding Remains The Same
+
+| LoadSize | LoadUnsigned | Instruction | Loaded Data |
+|----------|--------------|-------------|-------------|
+| `2'b00` | `0` | `LB` | Sign-extended byte |
+| `2'b00` | `1` | `LBU` | Zero-extended byte |
+| `2'b01` | `0` | `LH` | Sign-extended halfword |
+| `2'b01` | `1` | `LHU` | Zero-extended halfword |
+| `2'b10` | `X` | `LW` | Full word (no extension) |
+
+
+Both ports can access the same underlying memory array simultaneously, enabling two loads per cycle in our superscalar design.
+
+Since we only support **load instructions** (not stores), the superscalar data memory has no write interface
 
 ---
 
