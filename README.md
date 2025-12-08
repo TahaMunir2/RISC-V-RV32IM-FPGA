@@ -124,14 +124,75 @@ Pipeline & hazard interaction
 - Forwarding and hazard/stall logic remain unchanged.
 - Timing caveat: single-cycle combinational multiplier/divider may be the EX critical path; acceptable for simulation/coursework but not optimal for synthesis.
 
-Testing summary
-- Unit tests (Verilator + GoogleTest) exercise all M ops and corner cases:
-  - MUL / MULH / MULHSU / MULHU
-  - DIV / DIVU / REM / REMU
-  - Division‑by‑zero and signed overflow (`-2^31 / -1`) cases
-- Test pattern: set `ALUCtrl`, `ALUop1`, `ALUop2`, call `top->eval()`, assert `ALUout` and flags.
+## 5. ALU test cases (selected) — exact format
 
-Trade-offs & notes
+### 5.1.11 ALU Test: DIVU (Unsigned Division by Zero)
+
+Purpose  
+Checks divide-by-zero behaviour for unsigned division.
+
+Test Case (ALUTest13)
+
+ALUCtrl = DIVU (5'b10001)
+
+ALUop1 = 0x00000010
+
+ALUop2 = 0x00000000
+
+Expected ALUout = 0xFFFFFFFF
+
+What It Tests
+
+- Unsigned divide-by-zero semantics (quotient = all 1s)  
+- Distinction between signed and unsigned division rules
+
+---
+
+### 5.1.12 ALU Test: REM (Remainder with Divisor Zero)
+
+Purpose  
+Verifies that for signed remainder the dividend is returned when the divisor is zero.
+
+Test Case (ALUTest14)
+
+ALUCtrl = REM
+
+ALUop1 = 0x00000010 (16)
+
+ALUop2 = 0x00000000 (0)
+
+Expected ALUout = 0x00000010
+
+What It Tests
+
+- RISC-V rule: when divisor is zero, remainder = dividend (signed)  
+- Difference between quotient and remainder behaviour in corner cases
+
+---
+
+### 5.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)
+
+Purpose  
+Confirms that in the unsigned case, the remainder also returns the dividend on divide-by-zero.
+
+Test Case (ALUTest15)
+
+ALUCtrl = REMU
+
+ALUop1 = 0x00000010
+
+ALUop2 = 0x00000000
+
+Expected ALUout = 0x00000010
+
+What It Tests
+
+- Unsigned remainder semantics on divide-by-zero  
+- Consistency with the signed REM rule for this case
+
+---
+
+### 6 Trade-offs & notes
 - Simplicity vs. timing: combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 - Only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards.
 
