@@ -65,7 +65,7 @@ Our implementation is based on **Tomasulo's algorithm**, originally developed fo
 
 | Component | Purpose |
 |-----------|---------|
-| **Register Alias Table (RAT)** | Renames registers to eliminate data hazards |
+| **Register Alias Table (RAT)** | Renames registers to eliminate data hazards (false dependencies : WAR and WAW) |
 | **Re-Order Buffer (ROB)** | Tracks instructions for in-order commit |
 | **Register Update Unit (RUU)** | Holds instructions waiting for operands to be ready and can issue any instruction ready to execute disregarding the original program order (reservation stations) |
 | **Common Data Bus (CDB)** | Broadcasts results to wake up dependent instructions |
@@ -81,7 +81,7 @@ Our implementation is based on **Tomasulo's algorithm**, originally developed fo
 ### Scope
 
 This implementation demonstrates the core out-of-order machinery using **arithmetic instructions only** (R-type and I-type ALU operations, including `LUI`). The design handles all three types of data hazards: 
-Read After Write (RAW) , Write After Read (WAR), Write After Write (WAW) hazards via register renaming.
+Read After Write (RAW) via common data bus transmission ( replacing the forwarding logic implemented in our previous designs) , Write After Read (WAR), Write After Write (WAW) hazards via register renaming.
 
 Load, store, branch, and jump instructions introduce additional complexity such as memory disambiguation and speculative execution and will be explored in further branches.
 
