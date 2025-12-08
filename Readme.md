@@ -417,7 +417,7 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ## 3. Schematic
 
-<!-- TODO: Circuit diagram -->
+![diagram](branchprediction.png)
 
 ---
 
@@ -425,13 +425,11 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ### 4.1 Branch Predictor Testing
 
-<!-- TODO: Branch predictor unit tests -->
 
 ---
 
 ### 4.2 Full Circuit Testing
 
-<!-- TODO: Integration tests with assembly programs -->
 
 ---
 
