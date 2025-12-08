@@ -100,7 +100,7 @@ We had to update the control module to be able to handle CSR instructions.
 ```
 - As shown in the diagram below, the bottom 2 bits of funct3 in CSR instructions can be used to distinguish the type of CSR instruction, and the top bit can be used to determine if it uses an immediate or RS1, which is controlled by **`ALUSrc3`**
 - For the non-immediate instructions, we can simply just do **`RegWrite = 1'b1`** as we only need to write into the destination register
-- We control the sign extension done on the 5-bit immediate by **'ImmSrc`** for the I-type CSR instructions, with them reserving the code **`3'b101`**.
+- We control the sign extension done on the 5-bit immediate by **`ImmSrc`** for the I-type CSR instructions, with them reserving the code **`3'b101`**.
 
 ### 2.1.3 Immediate MUX
 
