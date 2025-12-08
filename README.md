@@ -148,9 +148,14 @@ For Zba instructions, all we had to do was set RegWrite and assign new ALUCtrl s
 else if (funct7 == 7'b0010000) begin // sh1add
                         RegWrite = 1;
                         ALUCtrl = 5'b10100;
-                    end
-                  
+                    end         
 ```
+
+| funct7 | funct3 | Instruction |
+| :--- | :--- | :--- |
+| 0010000 | 010 | sh1add |
+| 0010000 | 100 | sh2add |
+| 0010000 | 110 | sh3add |
 
 #### 2.2.2 ALU:
 
