@@ -1009,6 +1009,7 @@ mux mux_ALU1_immVSreg(
 
 ## 3. Schematic
 
+![diagram](Oooarith_1.jpg)
 
 ---
 
