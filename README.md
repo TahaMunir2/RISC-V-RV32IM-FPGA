@@ -3,6 +3,8 @@
 ## Table of Contents
 - [1. Overview](#1-overview)
 - [2. Implementation](#2-implementation)
+    - [2.1.1 Control Status Registers](#211-control-status-registers)
+
 
 
 ---
@@ -20,7 +22,7 @@ The Zba instructions are also atomic in the sense that they reduce shifting and 
 
 ## 2. Implementation
 
-### 2.1 Control Status Registers
+### 2.1.1 Control Status Register
 
 We define a module called CSR, which will go in the execution stage of the pipeline. 
 
@@ -64,6 +66,46 @@ always_comb begin
 - **`2'b01: temp =  wd`**: CSRRW stands for **Control Status Register Read and Write**, and you simply **read** the value into rd and **write** the value of either the imm or RS1 into the CSR.
 - **`2'b10: temp = temp | wd`**: **CSRRS stands for Control Status Register Read and Set**, and you do the same **read** as before but for writing, you go through all the bits in wd and if they are high than the corresponding bit in temp will also be **set** (the rest of the bits are untouched), this can be simplified into an OR operation.
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
+
+### 2.1.2 Decoder
+
+We had to update the control module to be able to handle CSR instructions.
+
+- We started by defining the OP Code for CSR instructions as **`OPC_CSR = 7'b1110011;`** at the top of the control module.
+
+```systemverilog
+ OPC_CSR: begin
+                csr_type = funct3[1:0];
+                ALUSrc3 = funct3[2];
+
+                if(funct3 == 3'b001) RegWrite = 1'b1; // CSSRW
+                if(funct3 == 3'b010) RegWrite = 1'b1; // CSSRS
+                if(funct3 == 3'b011) RegWrite = 1'b1; // CSSRC
+                
+                if(funct3 == 3'b101) begin // CSSRWI
+                    RegWrite = 1'b1;
+                    ImmSrc = 3'b101; // for CSR--I instructions
+                end
+                
+                if(funct3 == 3'b110) begin // CSSRSI
+                    RegWrite = 1'b1;
+                    ImmSrc = 3'b101;
+                end 
+                
+                if(funct3 == 3'b111) begin // CSSRCI
+                    RegWrite = 1'b1;
+                    ImmSrc = 3'b101; 
+                end
+            end
+```
+- As shown in the diagram below, the bottom 2 bits of funct3 in CSR instructions can be used to distinguish the type of CSR instruction, and the top bit can be used to determine if it uses an immediate or RS1, which is controlled by **`ALUSrc3`**
+- For the non-immediate instructions, we can simply just do **`RegWrite = 1'b1`** as we only need to write into the destination register
+- We control the sign extension done on the 5-bit immediate by **'ImmSrc`** for the I-type CSR instructions, with them reserving the code **`3'b101`**.
+
+### 2.1.3 Immediate MUX
+
+
+
 
 Testbench info:
 
