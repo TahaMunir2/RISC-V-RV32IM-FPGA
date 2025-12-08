@@ -51,78 +51,104 @@ From the pipeline perspective, M instructions behave like ordinary R-type ALU op
 
 All previous RV32I ALU codes remain unchanged in the lower range.
 
-### 2.2 Multiplication implementation
-- ALU computes 64-bit intermediate products (combinational):
+### 3. Control‑Path Changes for M Instructions
 
-```systemverilog
-logic [63:0] unsigned_mult;
-logic [63:0] signed_mult;
-logic [63:0] signed_unsigned_mult;
+To support RV32M, the control unit (`control.sv`) was extended in two ways:
 
-assign unsigned_mult        = $unsigned(ALUop1) * $unsigned(ALUop2);
-assign signed_mult          = $signed(ALUop1)   * $signed(ALUop2);
-assign signed_unsigned_mult = $signed(ALUop1)   * $unsigned(ALUop2);
-```
-Results are selected/sliced by `ALUCtrl` in the ALU. Example selections:
+1. ALUCtrl width increased from 4 bits to 5 bits.  
+2. Additional decoding for `opcode == OPC_OP` and `funct7 == 7'b0000001`.
 
-```systemverilog
-// MUL family (examples)
-5'b01100: ALUout = unsigned_mult[31:0];         // MUL   : low 32 bits
-5'b01101: ALUout = signed_mult[63:32];         // MULH  : high 32 bits (signed×signed)
-5'b01110: ALUout = unsigned_mult[63:32];       // MULHU : high 32 bits (unsigned×unsigned)
-5'b01111: ALUout = signed_unsigned_mult[63:32];// MULHSU: high 32 bits (signed×unsigned)
-```
+#### 3.1 Wider ALUCtrl output
 
-Notes:
-- For the low‑32 MUL case the low 32 bits of signed×signed and unsigned×unsigned products coincide for 32‑bit operands, so using `unsigned_mult[31:0]` is safe.
-- The ALU computes 64‑bit intermediates combinationally; this is simple but increases EX-stage critical path.
+The module header was updated to:
 
-Division / remainder (with RISC‑V corner cases):
-
-```systemverilog
-5'b10000: begin // DIV (signed)
-    if (ALUop2 == 32'h0)                 ALUout = 32'hFFFFFFFF; // -1 per spec
-    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF)
-                                         ALUout = 32'h80000000; // overflow case
-    else                                 ALUout = $signed(ALUop1) / $signed(ALUop2);
-end
-
-5'b10001: begin // DIVU (unsigned)
-    if (ALUop2 == 32'h0)                 ALUout = 32'hFFFFFFFF;
-    else                                 ALUout = $unsigned(ALUop1) / $unsigned(ALUop2);
-end
-
-5'b10010: begin // REM (signed)
-    if (ALUop2 == 32'h0)                 ALUout = ALUop1; // remainder = dividend
-    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF)
-                                         ALUout = 32'h0; // special case
-    else                                 ALUout = $signed(ALUop1) % $signed(ALUop2);
-end
-
-5'b10011: begin // REMU (unsigned)
-    if (ALUop2 == 32'h0)                 ALUout = ALUop1;
-    else                                 ALUout = $unsigned(ALUop1) % $unsigned(ALUop2);
-end
-```
-
-Flag outputs
-- `EQ`, `LT`, `LTU` are computed as before and are unchanged by M-type logic:
-  - `EQ  = (ALUop1 == ALUop2)`
-  - `LT  = ($signed(ALUop1) < $signed(ALUop2))`
-  - `LTU = (ALUop1 < ALUop2)`
-
-Control-path changes
-- `ALUCtrl` widened in `control.sv`:
 ```systemverilog
 output logic [4:0] ALUCtrl;
 ```
-- Decode M-ops under `opcode = OPC_OP` when `funct7 == 7'b0000001`; `funct3` selects the specific M instruction. For all M cases the remaining control signals mirror a normal R-type ALU op:
-  - `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`, `MemWrite = 0`, `Branch = 0`, `Jump = 0`.
 
-Pipeline & hazard interaction
-- M instructions are ordinary R-type ALU instructions from IF to WB.
-- Forwarding and hazard/stall logic remain unchanged.
-- Timing caveat: single-cycle combinational multiplier/divider may be the EX critical path; acceptable for simulation/coursework but not optimal for synthesis.
+All existing RV32I cases were adjusted to drive 5‑bit codes (e.g. `5'b00000` for ADD, `5'b00001` for SUB, etc.). No other control outputs required structural changes — M ops are treated as ordinary R‑type ALU instructions from the pipeline perspective.
+
+#### 3.2 Decoding M operations under OPC_OP
+
+M ops share the R‑type opcode `7'b0110011`. The control logic detects M‑extension via:
+
+- `funct7 == 7'b0000001` → M‑extension present  
+- `funct3` selects the specific M operation
+
+Simplified decode sketch:
+
+```systemverilog
+OPC_OP: begin
+    // funct3 == 3'b000 : ADD / SUB / MUL
+    if (funct3 == 3'b000) begin
+        if (funct7 == 7'b0000001) begin
+            // MUL
+            RegWrite = 1;
+            ALUCtrl  = 5'b01100;
+        end else begin
+            // ADD / SUB normal decoding...
+        end
+    end
+
+    // funct3 == 3'b100 : XOR / DIV
+    else if (funct3 == 3'b100) begin
+        if (funct7 == 7'b0000001) begin
+            // DIV
+            RegWrite = 1;
+            ALUCtrl  = 5'b10000;
+        end else begin
+            // XOR normal decoding...
+        end
+    end
+
+    // ...similar branches for MULH, MULHSU, MULHU, DIVU, REM, REMU
+end
+```
+
+For every M case, control signals (other than `ALUCtrl`) are set to match a normal R‑type ALU op:
+
+- `RegWrite = 1` — write result to `rd`  
+- `ALUSrc = 0` — both operands from registers (`rs1`, `rs2`)  
+- `ResultSrc = 2'b00` — select ALU result for WB  
+- `MemWrite = 0` — no data-memory access  
+- `Jump = 0`, `Branch = 0` — no control transfer  
+- `ALUsrc2 = 0` — first ALU operand is `rs1` (not `pc_save`)
+
+No special handling is required elsewhere (hazard unit, register file, pipeline control).
+
+---
+
+### 4. Interaction with the Existing Pipeline and Hazards
+
+- M instructions are ordinary R‑type ALU instructions with a more complex datapath.  
+- They pass through IF/ID → ID/EX → EX/MEM → MEM/WB exactly like ADD/SUB.  
+- Forwarding and stall logic remain unchanged:
+  - Hazard unit inspects register numbers and `RegWrite` / `ResultSrc` only.
+  - It does not need to know whether EX does ADD or MUL.  
+- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`; M instructions use ALU result.
+
+Timing caveat: combinational multiplier/divider are likely the EX critical path. Typical mitigation (not implemented here):
+
+- Multi‑cycle or pipelined multiply/divide unit  
+- Run core at lower clock frequency  
+- Use a long‑latency functional unit with reservation stations
+
+For this coursework the design remains single‑cycle per instruction (M ops included). M instructions were therefore omitted from the FPGA‑synthesized configuration.
+
+---
+
+### 5. Summary
+
+Adding RV32M required three main changes:
+
+1. Extend ALU control space to 5 bits (`ALUCtrl`) and add unique encodings for the eight M ops.  
+2. Add multiplier/divider datapaths in the ALU:
+   - 64‑bit products for each signedness combination, sliced per MUL* semantics.
+   - Signed/unsigned division and remainder with RISC‑V corner cases (divide‑by‑zero, `-2^31 / -1`).
+3. Extend control decode for `opcode == OPC_OP` and `funct7 == 7'b0000001`, mapping `(funct3, funct7)` → `ALUCtrl` while leaving all R‑type control signals unchanged.
+
+Everything else in the CPU (pipeline registers, hazard unit, branch logic, memories) is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute.
+
 
 ## 5. ALU test cases (selected) — exact format
 
