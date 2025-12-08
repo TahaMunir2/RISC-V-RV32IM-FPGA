@@ -22,12 +22,14 @@ The Zba instructions are also atomic in the sense that they reduce shifting and 
 
 ## 2. Implementation
 
-### 2.1.1 Control Status Register
+### 2.1 Zicsr
+
+#### 2.1.1 Control Status Register
 
 We define a module called CSR, which will go in the execution stage of the pipeline. 
 
 
-### Parameters
+##### Parameters
 
 ```systemverilog
 parameter ADDRESS_WIDTH = 12,
@@ -39,7 +41,7 @@ parameter CSR_WIDTH = 4096
 - **`ADDRESS_WIDTH = 12`**: 2^12 = 4096 hence there are 12 address bits.
 
 
-### Initialisation
+##### Initialisation
 
 ```systemverilog
   logic[DATA_WIDTH-1:0] temp;
@@ -50,7 +52,7 @@ parameter CSR_WIDTH = 4096
 - **`dout = csr_array[addr]`**: We first assign the initial value of the CSR to be stored into the destination register.
 
 
-### Zicsr Logic
+##### Zicsr Logic
 
 ```systemverilog
 always_comb begin
@@ -70,8 +72,7 @@ always_comb begin
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
 
 
-
-### 2.1.2 Decoder
+#### 2.1.2 Decoder
 
 We had to update the control module to be able to handle CSR instructions.
 
@@ -115,8 +116,7 @@ We had to update the control module to be able to handle CSR instructions.
     | **110** | CSRRSI |
     | **111** | CSRRCI |
 
-
-### 2.1.3 Immediate MUX
+#### 2.1.3 Immediate MUX
 
 We place a MUX before the CSR module to determine the value of **`wd`**.
 
@@ -126,10 +126,41 @@ We place a MUX before the CSR module to determine the value of **`wd`**.
 | 1 | 0-Extended 5-bit Imm | CSRRWI/CSRRSI/CSRRCI |
 
 
-### 2.1.4 Sign Extension
+#### 2.1.4 Sign Extension
+
+We also added this case in the Sign Extension module to deal with the 5-bit unsigned immediate.
+
+```systemverilog
+    else if(ImmSrc == 3'b101) begin
+        immext = {27'b0, instr[19:15]};
+    end
+```
+
+### 2.2 Zba
 
 
 
+#### 2.2.1 Decoder:
+
+For Zba instructions, all we had to do was set RegWrite and assign new ALUCtrl signals for each instruction.
+
+```systemverilog
+else if (funct7 == 7'b0010000) begin // sh1add
+                        RegWrite = 1;
+                        ALUCtrl = 5'b10100;
+                    end
+                  
+```
+
+#### 2.2.2 ALU:
+
+These were the only changes we had to make for the Zba instructions in the ALU, with **`<<`** meaning shift left.
+
+```systemverilog
+        5'b10100: ALUout = (ALUop1 << 1) + ALUop2; // sh1add
+        5'b10101: ALUout = (ALUop1 << 2) + ALUop2; // sh2add
+        5'b10110: ALUout = (ALUop1 << 3) + ALUop2; // sh3add
+```
 
 
 Testbench info:
