@@ -3,9 +3,20 @@
 ## Table of Contents
 - [1. Overview](#1-overview)
 - [2. Implementation](#2-implementation)
-    - [2.1.1 Control Status Registers](#211-control-status-registers)
-
-
+    - [2.1 Zicsr](#21-zicsr)
+        - [Control Status Register](#control-status-register)
+        - [Decoder](#decoder)
+        - [Immediate MUX](#immediate-mux)
+        - [Sign Extension](#sign-extension)
+        - [Hazard Unit](#hazard-unit)
+    - [2.2 Zba](#22-zba)
+        - [Decoder](#decoder-1)
+        - [ALU](#alu)
+    - [2.3 Top-Level Integration](#23-top-level-integration)
+- [3. Final Circuit Schematic](#3-final-circuit-schematic)
+- [4. Testing and Verification](#4-testing-and-verification)
+    - [Zicsr Testbench](#zicsr-testbench)
+    - [Zba Testbench](#zba-testbench)
 
 ---
 
