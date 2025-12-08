@@ -401,6 +401,235 @@ The Re-Order Buffer commits up to 2 instructions per cycle, the number of commit
 
 ### 2.3 Register Update Unit (RUU)
 
+#### Purpose
+
+The Register Update Unit (also known as **Reservation Stations** in Tomasulo's algorithm) holds instructions that are waiting for their operands. It enables **out-of-order execution** by:
+
+1. **Buffering instructions** until their source operands become available
+2. **Waking up instructions** when results are broadcast on the CDB
+3. **Issuing ready instructions** to the ALUs for execution
+
+#### Structure
+
+The RUU is implemented as an array of 64 entries:
+
+```systemverilog
+parameter DEPTH          = 64,
+parameter TAG_BITS       = $clog2(DEPTH),  // 6 bits
+parameter CONTROL_WIDTH  = 4               // ALU control bits
+```
+
+Each entry is a packed struct containing:
+
+```systemverilog
+typedef struct packed {
+    logic                     valid;      // Slot in use
+    logic                     issued;     // Already sent to ALU?
+    logic [TAG_BITS-1:0]      dest_tag;   // ROB tag for this instruction
+    logic                     src1_valid; // Is source 1 ready?
+    logic [TAG_BITS-1:0]      src1_tag;   // Producer tag for source 1
+    logic [31:0]              src1_value; // Value of source 1
+    logic                     src2_valid; // Is source 2 ready?
+    logic [TAG_BITS-1:0]      src2_tag;   // Producer tag for source 2
+    logic [31:0]              src2_value; // Value of source 2
+    logic [CONTROL_WIDTH-1:0] ctrl;       // ALU control signals
+} ruu_entry_t;
+```
+
+| Field | Description |
+|-------|-------------|
+| `valid` | Entry contains an instruction |
+| `issued` | Instruction has been sent to ALU (prevents re-issue) |
+| `dest_tag` | The ROB tag identifying this instruction |
+| `src1_valid` | Source operand 1 is available |
+| `src1_tag` | If not valid, the ROB tag of the producing instruction |
+| `src1_value` | The actual value (when valid) |
+| `src2_valid`, `src2_tag`, `src2_value` | Same for source operand 2 |
+| `ctrl` | ALU operation control signals |
+
+#### Interfaces
+
+##### Dispatch Interface (2 instructions per cycle)
+
+```systemverilog
+// Instruction 1
+input  logic                 dispatch1_en,
+input  logic [TAG_BITS-1:0]  dispatch1_dest_tag,
+input  logic                 dispatch1_src1_valid,
+input  logic [TAG_BITS-1:0]  dispatch1_src1_tag,
+input  logic [31:0]          dispatch1_src1_value,
+input  logic                 dispatch1_src2_valid,
+input  logic [TAG_BITS-1:0]  dispatch1_src2_tag,
+input  logic [31:0]          dispatch1_src2_value,
+input  logic [CONTROL_WIDTH-1:0] dispatch1_ctrl,
+
+// Instruction 2 (same signals)
+```
+
+##### Writeback Interface (CDB broadcast)
+
+```systemverilog
+input  logic                 wb1_en,
+input  logic [TAG_BITS-1:0]  wb1_tag,
+input  logic [31:0]          wb1_value,
+
+input  logic                 wb2_en,
+input  logic [TAG_BITS-1:0]  wb2_tag,
+input  logic [31:0]          wb2_value,
+```
+
+##### Free Interface (after commit)
+
+```systemverilog
+input  logic                 free1_en,
+input  logic [TAG_BITS-1:0]  free1_tag,
+input  logic                 free2_en,
+input  logic [TAG_BITS-1:0]  free2_tag,
+```
+
+##### Execute Interface (to ALUs)
+
+```systemverilog
+output logic [TAG_BITS-1:0]  exec0_dest_tag,
+output logic [31:0]          exec0_src1_value,
+output logic [31:0]          exec0_src2_value,
+output logic [CONTROL_WIDTH-1:0] exec0_ctrl,
+
+// Same for exec1 (second ALU)
+```
+
+---
+
+#### Sequential Operations
+
+The RUU performs four operations: **Dispatch**, **Writeback (Wake-up)**, **Issue**, and **Free**. 
+
+##### Dispatch: Adding New Instructions
+
+When instructions are decoded, they are dispatched to the first available RUU slots. The module scans for free entries (`valid == 0`):
+
+```systemverilog
+always_comb begin
+    found1 = 1'b0;
+    found2 = 1'b0;
+    for (int i = 0; i < DEPTH; i++) begin
+        if (!entries[i].valid) begin
+            if (!found1) begin
+                found1    = 1'b1;
+                slot1_idx = i;
+            end else if (!found2) begin
+                found2    = 1'b1;
+                slot2_idx = i;
+            end
+        end
+    end
+end
+```
+
+##### Writeback (Wake-up): CDB Broadcast
+
+When an ALU completes, it broadcasts the result on the CDB. All RUU entries **simultaneously** check if they're waiting for this tag. This happens on the **negative edge** to allow same-cycle wake-up and issue.
+
+```systemverilog
+always_ff @(negedge clk) begin
+    if (wb1_en) begin
+        for (int i = 0; i < DEPTH; i++) begin
+            // Check source 1
+            if (entries[i].valid && !entries[i].src1_valid &&
+                (entries[i].src1_tag == wb1_tag)) begin
+                entries[i].src1_valid <= 1'b1;
+                entries[i].src1_value <= wb1_value;
+            end
+            // Check source 2
+            if (entries[i].valid && !entries[i].src2_valid &&
+                (entries[i].src2_tag == wb1_tag)) begin
+                entries[i].src2_valid <= 1'b1;
+                entries[i].src2_value <= wb1_value;
+            end
+        end
+    end
+    // Same for wb2...
+end
+```
+
+##### Issue: Selecting Ready Instructions
+
+The issuer scans for entries that are **valid**, **not yet issued**, and have **both operands ready**. Up to 2 instructions can issue per cycle to the 2 ALUs.
+
+```systemverilog
+always_comb begin
+    issue0_valid = 1'b0;
+    issue0_idx   = '0;
+    
+    // First ALU: find oldest ready instruction
+    for (int i = 2; i < DEPTH; i++) begin
+        if (!issue0_valid &&
+            entries[i].valid &&
+            !entries[i].issued &&
+            entries[i].src1_valid &&
+            entries[i].src2_valid) begin
+            issue0_valid = 1'b1;
+            issue0_idx   = i;
+        end
+    end
+    
+    // Second ALU: find next ready instruction (different from first)
+    for (int i = 2; i < DEPTH; i++) begin
+        if (!issue1_valid &&
+            entries[i].valid &&
+            !entries[i].issued &&
+            entries[i].src1_valid &&
+            entries[i].src2_valid &&
+            (!issue0_valid || (issue0_idx != i))) begin
+            issue1_valid = 1'b1;
+            issue1_idx   = i;
+        end
+    end
+end
+```
+
+##### Free: Releasing Entries After Commit
+
+When the ROB commits an instruction, the corresponding RUU entry is freed by clearing its `valid` bit. The entry is matched by `dest_tag`.
+
+```systemverilog
+if (free1_en) begin
+    for (int i = 0; i < DEPTH; i++) begin
+        if (free1_tag == entries[i].dest_tag) begin
+            entries[i].valid  <= 1'b0;
+            entries[i].issued <= 1'b0;
+        end
+    end
+end
+```
+
+---
+
+#### Timing strategy: Negative Edge for Writeback?
+
+```systemverilog
+always_ff @(negedge clk) begin
+    // Writeback (wake-up) logic
+end
+```
+
+The writeback logic runs on the **negative edge** of the clock while dispatch, issue, and free run on the **positive edge**. This design choice enables **same-cycle wake-up**:
+
+![diagram](ruuwritebacktrick.png)
+
+Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue.
+
+This technique was not part of the first implementation of this circuit. However, using GTKWave, we examined the ALU operands signals wave and observed a delay.
+
+Below is what we observed before writing back at the negative edge of the clock: (all the work was done in the positive edge)
+
+![diagram](writebackposedge.jpeg)
+
+Below is what we observed before writing back at the negative edge of the clock:
+
+![diagram](writebacknegedge.jpeg)
+
+Indeed, this strategy of writing back at the negative edge eliminates the delay and increase the throughput.
 
 ---
 
