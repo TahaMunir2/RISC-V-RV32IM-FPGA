@@ -1,95 +1,58 @@
-# RV32M (“M-type”) Instructions – Design and Implementation
+# RV32M (“M-type”) Instructions — Design & Implementation
 
-This section documents how the RV32M integer multiplication and division extension is integrated into our RV32I core. The focus is on the additional functionality and on the changes made to the ALU and control logic; everything else in the CPU (pipeline structure, hazard unit, memories, etc.) behaves as before.
-
----
-
-## 1. Scope of the M Extension
-
-We implement the full RV32M base extension as defined in the RISC-V spec:
-
-- **MUL** – computes the full 64-bit product  
-  \( P = (\text{int32})rs1 \times (\text{int32})rs2 \)  
-  and writes the low 32 bits \( P[31:0] \) to `rd` (modulo \(2^{32}\) wrap-around).
-
-- **MULH** – computes the 64-bit signed product  
-  \( P = (\text{int32})rs1 \times (\text{int32})rs2 \)  
-  and writes the high 32 bits \( P[63:32] \) to `rd` (signed×signed high word).
-
-- **MULHSU** – computes the 64-bit mixed-sign product  
-  \( P = (\text{int32})rs1 \times (\text{uint32})rs2 \)  
-  and writes the high 32 bits \( P[63:32] \) to `rd` (signed×unsigned high word).
-
-- **MULHU** – computes the 64-bit unsigned product  
-  \( P = (\text{uint32})rs1 \times (\text{uint32})rs2 \)  
-  and writes the high 32 bits \( P[63:32] \) to `rd` (unsigned×unsigned high word).
-
-- **DIV** – performs signed integer division  
-  \( q = \text{trunc}((\text{int32})rs1 / (\text{int32})rs2) \)  
-  with special cases:
-  - \( q = -1 \) if divisor is 0  
-  - \( q = 0x80000000 \) for the overflow case \( -2^{31} / -1 \).
-
-- **DIVU** – performs unsigned division  
-  \( q = (\text{uint32})rs1 / (\text{uint32})rs2 \),  
-  with \( q = 0xFFFFFFFF \) if the divisor is 0.
-
-- **REM** – returns the signed remainder  
-  \( r = (\text{int32})rs1 \% (\text{int32})rs2 \)  
-  such that \( rs1 = q \cdot rs2 + r \) and **r has the same sign as rs1**.  
-  If divisor is 0, `r = rs1`, and in the overflow case \((-2^{31} / -1)\) we return `r = 0`.
-
-- **REMU** – returns the unsigned remainder  
-  \( r = (\text{uint32})rs1 \% (\text{uint32})rs2 \)  
-  (always in \([0, 2^{32}-1]\)); if divisor is 0, `r = rs1` (bit-pattern preserved).
-
-Architecturally, these are encoded as standard **R-type** instructions with:
-
-- `opcode = OP (0110011)`
-- `funct7 = 0000001` to indicate “M-extension” operation
-- `funct3` to select which of the eight operations.
-
-In our design, all eight M operations are executed in the existing **ALU**. They are treated like any other R-type ALU instruction by the pipeline and hazard unit:
-
-- Read `rs1` and `rs2` from the register file  
-- Produce a 32-bit result in `rd`  
-- Set `RegWrite = 1` and write back in the WB stage  
-- No special cases in the forwarding logic; M ops forward exactly like `ADD`/`SUB`/etc.
-
-The rest of this section explains how the ALU and control logic were extended to support these operations.
+This document describes how the RV32M integer multiply/divide extension was integrated into our RV32I core. It focuses only on the added functionality and the changes made to the ALU and control modules. Everything else in the CPU (pipeline, hazard unit, register file, memories, etc.) is unchanged.
 
 ---
 
-## 2. ALU Changes for M Instructions
+## 1. Scope
 
-### 2.1 Wider ALU control signal
+We implemented the full RV32M base extension (eight instructions):
 
-Originally, `ALUCtrl` was 4 bits, enough to encode the basic RV32I operations (ADD, SUB, logic, shifts, SLT/SLTU, LUI, AUIPC, etc.). To accommodate all the new M operations **without overloading existing encodings**, we widened the control signal.
+- **MUL** — low 32 bits of signed×signed product: `rd = (rs1 * rs2)[31:0]`
+- **MULH** — high 32 bits of signed×signed product: `rd = (signed(rs1) * signed(rs2))[63:32]`
+- **MULHSU** — high 32 bits of signed×unsigned product: `rd = (signed(rs1) * unsigned(rs2))[63:32]`
+- **MULHU** — high 32 bits of unsigned×unsigned product: `rd = (unsigned(rs1) * unsigned(rs2))[63:32]`
+- **DIV** — signed quotient with RISC‑V special cases:
+  - divisor == 0 → `q = -1` (`0xFFFFFFFF`)
+  - overflow `-2^31 / -1` → `q = -2^31` (`0x80000000`)
+- **DIVU** — unsigned quotient:
+  - divisor == 0 → `q = 0xFFFFFFFF`
+- **REM** — signed remainder:
+  - divisor == 0 → `r = rs1`
+  - overflow case `-2^31 / -1` → `r = 0`
+  - remainder has sign of dividend
+- **REMU** — unsigned remainder:
+  - divisor == 0 → `r = rs1`
 
-Existing RV32I operations were kept on small values (`00000`–`01011`), and the M extension used the higher codes (`01100`–`10011`) in order of next available, which kept the mapping readable and easy to scale.
+Encoding: standard R-type (`opcode = OP (0110011)`), `funct7 = 7'b0000001` indicates M-extension, `funct3` selects the specific M op.
 
-Concretely, the ALU now interprets `ALUCtrl` for the new M-extension codes as:
-
-- `01100` – **MUL** (low 32 bits)  
-- `01101` – **MULH** (high 32 bits of signed×signed)  
-- `01110` – **MULHU** (high 32 bits of unsigned×unsigned)  
-- `01111` – **MULHSU** (high 32 bits of signed×unsigned)  
-- `10000` – **DIV** (signed)  
-- `10001` – **DIVU** (unsigned)  
-- `10010` – **REM** (signed remainder)  
-- `10011` – **REMU** (unsigned remainder)
-
-These codes are chosen such that:
-
-- Existing RV32I behaviour is unchanged  
-- All eight M operations have unique control values without conflict  
-- The mapping is easy to decode in the control unit and to extend for new instructions
+From the pipeline perspective, M instructions behave like ordinary R-type ALU ops:
+- Read `rs1` and `rs2` from the register file
+- Produce a 32-bit result and write to `rd` in WB
+- `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`
+- Forwarding and hazard logic identical to other R-type ops
 
 ---
 
-### 2.2 64-bit intermediate product signals
+## 2. ALU changes
 
-To implement the `MUL*` family, the ALU conceptually supports 64-bit products for each combination of operand signedness required by the ISA:
+### 2.1 ALUCtrl widened
+- `ALUCtrl` was widened from 4 bits to **5 bits** so M operations have distinct encodings and do not reuse existing codes.
+- New mapping (examples — chosen contiguous codes to avoid conflicts):
+
+  - `5'b01100` — MUL  (low 32 bits)
+  - `5'b01101` — MULH (high 32 bits signed×signed)
+  - `5'b01110` — MULHU(high 32 bits unsigned×unsigned)
+  - `5'b01111` — MULHSU(high 32 bits signed×unsigned)
+  - `5'b10000` — DIV  (signed)
+  - `5'b10001` — DIVU (unsigned)
+  - `5'b10010` — REM  (signed remainder)
+  - `5'b10011` — REMU (unsigned remainder)
+
+All previous RV32I ALU codes remain unchanged in the lower range.
+
+### 2.2 Multiplication implementation
+- ALU computes 64-bit intermediate products (combinational):
 
 ```systemverilog
 logic [63:0] unsigned_mult;
@@ -99,3 +62,80 @@ logic [63:0] signed_unsigned_mult;
 assign unsigned_mult        = $unsigned(ALUop1) * $unsigned(ALUop2);
 assign signed_mult          = $signed(ALUop1)   * $signed(ALUop2);
 assign signed_unsigned_mult = $signed(ALUop1)   * $unsigned(ALUop2);
+```
+Results are selected/sliced by `ALUCtrl` in the ALU. Example selections:
+
+```systemverilog
+// MUL family (examples)
+5'b01100: ALUout = unsigned_mult[31:0];         // MUL   : low 32 bits
+5'b01101: ALUout = signed_mult[63:32];         // MULH  : high 32 bits (signed×signed)
+5'b01110: ALUout = unsigned_mult[63:32];       // MULHU : high 32 bits (unsigned×unsigned)
+5'b01111: ALUout = signed_unsigned_mult[63:32];// MULHSU: high 32 bits (signed×unsigned)
+```
+
+Notes:
+- For the low‑32 MUL case the low 32 bits of signed×signed and unsigned×unsigned products coincide for 32‑bit operands, so using `unsigned_mult[31:0]` is safe.
+- The ALU computes 64‑bit intermediates combinationally; this is simple but increases EX-stage critical path.
+
+Division / remainder (with RISC‑V corner cases):
+
+```systemverilog
+5'b10000: begin // DIV (signed)
+    if (ALUop2 == 32'h0)                 ALUout = 32'hFFFFFFFF; // -1 per spec
+    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF)
+                                         ALUout = 32'h80000000; // overflow case
+    else                                 ALUout = $signed(ALUop1) / $signed(ALUop2);
+end
+
+5'b10001: begin // DIVU (unsigned)
+    if (ALUop2 == 32'h0)                 ALUout = 32'hFFFFFFFF;
+    else                                 ALUout = $unsigned(ALUop1) / $unsigned(ALUop2);
+end
+
+5'b10010: begin // REM (signed)
+    if (ALUop2 == 32'h0)                 ALUout = ALUop1; // remainder = dividend
+    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF)
+                                         ALUout = 32'h0; // special case
+    else                                 ALUout = $signed(ALUop1) % $signed(ALUop2);
+end
+
+5'b10011: begin // REMU (unsigned)
+    if (ALUop2 == 32'h0)                 ALUout = ALUop1;
+    else                                 ALUout = $unsigned(ALUop1) % $unsigned(ALUop2);
+end
+```
+
+Flag outputs
+- `EQ`, `LT`, `LTU` are computed as before and are unchanged by M-type logic:
+  - `EQ  = (ALUop1 == ALUop2)`
+  - `LT  = ($signed(ALUop1) < $signed(ALUop2))`
+  - `LTU = (ALUop1 < ALUop2)`
+
+Control-path changes
+- `ALUCtrl` widened in `control.sv`:
+```systemverilog
+output logic [4:0] ALUCtrl;
+```
+- Decode M-ops under `opcode = OPC_OP` when `funct7 == 7'b0000001`; `funct3` selects the specific M instruction. For all M cases the remaining control signals mirror a normal R-type ALU op:
+  - `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`, `MemWrite = 0`, `Branch = 0`, `Jump = 0`.
+
+Pipeline & hazard interaction
+- M instructions are ordinary R-type ALU instructions from IF to WB.
+- Forwarding and hazard/stall logic remain unchanged.
+- Timing caveat: single-cycle combinational multiplier/divider may be the EX critical path; acceptable for simulation/coursework but not optimal for synthesis.
+
+Testing summary
+- Unit tests (Verilator + GoogleTest) exercise all M ops and corner cases:
+  - MUL / MULH / MULHSU / MULHU
+  - DIV / DIVU / REM / REMU
+  - Division‑by‑zero and signed overflow (`-2^31 / -1`) cases
+- Test pattern: set `ALUCtrl`, `ALUop1`, `ALUop2`, call `top->eval()`, assert `ALUout` and flags.
+
+Trade-offs & notes
+- Simplicity vs. timing: combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+- Only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards.
+
+Summary
+- RV32M support implemented in ALU + control with unique 5‑bit `ALUCtrl` encodings for all eight M instructions.
+- Behaviour matches the RISC‑V spec, including all specified corner cases.
+- M instructions forward and write back like other R-type ALU operations; integration is modular and local to ALU/control.
