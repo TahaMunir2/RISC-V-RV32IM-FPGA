@@ -57,56 +57,57 @@ void Vdut___024root__trace_chg_sub_0(Vdut___024root* vlSelf, VerilatedVcd::Buffe
         bufp->chgBit(oldp+39,(vlSelf->l2_cache__DOT__evict));
         bufp->chgBit(oldp+40,(vlSelf->l2_cache__DOT__wb_ready_d_next));
         bufp->chgBit(oldp+41,(vlSelf->l2_cache__DOT__write_back_en_next));
-        bufp->chgWData(oldp+42,(vlSelf->l2_cache__DOT__l1write_back_data_buffer_next),128);
-        bufp->chgBit(oldp+46,(vlSelf->l2_cache__DOT__l1write_buffer_next));
-        bufp->chgIData(oldp+47,(vlSelf->l2_cache__DOT__l1write_back_addr_buffer_next),32);
-        bufp->chgBit(oldp+48,(vlSelf->l2_cache__DOT__hit0_wb));
-        bufp->chgBit(oldp+49,(vlSelf->l2_cache__DOT__hit1_wb));
-        bufp->chgBit(oldp+50,(vlSelf->l2_cache__DOT__hit2_wb));
-        bufp->chgBit(oldp+51,(vlSelf->l2_cache__DOT__hit3_wb));
-        bufp->chgBit(oldp+52,(vlSelf->l2_cache__DOT__miss_wb));
-        bufp->chgCData(oldp+53,(vlSelf->l2_cache__DOT__way),2);
-        bufp->chgIData(oldp+54,(vlSelf->l2_cache__DOT__tag_bits),19);
-        bufp->chgCData(oldp+55,(vlSelf->l2_cache__DOT__set),8);
-        bufp->chgCData(oldp+56,(vlSelf->l2_cache__DOT__block_offset),3);
-        bufp->chgWData(oldp+57,(vlSelf->l2_cache__DOT__l2write_back_data_buffer_next),256);
-        bufp->chgCData(oldp+65,(vlSelf->l2_cache__DOT__l2write_buffer_next),2);
-        bufp->chgIData(oldp+66,(vlSelf->l2_cache__DOT__l2write_back_addr_buffer_next),32);
+        bufp->chgWData(oldp+42,(vlSelf->l2_cache__DOT__write_back_data_next),128);
+        bufp->chgWData(oldp+46,(vlSelf->l2_cache__DOT__l1write_back_data_buffer_next),128);
+        bufp->chgBit(oldp+50,(vlSelf->l2_cache__DOT__l1write_buffer_next));
+        bufp->chgIData(oldp+51,(vlSelf->l2_cache__DOT__l1write_back_addr_buffer_next),32);
+        bufp->chgBit(oldp+52,(vlSelf->l2_cache__DOT__hit0_wb));
+        bufp->chgBit(oldp+53,(vlSelf->l2_cache__DOT__hit1_wb));
+        bufp->chgBit(oldp+54,(vlSelf->l2_cache__DOT__hit2_wb));
+        bufp->chgBit(oldp+55,(vlSelf->l2_cache__DOT__hit3_wb));
+        bufp->chgBit(oldp+56,(vlSelf->l2_cache__DOT__miss_wb));
+        bufp->chgCData(oldp+57,(vlSelf->l2_cache__DOT__way),2);
+        bufp->chgIData(oldp+58,(vlSelf->l2_cache__DOT__tag_bits),19);
+        bufp->chgCData(oldp+59,(vlSelf->l2_cache__DOT__set),8);
+        bufp->chgCData(oldp+60,(vlSelf->l2_cache__DOT__block_offset),3);
+        bufp->chgWData(oldp+61,(vlSelf->l2_cache__DOT__l2write_back_data_buffer_next),256);
+        bufp->chgCData(oldp+69,(vlSelf->l2_cache__DOT__l2write_buffer_next),2);
+        bufp->chgIData(oldp+70,(vlSelf->l2_cache__DOT__l2write_back_addr_buffer_next),32);
     }
     if (VL_UNLIKELY(vlSelf->__Vm_traceActivity[2U])) {
-        bufp->chgWData(oldp+67,(vlSelf->l2_cache__DOT__l1write_back_data_buffer),128);
-        bufp->chgBit(oldp+71,(vlSelf->l2_cache__DOT__l1write_buffer));
-        bufp->chgIData(oldp+72,(vlSelf->l2_cache__DOT__l1write_back_addr_buffer),32);
-        bufp->chgIData(oldp+73,((vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+        bufp->chgWData(oldp+71,(vlSelf->l2_cache__DOT__l1write_back_data_buffer),128);
+        bufp->chgBit(oldp+75,(vlSelf->l2_cache__DOT__l1write_buffer));
+        bufp->chgIData(oldp+76,(vlSelf->l2_cache__DOT__l1write_back_addr_buffer),32);
+        bufp->chgIData(oldp+77,((vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                  >> 0xdU)),19);
-        bufp->chgCData(oldp+74,((0xffU & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+        bufp->chgCData(oldp+78,((0xffU & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                           >> 5U))),8);
-        bufp->chgCData(oldp+75,((7U & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+        bufp->chgCData(oldp+79,((7U & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                        >> 2U))),3);
-        bufp->chgWData(oldp+76,(vlSelf->l2_cache__DOT__l2write_back_data_buffer),256);
-        bufp->chgCData(oldp+84,(vlSelf->l2_cache__DOT__l2write_buffer),2);
-        bufp->chgIData(oldp+85,(vlSelf->l2_cache__DOT__l2write_back_addr_buffer),32);
+        bufp->chgWData(oldp+80,(vlSelf->l2_cache__DOT__l2write_back_data_buffer),256);
+        bufp->chgCData(oldp+88,(vlSelf->l2_cache__DOT__l2write_buffer),2);
+        bufp->chgIData(oldp+89,(vlSelf->l2_cache__DOT__l2write_back_addr_buffer),32);
     }
-    bufp->chgBit(oldp+86,(vlSelf->clk));
-    bufp->chgBit(oldp+87,(vlSelf->fetch_i));
-    bufp->chgBit(oldp+88,(vlSelf->fetch_d));
-    bufp->chgIData(oldp+89,(vlSelf->addr_i),32);
-    bufp->chgIData(oldp+90,(vlSelf->addr_d),32);
-    bufp->chgWData(oldp+91,(vlSelf->line_from_mem),256);
-    bufp->chgWData(oldp+99,(vlSelf->l1write_back_data),128);
-    bufp->chgBit(oldp+103,(vlSelf->l1write_back_en));
-    bufp->chgIData(oldp+104,(vlSelf->l1write_back_addr),32);
-    bufp->chgBit(oldp+105,(vlSelf->ready));
-    bufp->chgBit(oldp+106,(vlSelf->wb_ready));
-    bufp->chgBit(oldp+107,(vlSelf->ready_i));
-    bufp->chgBit(oldp+108,(vlSelf->ready_d));
-    bufp->chgBit(oldp+109,(vlSelf->wb_ready_d));
-    bufp->chgWData(oldp+110,(vlSelf->data_out),128);
-    bufp->chgWData(oldp+114,(vlSelf->write_back_data),128);
-    bufp->chgIData(oldp+118,(vlSelf->write_back_addr),32);
-    bufp->chgBit(oldp+119,(vlSelf->write_back_en));
-    bufp->chgIData(oldp+120,(vlSelf->main_mem_addr),32);
-    bufp->chgBit(oldp+121,(vlSelf->main_mem_fetch));
+    bufp->chgBit(oldp+90,(vlSelf->clk));
+    bufp->chgBit(oldp+91,(vlSelf->fetch_i));
+    bufp->chgBit(oldp+92,(vlSelf->fetch_d));
+    bufp->chgIData(oldp+93,(vlSelf->addr_i),32);
+    bufp->chgIData(oldp+94,(vlSelf->addr_d),32);
+    bufp->chgWData(oldp+95,(vlSelf->line_from_mem),256);
+    bufp->chgWData(oldp+103,(vlSelf->l1write_back_data),128);
+    bufp->chgBit(oldp+107,(vlSelf->l1write_back_en));
+    bufp->chgIData(oldp+108,(vlSelf->l1write_back_addr),32);
+    bufp->chgBit(oldp+109,(vlSelf->ready));
+    bufp->chgBit(oldp+110,(vlSelf->wb_ready));
+    bufp->chgBit(oldp+111,(vlSelf->ready_i));
+    bufp->chgBit(oldp+112,(vlSelf->ready_d));
+    bufp->chgBit(oldp+113,(vlSelf->wb_ready_d));
+    bufp->chgWData(oldp+114,(vlSelf->data_out),128);
+    bufp->chgWData(oldp+118,(vlSelf->write_back_data),128);
+    bufp->chgIData(oldp+122,(vlSelf->write_back_addr),32);
+    bufp->chgBit(oldp+123,(vlSelf->write_back_en));
+    bufp->chgIData(oldp+124,(vlSelf->main_mem_addr),32);
+    bufp->chgBit(oldp+125,(vlSelf->main_mem_fetch));
 }
 
 void Vdut___024root__trace_cleanup(void* voidSelf, VerilatedVcd* /*unused*/) {

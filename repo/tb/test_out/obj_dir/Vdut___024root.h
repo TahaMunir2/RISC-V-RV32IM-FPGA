@@ -75,12 +75,13 @@ class Vdut___024root final : public VerilatedModule {
         IData/*18:0*/ l2_cache__DOT__tag_bits_rd;
         VlWide<8>/*255:0*/ l2_cache__DOT__wmask;
         IData/*31:0*/ l2_cache__DOT__addr;
+        VlWide<4>/*127:0*/ l2_cache__DOT__write_back_data_next;
         VlWide<4>/*127:0*/ l2_cache__DOT__l1write_back_data_buffer;
         VlWide<4>/*127:0*/ l2_cache__DOT__l1write_back_data_buffer_next;
         IData/*31:0*/ l2_cache__DOT__l1write_back_addr_buffer;
-        IData/*31:0*/ l2_cache__DOT__l1write_back_addr_buffer_next;
     };
     struct {
+        IData/*31:0*/ l2_cache__DOT__l1write_back_addr_buffer_next;
         IData/*18:0*/ l2_cache__DOT__tag_bits;
         VlWide<8>/*255:0*/ l2_cache__DOT__l2write_back_data_buffer;
         VlWide<8>/*255:0*/ l2_cache__DOT__l2write_back_data_buffer_next;

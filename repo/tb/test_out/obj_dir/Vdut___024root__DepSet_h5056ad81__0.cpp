@@ -134,11 +134,14 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
     __Vdlyvset__l2_cache__DOT__cache__v27 = 0U;
     __Vdlyvset__l2_cache__DOT__cache__v29 = 0U;
     __Vdlyvset__l2_cache__DOT__cache__v30 = 0U;
-    vlSelf->write_back_en = vlSelf->l2_cache__DOT__write_back_en_next;
+    vlSelf->write_back_data[0U] = vlSelf->l2_cache__DOT__write_back_data_next[0U];
+    vlSelf->write_back_data[1U] = vlSelf->l2_cache__DOT__write_back_data_next[1U];
+    vlSelf->write_back_data[2U] = vlSelf->l2_cache__DOT__write_back_data_next[2U];
+    vlSelf->write_back_data[3U] = vlSelf->l2_cache__DOT__write_back_data_next[3U];
     vlSelf->wb_ready_d = vlSelf->l2_cache__DOT__wb_ready_d_next;
+    vlSelf->write_back_en = vlSelf->l2_cache__DOT__write_back_en_next;
     vlSelf->ready_d = 0U;
     vlSelf->ready_i = 0U;
-    vlSelf->l2_cache__DOT__l2write_buffer = vlSelf->l2_cache__DOT__l2write_buffer_next;
     vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
         = vlSelf->l2_cache__DOT__l1write_back_addr_buffer_next;
     vlSelf->l2_cache__DOT__l1write_back_data_buffer[0U] 
@@ -149,7 +152,6 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
         = vlSelf->l2_cache__DOT__l1write_back_data_buffer_next[2U];
     vlSelf->l2_cache__DOT__l1write_back_data_buffer[3U] 
         = vlSelf->l2_cache__DOT__l1write_back_data_buffer_next[3U];
-    vlSelf->l2_cache__DOT__l1write_buffer = vlSelf->l2_cache__DOT__l1write_buffer_next;
     vlSelf->l2_cache__DOT__l2write_back_data_buffer[0U] 
         = vlSelf->l2_cache__DOT__l2write_back_data_buffer_next[0U];
     vlSelf->l2_cache__DOT__l2write_back_data_buffer[1U] 
@@ -168,6 +170,8 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
         = vlSelf->l2_cache__DOT__l2write_back_data_buffer_next[7U];
     vlSelf->l2_cache__DOT__l2write_back_addr_buffer 
         = vlSelf->l2_cache__DOT__l2write_back_addr_buffer_next;
+    vlSelf->l2_cache__DOT__l2write_buffer = vlSelf->l2_cache__DOT__l2write_buffer_next;
+    vlSelf->l2_cache__DOT__l1write_buffer = vlSelf->l2_cache__DOT__l1write_buffer_next;
     vlSelf->data_out[0U] = 0U;
     vlSelf->data_out[1U] = 0U;
     vlSelf->data_out[2U] = 0U;
@@ -486,18 +490,12 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
                    | (vlSelf->l2_cache__DOT__write_data[7U] 
                       & vlSelf->l2_cache__DOT__wmask[7U]));
             __Vdlyvlsb__l2_cache__DOT__cache__v5 = 0U;
-            __Vdlyvdim0__l2_cache__DOT__cache__v5 = 
-                (0xffU & (vlSelf->l2_cache__DOT__addr 
-                          >> 5U));
+            __Vdlyvdim0__l2_cache__DOT__cache__v5 = vlSelf->l2_cache__DOT__set;
             __Vdlyvval__l2_cache__DOT__cache__v6 = vlSelf->l2_cache__DOT__tag_bits;
             __Vdlyvlsb__l2_cache__DOT__cache__v6 = 0x100U;
-            __Vdlyvdim0__l2_cache__DOT__cache__v6 = 
-                (0xffU & (vlSelf->l2_cache__DOT__addr 
-                          >> 5U));
+            __Vdlyvdim0__l2_cache__DOT__cache__v6 = vlSelf->l2_cache__DOT__set;
             __Vdlyvlsb__l2_cache__DOT__cache__v7 = 0x114U;
-            __Vdlyvdim0__l2_cache__DOT__cache__v7 = 
-                (0xffU & (vlSelf->l2_cache__DOT__addr 
-                          >> 5U));
+            __Vdlyvdim0__l2_cache__DOT__cache__v7 = vlSelf->l2_cache__DOT__set;
         } else if ((1U == (IData)(vlSelf->l2_cache__DOT__way))) {
             __Vdlyvval__l2_cache__DOT__cache__v8 = vlSelf->l2_cache__DOT__wr_wb;
             __Vdlyvset__l2_cache__DOT__cache__v8 = 1U;
@@ -560,18 +558,14 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
                    | (vlSelf->l2_cache__DOT__write_data[7U] 
                       & vlSelf->l2_cache__DOT__wmask[7U]));
             __Vdlyvlsb__l2_cache__DOT__cache__v9 = 0x115U;
-            __Vdlyvdim0__l2_cache__DOT__cache__v9 = 
-                (0xffU & (vlSelf->l2_cache__DOT__addr 
-                          >> 5U));
+            __Vdlyvdim0__l2_cache__DOT__cache__v9 = vlSelf->l2_cache__DOT__set;
             __Vdlyvval__l2_cache__DOT__cache__v10 = vlSelf->l2_cache__DOT__tag_bits;
             __Vdlyvlsb__l2_cache__DOT__cache__v10 = 0x215U;
             __Vdlyvdim0__l2_cache__DOT__cache__v10 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
             __Vdlyvlsb__l2_cache__DOT__cache__v11 = 0x229U;
             __Vdlyvdim0__l2_cache__DOT__cache__v11 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
         } else if ((2U == (IData)(vlSelf->l2_cache__DOT__way))) {
             __Vdlyvval__l2_cache__DOT__cache__v12 = vlSelf->l2_cache__DOT__wr_wb;
             __Vdlyvset__l2_cache__DOT__cache__v12 = 1U;
@@ -636,17 +630,14 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
                       & vlSelf->l2_cache__DOT__wmask[7U]));
             __Vdlyvlsb__l2_cache__DOT__cache__v13 = 0x22aU;
             __Vdlyvdim0__l2_cache__DOT__cache__v13 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
             __Vdlyvval__l2_cache__DOT__cache__v14 = vlSelf->l2_cache__DOT__tag_bits;
             __Vdlyvlsb__l2_cache__DOT__cache__v14 = 0x32aU;
             __Vdlyvdim0__l2_cache__DOT__cache__v14 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
             __Vdlyvlsb__l2_cache__DOT__cache__v15 = 0x33eU;
             __Vdlyvdim0__l2_cache__DOT__cache__v15 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
         } else if ((3U == (IData)(vlSelf->l2_cache__DOT__way))) {
             __Vdlyvval__l2_cache__DOT__cache__v16 = vlSelf->l2_cache__DOT__wr_wb;
             __Vdlyvset__l2_cache__DOT__cache__v16 = 1U;
@@ -711,17 +702,14 @@ VL_INLINE_OPT void Vdut___024root___sequent__TOP__0(Vdut___024root* vlSelf) {
                       & vlSelf->l2_cache__DOT__wmask[7U]));
             __Vdlyvlsb__l2_cache__DOT__cache__v17 = 0x33fU;
             __Vdlyvdim0__l2_cache__DOT__cache__v17 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
             __Vdlyvval__l2_cache__DOT__cache__v18 = vlSelf->l2_cache__DOT__tag_bits;
             __Vdlyvlsb__l2_cache__DOT__cache__v18 = 0x43fU;
             __Vdlyvdim0__l2_cache__DOT__cache__v18 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
             __Vdlyvlsb__l2_cache__DOT__cache__v19 = 0x453U;
             __Vdlyvdim0__l2_cache__DOT__cache__v19 
-                = (0xffU & (vlSelf->l2_cache__DOT__addr 
-                            >> 5U));
+                = vlSelf->l2_cache__DOT__set;
         }
     }
     if (__Vdlyvset__l2_cache__DOT__cache__v0) {
@@ -997,10 +985,10 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
         = vlSelf->l2_cache__DOT__l2write_back_addr_buffer;
     vlSelf->l2_cache__DOT__write_back_en_next = 0U;
     vlSelf->write_back_addr = 0U;
-    vlSelf->write_back_data[0U] = 0U;
-    vlSelf->write_back_data[1U] = 0U;
-    vlSelf->write_back_data[2U] = 0U;
-    vlSelf->write_back_data[3U] = 0U;
+    vlSelf->l2_cache__DOT__write_back_data_next[0U] = 0U;
+    vlSelf->l2_cache__DOT__write_back_data_next[1U] = 0U;
+    vlSelf->l2_cache__DOT__write_back_data_next[2U] = 0U;
+    vlSelf->l2_cache__DOT__write_back_data_next[3U] = 0U;
     vlSelf->l2_cache__DOT__way = 0U;
     vlSelf->l2_cache__DOT__way_rd = 0U;
     vlSelf->l2_cache__DOT__clean = 1U;
@@ -1077,7 +1065,8 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
                                          [(0xffU & 
                                            (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                             >> 5U))][8U]) 
-                                        == vlSelf->l2_cache__DOT__tag_bits_rd) 
+                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 0xdU)) 
                                        & (vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
@@ -1095,7 +1084,8 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
                                                & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                                   >> 5U))][0x10U] 
                                              >> 0x15U))) 
-                                        == vlSelf->l2_cache__DOT__tag_bits_rd) 
+                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 0xdU)) 
                                        & (vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
@@ -1107,7 +1097,8 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                              >> 5U))][0x19U] 
                                           >> 0xaU)) 
-                                        == vlSelf->l2_cache__DOT__tag_bits_rd) 
+                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 0xdU)) 
                                        & (vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
@@ -1125,7 +1116,8 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
                                              & (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
                                                 >> 5U))][0x21U] 
                                            >> 0x1fU))) 
-                                        == vlSelf->l2_cache__DOT__tag_bits_rd) 
+                                        == (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
+                                            >> 0xdU)) 
                                        & (vlSelf->l2_cache__DOT__cache
                                           [(0xffU & 
                                             (vlSelf->l2_cache__DOT__l1write_back_addr_buffer 
@@ -1657,10 +1649,14 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
     if (((2U == (IData)(vlSelf->l2_cache__DOT__l2write_buffer)) 
          & (IData)(vlSelf->wb_ready))) {
         vlSelf->l2_cache__DOT__write_back_en_next = 1U;
-        vlSelf->write_back_data[0U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[0U];
-        vlSelf->write_back_data[1U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[1U];
-        vlSelf->write_back_data[2U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[2U];
-        vlSelf->write_back_data[3U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[3U];
+        vlSelf->l2_cache__DOT__write_back_data_next[0U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[0U];
+        vlSelf->l2_cache__DOT__write_back_data_next[1U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[1U];
+        vlSelf->l2_cache__DOT__write_back_data_next[2U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[2U];
+        vlSelf->l2_cache__DOT__write_back_data_next[3U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[3U];
         vlSelf->write_back_addr = vlSelf->l2_cache__DOT__l2write_back_addr_buffer;
         vlSelf->l2_cache__DOT__l2write_buffer_next 
             = (3U & ((IData)(vlSelf->l2_cache__DOT__l2write_buffer) 
@@ -1668,10 +1664,14 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
     } else if (((1U == (IData)(vlSelf->l2_cache__DOT__l2write_buffer)) 
                 & (IData)(vlSelf->wb_ready))) {
         vlSelf->l2_cache__DOT__write_back_en_next = 1U;
-        vlSelf->write_back_data[0U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[4U];
-        vlSelf->write_back_data[1U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[5U];
-        vlSelf->write_back_data[2U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[6U];
-        vlSelf->write_back_data[3U] = vlSelf->l2_cache__DOT__l2write_back_data_buffer[7U];
+        vlSelf->l2_cache__DOT__write_back_data_next[0U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[4U];
+        vlSelf->l2_cache__DOT__write_back_data_next[1U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[5U];
+        vlSelf->l2_cache__DOT__write_back_data_next[2U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[6U];
+        vlSelf->l2_cache__DOT__write_back_data_next[3U] 
+            = vlSelf->l2_cache__DOT__l2write_back_data_buffer[7U];
         vlSelf->write_back_addr = (0x10U | (0xffffffefU 
                                             & vlSelf->l2_cache__DOT__l2write_back_addr_buffer));
         vlSelf->l2_cache__DOT__l2write_buffer_next 
@@ -1681,10 +1681,14 @@ VL_INLINE_OPT void Vdut___024root___combo__TOP__1(Vdut___024root* vlSelf) {
                  & (IData)(vlSelf->l2_cache__DOT__miss_wb)) 
                 & (IData)(vlSelf->wb_ready))) {
         vlSelf->l2_cache__DOT__write_back_en_next = 1U;
-        vlSelf->write_back_data[0U] = vlSelf->l2_cache__DOT__l1write_back_data_buffer[0U];
-        vlSelf->write_back_data[1U] = vlSelf->l2_cache__DOT__l1write_back_data_buffer[1U];
-        vlSelf->write_back_data[2U] = vlSelf->l2_cache__DOT__l1write_back_data_buffer[2U];
-        vlSelf->write_back_data[3U] = vlSelf->l2_cache__DOT__l1write_back_data_buffer[3U];
+        vlSelf->l2_cache__DOT__write_back_data_next[0U] 
+            = vlSelf->l2_cache__DOT__l1write_back_data_buffer[0U];
+        vlSelf->l2_cache__DOT__write_back_data_next[1U] 
+            = vlSelf->l2_cache__DOT__l1write_back_data_buffer[1U];
+        vlSelf->l2_cache__DOT__write_back_data_next[2U] 
+            = vlSelf->l2_cache__DOT__l1write_back_data_buffer[2U];
+        vlSelf->l2_cache__DOT__write_back_data_next[3U] 
+            = vlSelf->l2_cache__DOT__l1write_back_data_buffer[3U];
         vlSelf->write_back_addr = vlSelf->l2_cache__DOT__l1write_back_addr_buffer;
         vlSelf->l2_cache__DOT__l1write_buffer_next 
             = (1U & ((IData)(vlSelf->l2_cache__DOT__l1write_buffer) 
@@ -1781,7 +1785,7 @@ VL_INLINE_OPT QData Vdut___024root___change_request_1(Vdut___024root* vlSelf) {
     // Change detection
     QData __req = false;  // Logically a bool
     __req |= ((vlSelf->l2_cache__DOT__addr ^ vlSelf->__Vchglast__TOP__l2_cache__DOT__addr));
-    VL_DEBUG_IF( if(__req && ((vlSelf->l2_cache__DOT__addr ^ vlSelf->__Vchglast__TOP__l2_cache__DOT__addr))) VL_DBG_MSGF("        CHANGE: /home/leoyin/Documents/iac/Team5/repo/rtl/l2_cache.sv:78: l2_cache.addr\n"); );
+    VL_DEBUG_IF( if(__req && ((vlSelf->l2_cache__DOT__addr ^ vlSelf->__Vchglast__TOP__l2_cache__DOT__addr))) VL_DBG_MSGF("        CHANGE: /home/leoyin/Documents/iac/Team5/repo/rtl/l2_cache.sv:79: l2_cache.addr\n"); );
     // Final
     vlSelf->__Vchglast__TOP__l2_cache__DOT__addr = vlSelf->l2_cache__DOT__addr;
     return __req;

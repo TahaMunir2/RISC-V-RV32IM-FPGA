@@ -26,6 +26,7 @@ module l2_cache #(
 );
     /* verilator lint_off UNUSED */
     /* verilator lint_off ALWCOMBORDER */
+    /* verilator lint_off UNOPTFLAT */
     typedef struct packed {
         logic [7:0] byte3;  
         logic [7:0] byte2;  
@@ -83,6 +84,7 @@ module l2_cache #(
     logic evict;
     logic wb_ready_d_next;
     logic write_back_en_next;
+    logic [DATA_WIDTH*4-1:0] write_back_data_next;
 
     assign tag_bits_rd = addr[ADDRESS_WIDTH-1:13];
     assign set_rd = addr[12:5];
@@ -127,7 +129,13 @@ module l2_cache #(
             cache[i].block2.valid   = 1'b0;
             cache[i].block2.dirty   = 1'b0;
             cache[i].block3.valid   = 1'b0;
-            cache[i].block3.dirty   = 1'b0;            
+            cache[i].block3.dirty   = 1'b0;  
+            cache[i].u01            = 1'b0;
+            cache[i].u02            = 1'b0;
+            cache[i].u03            = 1'b0;
+            cache[i].u12            = 1'b0;
+            cache[i].u13            = 1'b0;
+            cache[i].u23            = 1'b0;
         end
 
         l1write_buffer = 1'b0;
@@ -161,7 +169,7 @@ module l2_cache #(
         l2write_back_addr_buffer_next = l2write_back_addr_buffer;
         write_back_en_next = 0;
         write_back_addr = '0;
-        write_back_data = '0;
+        write_back_data_next = '0;
         way = '0;
         way_rd = '0;
         clean = 1;
@@ -208,10 +216,10 @@ module l2_cache #(
         valid2 = cache[set_rd].block2.valid;
         valid3 = cache[set_rd].block3.valid;
 
-        hit0_wb = (cache[set_wb].block0.tag == tag_bits_rd && cache[set_wb].block0.valid && fetch);
-        hit1_wb = (cache[set_wb].block1.tag == tag_bits_rd && cache[set_wb].block1.valid && fetch);
-        hit2_wb = (cache[set_wb].block2.tag == tag_bits_rd && cache[set_wb].block2.valid && fetch);
-        hit3_wb = (cache[set_wb].block3.tag == tag_bits_rd && cache[set_wb].block3.valid && fetch);
+        hit0_wb = (cache[set_wb].block0.tag == tag_bits_wb && cache[set_wb].block0.valid && fetch);
+        hit1_wb = (cache[set_wb].block1.tag == tag_bits_wb && cache[set_wb].block1.valid && fetch);
+        hit2_wb = (cache[set_wb].block2.tag == tag_bits_wb && cache[set_wb].block2.valid && fetch);
+        hit3_wb = (cache[set_wb].block3.tag == tag_bits_wb && cache[set_wb].block3.valid && fetch);
         miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
 
         if (l1write && !l1write_buffer) begin
@@ -382,21 +390,21 @@ module l2_cache #(
 
         if ((l2write_buffer == 2'b10) && wb_ready) begin
             write_back_en_next = 1;
-            write_back_data = l2write_back_data_buffer[127:0];
+            write_back_data_next = l2write_back_data_buffer[127:0];
             write_back_addr = l2write_back_addr_buffer;
             l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l2write_buffer == 2'b01) && wb_ready) begin
             write_back_en_next = 1;
-            write_back_data = l2write_back_data_buffer[255:128];
+            write_back_data_next = l2write_back_data_buffer[255:128];
             write_back_addr = {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
             l2write_buffer_next = l2write_buffer - 1;
         end
 
         else if ((l1write_buffer && miss_wb) && wb_ready) begin
             write_back_en_next = 1;
-            write_back_data = l1write_back_data_buffer;
+            write_back_data_next = l1write_back_data_buffer;
             write_back_addr = l1write_back_addr_buffer;
             l1write_buffer_next = l1write_buffer - 1;
         end
@@ -441,6 +449,7 @@ module l2_cache #(
         l2write_back_data_buffer <= l2write_back_data_buffer_next;
         l2write_back_addr_buffer <= l2write_back_addr_buffer_next;
         write_back_en <= write_back_en_next;
+        write_back_data <= write_back_data_next;
 
         if (clean) begin
 
@@ -470,9 +479,9 @@ module l2_cache #(
                     cache[set].block0.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set_rd].block0[255:0] <= (cache[set].block0[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block0.tag <= tag_bits;
-                cache[set_rd].block0.valid <= 1'b1;
+                cache[set].block0[255:0] <= (cache[set].block0[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block0.tag <= tag_bits;
+                cache[set].block0.valid <= 1'b1;
             end
 
             
@@ -485,9 +494,9 @@ module l2_cache #(
                     cache[set].block1.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set_rd].block1[255:0] <= (cache[set].block1[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block1.tag <= tag_bits;
-                cache[set_rd].block1.valid <= 1'b1;
+                cache[set].block1[255:0] <= (cache[set].block1[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block1.tag <= tag_bits;
+                cache[set].block1.valid <= 1'b1;
             end
 
             else if (way == 2'b10) begin
@@ -499,9 +508,9 @@ module l2_cache #(
                     cache[set].block2.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set_rd].block2[255:0] <= (cache[set].block2[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block2.tag <= tag_bits;
-                cache[set_rd].block2.valid <= 1'b1;
+                cache[set].block2[255:0] <= (cache[set].block2[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block2.tag <= tag_bits;
+                cache[set].block2.valid <= 1'b1;
             end
 
             
@@ -514,9 +523,9 @@ module l2_cache #(
                     cache[set].block3.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set_rd].block3[255:0] <= (cache[set].block3[255:0] & ~wmask) | (write_data & wmask);
-                cache[set_rd].block3.tag <= tag_bits;
-                cache[set_rd].block3.valid <= 1'b1;
+                cache[set].block3[255:0] <= (cache[set].block3[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block3.tag <= tag_bits;
+                cache[set].block3.valid <= 1'b1;
             end
         end
 

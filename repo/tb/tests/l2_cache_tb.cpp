@@ -191,7 +191,6 @@ TEST_F(L2CacheTestbench, L1WriteBackForwardToMemory) {
 
     // Now memory is ready to accept L2 write-back
     top->wb_ready = 1;
-    top->ready    = 1;  // if your design also gates on ready
 
     runSimulation(1);
 
@@ -256,13 +255,6 @@ TEST_F(L2CacheTestbench, DirtyEvictionCausesWriteBack) {
         << "L2 should accept dirty L1 write-back before eviction.";
 
     top->l1write_back_en = 0;
-    top->wb_ready        = 1;
-    top->ready           = 1;
-    runSimulation(1);
-
-    // Clear handshakes
-    top->wb_ready = 0;
-    top->ready    = 0;
     runSimulation(1);
 
     // Now force a new miss in same set -> eviction of some way
@@ -270,6 +262,7 @@ TEST_F(L2CacheTestbench, DirtyEvictionCausesWriteBack) {
     top->addr_d  = a4;
     setLineFromMemUniform(0xEEE00000);
     top->ready = 1;
+    top->wb_ready = 1;
 
     bool saw_writeback = false;
     for (int i = 0; i < 8; ++i) {
@@ -281,7 +274,7 @@ TEST_F(L2CacheTestbench, DirtyEvictionCausesWriteBack) {
     }
 
     EXPECT_TRUE(saw_writeback)
-        << "Dirty eviction should eventually assert write_back_en.";
+        << "Dirty eviction should assert write_back_en when main mem asserts wb_ready.";
 
     top->ready = 0;
     runSimulation(1);
