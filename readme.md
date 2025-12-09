@@ -459,11 +459,57 @@ We then implement an edge detector in the FPGA wrapper because even after 20ms o
     assign trigger_pulse = trigger_clean && !trigger_clean_prev; // only high when trigger_clean is 1 and prev is 0
 ```
 
+#### FPGA Wrapper
+
+Finally, let's go over the actual FPGA Wrapper file. We already know how we define the 7-segment displays and trigger in this file but we also need it to interface with top.sv, the reset button and the FPGA itself with inputs and outputs as defined below:
+
+```systemverilog
+    input  logic cpu_clk,      
+    input  logic [1:0] KEY,     
+    output logic [9:0] LED_FPGA,
+    output logic [7:0] SEGMENT0,
+    output logic [7:0] SEGMENT1,
+    output logic [7:0] SEGMENT2,
+    output logic [7:0] SEGMENT3,
+    output logic [7:0] SEGMENT4,
+    output logic [7:0] SEGMENT5
+```
+- There are only 2 keys on the DE-10 Lite.
+
+The Reset logic is similar to the Trigger logic, but for Reset, we don't need it to be as perfect as we can hold Reset.
+
+```systemverilog
+    logic rst_n_meta;  
+    logic cpu_rst;     
+	 logic rst_n_sync;
+    
+	 always_ff @(posedge cpu_clk) begin
+        rst_n_meta <= KEY[1];
+        rst_n_sync <= rst_n_meta;
+    end
+    
+	 assign cpu_rst = ~rst_n_sync;
+```
+
+The top instantiation in the FPGA is quite simple; it just has the cleaned-up signals:
+
+```systemverilog
+	 top top (
+        .clk(cpu_clk),
+        .rst(cpu_rst),
+        .trigger(trigger_pulse),
+        .a0(cpu_a0),
+        .leds(LED_FPGA)        
+    );
+```
 
 ```systemverilog
 
 ```
 
+```systemverilog
+
+```
 
 ```systemverilog
 
