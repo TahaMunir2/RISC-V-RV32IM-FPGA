@@ -24,7 +24,7 @@
 |               | [Forwarding Logic]            |                          |        **               |                   |                       |
 |               | [Top File]            | *                         |    *                   |      *             |                       |
 |               | Testing [pdf](https://github.com/luju1108/Team14/blob/98bc1b035346cb44bc519077c4daae0fd198ed2f/RTL/README_PDF.md) [F1](https://youtu.be/59yWMzJzut0)                      |                          |                       | *                |                       |
-|       Branch prediction        |                        |     **                      |                     |                   |                     |
+|       Branch prediction        |                        |                          |           **          |                   |                     |
 | Cache         | [Direct Mapped Cache]    |                      |                    |                   | **                 |
 |               | RAM Refactor                  |                           |                   |                   | **                 |
 |               | Data Memory                   |                           |                    |                   | **                  |
