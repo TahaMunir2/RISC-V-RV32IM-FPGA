@@ -68,7 +68,7 @@ module de_pipeline #(
 
     always @(posedge clk) begin
         
-        if (rst || flush) begin 
+        if (rst || (flush && enable)) begin 
              // data
             pc_save_e <= 0;
             RD1_e <= 0;

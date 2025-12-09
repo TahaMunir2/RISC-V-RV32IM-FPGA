@@ -3,6 +3,7 @@ module em_pipeline #(
 ) (
     input logic clk,
     input logic rst,
+    input logic enable,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_e,
     input logic [4:0] Rd_e, //changed the size of this register
@@ -54,7 +55,7 @@ module em_pipeline #(
             csr_typeM <= 0;
         end
 
-        else begin
+        else if (enable) begin
             //data
             pc_save_m <= pc_save_e;
             Rd_m <= Rd_e;

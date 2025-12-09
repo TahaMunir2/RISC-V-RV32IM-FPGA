@@ -105,7 +105,7 @@ TEST_F(CpuTestbench, Zba)
     setupTest("shadd");
     setData("reference/gaussian.mem");
     initSimulation();
-    runSimulation(6);
+    runSimulation(8);
     EXPECT_EQ(top_->a0, 135); // does sh1add
     runSimulation(1);
     EXPECT_EQ(top_->a0, 263); // does sh2add

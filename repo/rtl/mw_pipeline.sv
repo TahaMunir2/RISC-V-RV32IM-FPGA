@@ -3,6 +3,7 @@ module mw_pipeline #(
 ) (
     input logic clk,
     input logic rst,
+    input logic enable,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_m,
     input logic [4:0] Rd_m,
@@ -42,7 +43,7 @@ module mw_pipeline #(
             csr_typeW <= 0;
         end
         
-        else begin
+        else if (enable) begin
             // data
             pc_save_w <= pc_save_m;
             Rd_w <= Rd_m;
