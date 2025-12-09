@@ -683,7 +683,15 @@ Our first successful port onto an FPGA showed us these statistics:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/fpga_stats.png)
 
-Which matches up with the memory we expected.
+Which matches up with the memory we expected. It is interesting to see that our design would need that many logic elements and registers.
+
+#### LEDs and 7-Segment Displays Test
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/leds_7.jpeg)
+
+#### External Interrupt Test
+
+![video](https://github.com/TahaMunir2/Team5/blob/main/images/external.mp4)
 
 
 
