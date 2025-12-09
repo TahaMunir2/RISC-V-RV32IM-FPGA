@@ -188,7 +188,7 @@ We also needed to update PC_block to jump to and from our new trap handler:
 
 #### Top Level Integration
 
-We needed to add some safeguarding for the **`we`** in the timer
+We needed to add some safeguarding for the **`we`** in the timer:
 
 ```systemverilog
       assign timer_write_en = MemWriteM && (ALUResultM[31:4] == 28'h8000100);
@@ -255,7 +255,33 @@ And now we would need to call the new dmem_ram inside the datamem module:
 
 We must take note that, as reading memory is now synchronous, we must not pass the outputs of the memory blocks through the pipeline registers; instead, they can go straight to the next stage.
 
-However, this also means we must now change the logic for the hazard unit, as it relies on  
+However, this also means we must now change the logic, as our previous instructions assumed that we had synchronous reads. This includes adding a stall buffer in top, as when we call stall, our BRAM has already gotten our instruction, and if we don't hold onto it will get overwritten and lost:
+
+```systemverilog
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            Stall_Active <= 0;
+            InstrD_Saved <= 0;
+        end else begin
+            Stall_Active <= flush_d_exec; 
+            if (flush_d_exec && !Stall_Active) begin
+                InstrD_Saved <= InstrF_raw;
+            end
+        end
+    end
+```
+We must also kill the cycle that occurs while we are branching, as even though we update the address our ROM is accessing, as it is asynchronous, it still grabs the previous address, which will run an instruction we don't want to run:
+
+```systemverilog
+    always_ff @(posedge clk) begin
+        if (rst) kill_cycle <= 0;
+        else kill_cycle <= (JumpE || false_prediction || trap_en || mret_en); 
+    end
+
+    assign InstrF = (kill_cycle || rst) ? 32'h00000013 : // addi x0, x0, 0 or NOP
+                    (Stall_Active) ? InstrD_Saved : InstrF_raw;
+```
+
 
 ```systemverilog
 
