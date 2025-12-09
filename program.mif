@@ -1,35 +1,16 @@
-DEPTH = 2048;
-WIDTH = 32;
-ADDRESS_RADIX = DEC;
-DATA_RADIX = HEX;
-CONTENT
-BEGIN
-    -- ================= SETUP/LED =================
-    -- 0: LUI x5, 0x80002      (Load LED GPIO Base 0x80002000 into x5)
-    0 : 800022B7;
-    
-    -- 1: ADDI x6, x0, 0x1F    (x6 = 31, pattern for 5 LEDs ON)
-    1 : 01F00313;
-    
-    -- 2: SW x6, 0(x5)         (WRITE: Turns on 5 LEDs via GPIO)
-    2 : 0062A023;
-    
-    -- ================= ARITHMETIC =================
-    -- 3: ADDI x11, x0, 100    (x11 = 100)
-    3 : 06400593;
-    
-    -- 4: ADDI x12, x0, 50     (x12 = 50)
-    4 : 03200613;
-    
-    -- 5: ADD x10, x11, x12    (x10 = 100 + 50 = 150)
-    5 : 00C58533;
-    
-    -- 6: ADDI x10, x10, -3    (x10 = 150 - 3 = 147)
-    6 : FFD50513;
-    
-    -- ================= HALT =================
-    -- 7: JAL x0, 0            (Halt: Value 147 remains visible in x10)
-    7 : 0000006F;
+WIDTH=32;
+DEPTH=2048;
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
 
-    [8..2047] : 00000000;
+CONTENT BEGIN
+    00 : 800024B7;
+    01 : 00100293;
+    02 : 0054A023;
+    03 : 00029463;
+    04 : 0000006F;
+    05 : 3FF00313;
+    06 : 0064A023;
+    07 : 0000006F;
+    [08..7FF] : 00000000;
 END;
