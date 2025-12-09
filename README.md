@@ -26,7 +26,7 @@ We implemented the full RV32M base extension (eight instructions):
 
 Encoding: standard R-type (`opcode = OP (0110011)`), `funct7 = 7'b0000001` indicates M-extension, `funct3` selects the specific M op.
 
-From the pipeline perspective, M instructions behave like ordinary R-type ALU ops:
+From the perspective of the internal logic of the CPU, M instructions behave like ordinary R-type ALU ops:
 - Read `rs1` and `rs2` from the register file
 - Produce a 32-bit result and write to `rd` in WB
 - `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`
@@ -54,6 +54,8 @@ All previous RV32I ALU codes remain unchanged in the lower range.
 ### 2.2 Multiplication implementation
 
 The RV32M multiplication instructions (`MUL`, `MULH`, `MULHSU`, `MULHU`) are all implemented inside the main ALU as purely combinational operations that produce a full 64-bit product and then select either the low or high 32 bits, with the correct signed/unsigned interpretation of the operands.
+
+Approaches that would be possible to implement with fewer lines of code do exist, but the objective with the implementation here was to make the code more efficient for synthesis (even though we did not intend to include M instructions in the design that we put on our FPGA). In the code shown below, based on the ALUCtrl signal, which uniuely identifies the type of ALU instruction being executed, we select whether we want the signed or unsigned representation of each operand:
 
 ```Systemverilog
 logic [63:0] ALUop1_ext;
@@ -90,8 +92,20 @@ end
 
 assign product = ALUop1_ext * ALUop2_ext;
 ```
+The reason why we extend each operand to 64 bits even before the multiplication is that, in SystemVerilog, the width of a * b is the max of the operand widths. If the current 32-bit format of ALUop1 and ALUop2 were used, the raw product would also 32 bits. That 32-bit product would then extended to 64 bits when assigned to signed_unsigned_mult, but the upper 32 bits of the result of the multiplication would already have been lost. Therefore, we simply increase the number of bits of our operands to 64 and use ```Systemverilog $signed ``` and ```Systemverilog $unsigned ```, which already take care of the sign extension.
 
-
+The only task that now remains is to select the upper or lower 32-bits of the product, which is then as such:
+```Systemverilog
+case (ALUCtrl)
+...
+5'b1100: ALUout = product[31:0]; //MUL
+        5'b1101: ALUout = product[63:32]; //MULH
+        5'b1110: ALUout = product[63:32]; //MULHSU
+        5'b1111: ALUout = product[63:32]; //MULHU
+...
+default: ALUout = 32'b0;
+endcase
+```
 ### 2.3. Division and remainder with edge cases
 The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
 •	DIV (ALUCtrl = 5'b10000)
@@ -198,13 +212,13 @@ No special handling is required elsewhere (hazard unit, register file, pipeline 
   - It does not need to know whether EX does ADD or MUL.  
 - Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`; M instructions use ALU result.
 
-Timing caveat: combinational multiplier/divider are likely the EX critical path. Typical mitigation (not implemented here):
+Timing caveat: combinational multiplier/divider are likely the `EX` critical path. Typical mitigation for this are:
 
 - Multi‑cycle or pipelined multiply/divide unit  
 - Run core at lower clock frequency  
 - Use a long‑latency functional unit with reservation stations
 
-For this coursework the design remains single‑cycle per instruction (M ops included). M instructions were therefore omitted from the FPGA‑synthesized configuration.
+For this coursework, some modifications were indeed made to accomodate synthesis, but the design remains single‑cycle for the execution of M instructions. As such, M instructions were still omitted from the FPGA‑synthesized configuration.
 
 ---
 
@@ -229,7 +243,7 @@ Purpose
 Checks divide-by-zero behaviour for unsigned division.
 
 Test Case (ALUTest13)
-
+```
 ALUCtrl = DIVU (5'b10001)
 
 ALUop1 = 0x00000010
@@ -237,7 +251,7 @@ ALUop1 = 0x00000010
 ALUop2 = 0x00000000
 
 Expected ALUout = 0xFFFFFFFF
-
+```
 What It Tests
 
 - Unsigned divide-by-zero semantics (quotient = all 1s)  
@@ -251,7 +265,7 @@ Purpose
 Verifies that for signed remainder the dividend is returned when the divisor is zero.
 
 Test Case (ALUTest14)
-
+```
 ALUCtrl = REM
 
 ALUop1 = 0x00000010 (16)
@@ -259,7 +273,7 @@ ALUop1 = 0x00000010 (16)
 ALUop2 = 0x00000000 (0)
 
 Expected ALUout = 0x00000010
-
+```
 What It Tests
 
 - RISC-V rule: when divisor is zero, remainder = dividend (signed)  
@@ -273,7 +287,7 @@ Purpose
 Confirms that in the unsigned case, the remainder also returns the dividend on divide-by-zero.
 
 Test Case (ALUTest15)
-
+```
 ALUCtrl = REMU
 
 ALUop1 = 0x00000010
@@ -281,7 +295,7 @@ ALUop1 = 0x00000010
 ALUop2 = 0x00000000
 
 Expected ALUout = 0x00000010
-
+```
 What It Tests
 
 - Unsigned remainder semantics on divide-by-zero  
