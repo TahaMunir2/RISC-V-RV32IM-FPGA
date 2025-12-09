@@ -1,0 +1,71 @@
+module datamem #(
+    parameter ADDRESS_WIDTH = 32,
+              DATA_WIDTH = 32
+)(
+    input  logic                     MemWrite,
+    input  logic [ADDRESS_WIDTH-1:0] WD,
+    input  logic [1:0]               SizeWrite,
+    input  logic [ADDRESS_WIDTH-1:0] A, 
+    input  logic [1:0]               LoadSize, 
+    input  logic                     LoadUnsigned, 
+    input  logic                     clk,
+    output logic [DATA_WIDTH-1:0]    dout
+);
+
+    logic [7:0] ram_array [2**17-1:0];
+
+    initial begin
+        $display("Loading ram.");
+        $readmemh("reference/gaussian.mem", ram_array, 32'h10000);
+    end
+
+    always_ff @(posedge clk) begin // sync reading
+        logic [31:0] data;
+        
+        data[7:0]   = ram_array[A];
+        data[15:8]  = ram_array[A+1];
+        data[23:16] = ram_array[A+2];
+        data[31:24] = ram_array[A+3];
+
+        // 2. Select load size & sign extend
+        case (LoadSize)
+           
+            2'b00: begin  // LB / LBU
+                if (LoadUnsigned)
+                    dout <= {24'b0, data[7:0]};
+                else
+                    dout <= {{24{data[7]}}, data[7:0]};
+            end
+
+            2'b01: begin  // LH / LHU
+                if (LoadUnsigned)
+                    dout <= {16'b0, data[15:0]};
+                else
+                    dout <= {{16{data[15]}}, data[15:0]};
+            end
+
+            default: begin // LW
+                dout <= data;
+            end
+        endcase
+    end
+
+    always_ff @(negedge clk) begin
+        if (MemWrite) begin
+            if (SizeWrite == 2'b00) begin
+                ram_array[A] <= WD[7:0];
+            end
+            else if (SizeWrite == 2'b01) begin
+                ram_array[A]   <= WD[7:0];
+                ram_array[A+1] <= WD[15:8];
+            end
+            else if (SizeWrite == 2'b10) begin
+                ram_array[A]   <= WD[7:0];
+                ram_array[A+1] <= WD[15:8];
+                ram_array[A+2] <= WD[23:16];
+                ram_array[A+3] <= WD[31:24];
+            end
+        end
+    end
+
+endmodule
