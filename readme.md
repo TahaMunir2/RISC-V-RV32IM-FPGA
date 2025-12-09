@@ -46,10 +46,11 @@ Therefore, we need mstatus[3], mip[7] and mie[7] to all be high to enter the tra
 
 An FPGA (Field Programmable Gate Array) is a programmable integrated circuit which can form physical implementations of digital circuits described in HDLs. They are made of a matrix of configurable logic blocks (which can be further broken down into flip-flops, lookup tables and full adders) with configurable interconnects that allow FPGAs to create real digital circuits. The DE-10 lite FPGA that we were able to borrow from EEStore comes with 50,000 logic elements, 200 KB of BRAM, 6 7-segment displays and 10 individually addressable LEDs.
 
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/de10.jpeg)
+
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
 We were able to get a variety of instructions running on our FPGA, including arithmetic, store, load, jump and branch instructions, all running on our FPGA and partially get interrupts working as shown in the videos in the testing section however, it proved to be quite challenging as Quartus had quite a steep learning curve, we were limited for time and we couldn't simply pull out GTKWave everytime something went wrong which made debugging very challenging.
-
 
 ## Implementation:
 
@@ -397,7 +398,7 @@ We can then define these in the FPGA wrapper as follows, with each segment being
 
 Now is where everything gets particularly tricky. We need to convert real-world actions into digital signals, only using digital logic. For example, we need a trigger pulse from pressing the button; however, if we just keep the button as an input (which we will do using the TCL file), without processing it first, it will lead to 100,000s of cycles of interrupt requests, which could very well break our program. We need something called a "debouncer" to wait for the signal to stop "bouncing" (as shown below) between high and low and become stable, and then an edge detector to only take in 1 pulse, so our external interrupt works as it does in simulation.
 
-/////////////////////////// insert bouncing image ////////////////////
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/debounce.png)
 
 The debouncing logic relies on 2 stages, one stage which removes metastability and a second stage that implements a timer for 2^20 cycles (20 ms at 50 MHz) to wait for a non-bouncy signal
 
@@ -502,10 +503,106 @@ The top instantiation in the FPGA is quite simple; it just has the cleaned-up si
         .leds(LED_FPGA)        
     );
 ```
+#### Pins
 
-```systemverilog
+Now we must make a .tcl file which just tells the FPGA how to configure the board with the outputs from the digital circuit to the hardware on the board, such as the clock, LEDs, display and Schmitt triggers. Looking at other projects done online on this board, I was able to work out how to set up the .tcl file for this implementation:
 
 ```
+# 1. CLOCK
+set_location_assignment PIN_P11 -to cpu_clk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to cpu_clk
+
+# 2. KEYS (Buttons)
+set_location_assignment PIN_B8 -to KEY[0]
+set_location_assignment PIN_A7 -to KEY[1]
+set_instance_assignment -name IO_STANDARD "3.3 V SCHMITT TRIGGER" -to KEY[0]
+set_instance_assignment -name IO_STANDARD "3.3 V SCHMITT TRIGGER" -to KEY[1]
+
+# 3. LEDs
+set_location_assignment PIN_A8 -to LED_FPGA[0]
+set_location_assignment PIN_A9 -to LED_FPGA[1]
+set_location_assignment PIN_A10 -to LED_FPGA[2]
+set_location_assignment PIN_B10 -to LED_FPGA[3]
+set_location_assignment PIN_D13 -to LED_FPGA[4]
+set_location_assignment PIN_C13 -to LED_FPGA[5]
+set_location_assignment PIN_E14 -to LED_FPGA[6]
+set_location_assignment PIN_D14 -to LED_FPGA[7]
+set_location_assignment PIN_A11 -to LED_FPGA[8]
+set_location_assignment PIN_B11 -to LED_FPGA[9]
+# Set Voltage for ALL LEDs
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_FPGA[*]
+
+#3 Displays
+# SEGMENT0
+set_location_assignment PIN_C14 -to SEGMENT0[0]
+set_location_assignment PIN_E15 -to SEGMENT0[1]
+set_location_assignment PIN_C15 -to SEGMENT0[2]
+set_location_assignment PIN_C16 -to SEGMENT0[3]
+set_location_assignment PIN_E16 -to SEGMENT0[4]
+set_location_assignment PIN_D17 -to SEGMENT0[5]
+set_location_assignment PIN_C17 -to SEGMENT0[6]
+set_location_assignment PIN_D15 -to SEGMENT0[7]
+
+# SEGMENT1
+set_location_assignment PIN_C18 -to SEGMENT1[0]
+set_location_assignment PIN_D18 -to SEGMENT1[1]
+set_location_assignment PIN_E18 -to SEGMENT1[2]
+set_location_assignment PIN_B16 -to SEGMENT1[3]
+set_location_assignment PIN_A17 -to SEGMENT1[4]
+set_location_assignment PIN_A18 -to SEGMENT1[5]
+set_location_assignment PIN_B17 -to SEGMENT1[6]
+set_location_assignment PIN_A16 -to SEGMENT1[7]
+
+# SEGMENT2
+set_location_assignment PIN_B20 -to SEGMENT2[0]
+set_location_assignment PIN_A20 -to SEGMENT2[1]
+set_location_assignment PIN_B19 -to SEGMENT2[2]
+set_location_assignment PIN_A21 -to SEGMENT2[3]
+set_location_assignment PIN_B21 -to SEGMENT2[4]
+set_location_assignment PIN_C22 -to SEGMENT2[5]
+set_location_assignment PIN_B22 -to SEGMENT2[6]
+set_location_assignment PIN_A19 -to SEGMENT2[7]
+
+#  SEGMENT3
+set_location_assignment PIN_F21 -to SEGMENT3[0]
+set_location_assignment PIN_E22 -to SEGMENT3[1]
+set_location_assignment PIN_E21 -to SEGMENT3[2]
+set_location_assignment PIN_C19 -to SEGMENT3[3]
+set_location_assignment PIN_C20 -to SEGMENT3[4]
+set_location_assignment PIN_D19 -to SEGMENT3[5]
+set_location_assignment PIN_E17 -to SEGMENT3[6]
+set_location_assignment PIN_D22 -to SEGMENT3[7]
+
+#  SEGMENT4
+set_location_assignment PIN_F18 -to SEGMENT4[0]
+set_location_assignment PIN_E20 -to SEGMENT4[1]
+set_location_assignment PIN_E19 -to SEGMENT4[2]
+set_location_assignment PIN_J18 -to SEGMENT4[3]
+set_location_assignment PIN_H19 -to SEGMENT4[4]
+set_location_assignment PIN_F19 -to SEGMENT4[5]
+set_location_assignment PIN_F20 -to SEGMENT4[6]
+set_location_assignment PIN_F17 -to SEGMENT4[7]
+
+#SEGMENT5
+set_location_assignment PIN_J20 -to SEGMENT5[0]
+set_location_assignment PIN_K20 -to SEGMENT5[1]
+set_location_assignment PIN_L18 -to SEGMENT5[2]
+set_location_assignment PIN_N18 -to SEGMENT5[3]
+set_location_assignment PIN_M20 -to SEGMENT5[4]
+set_location_assignment PIN_N19 -to SEGMENT5[5]
+set_location_assignment PIN_N20 -to SEGMENT5[6]
+set_location_assignment PIN_L19 -to SEGMENT5[7]
+
+# FORCE ALL SEGMENTS TO 3.3V
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT0[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT1[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT2[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT3[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT4[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
+```
+
+
 
 ```systemverilog
 
