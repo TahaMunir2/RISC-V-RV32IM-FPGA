@@ -5,7 +5,7 @@
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (Cyllocoding)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
-| General       | Shell Script        |                           |                    |      **           |                       |
+| ##General       | Shell Script        |                           |                    |      **           |                       |
 |               | F1 Assembly     |                        |                    |       **            |                       |
 | [Single Cycle](https://github.com/TahaMunir2/Team5/tree/single-cycle-cpu)  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
