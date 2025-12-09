@@ -196,7 +196,7 @@ We needed to add some safeguarding for the **`we`** in the timer
 
 ### FPGA:
 
-
+d
 
 ```systemverilog
 
