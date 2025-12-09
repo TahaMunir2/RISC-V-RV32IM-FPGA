@@ -5,8 +5,6 @@
 - [2. Implementation](#2-implementation)
   - [2.1 Adapting Data Memory for Superscalar](#21-adapting-data-memory-for-superscalar)
   - [2.2 Doubling the Common Data Bus Width](#22-doubling-the-common-data-bus-width)
-    - [2.2.1 ROB Writeback Expansion](#221-rob-writeback-expansion)
-    - [2.2.2 RUU Writeback Expansion](#222-ruu-writeback-expansion)
   - [2.3 Load Instruction Integration](#23-load-instruction-integration)
 - [3. Schematic](#3-schematic)
 - [4. Testing & Verification](#4-testing--verification)
@@ -108,9 +106,6 @@ Both ports can access the same underlying memory array simultaneously, enabling 
 Since we only support **load instructions** (not stores), the superscalar data memory has no write interface
 
 ---
-
-### 2.2 Doubling the Common Data Bus Width
-
 
 ### 2.2 Doubling the Common Data Bus Width
 
@@ -222,6 +217,188 @@ Each writeback port writes to a **different ROB entry** (identified by its uniqu
 
 #### 2.2.2 RUU Writeback Expansion
 
+The Register Update Unit requires similar modifications to handle results from both ALUs and memory. Additionally, the RUU entry structure and issue logic must be adapted for load instructions.
+
+##### Expanded Writeback Interface
+
+**Before (2 CDB inputs):**
+```systemverilog
+// Execute stage only
+input  logic                 wb1_en,
+input  logic [TAG_BITS-1:0]  wb1_tag,
+input  logic [31:0]          wb1_value,
+
+input  logic                 wb2_en,
+input  logic [TAG_BITS-1:0]  wb2_tag,
+input  logic [31:0]          wb2_value,
+```
+
+**After (4 CDB inputs):**
+```systemverilog
+// Execute stage (ALUs)
+input  logic                 wb1_en,
+input  logic [TAG_BITS-1:0]  wb1_tag,
+input  logic [31:0]          wb1_value,
+
+input  logic                 wb2_en,
+input  logic [TAG_BITS-1:0]  wb2_tag,
+input  logic [31:0]          wb2_value,
+
+// Memory stage (Loads)
+input  logic                 wb3_en,
+input  logic [TAG_BITS-1:0]  wb3_tag,
+input  logic [31:0]          wb3_value,
+
+input  logic                 wb4_en,
+input  logic [TAG_BITS-1:0]  wb4_tag,
+input  logic [31:0]          wb4_value,
+```
+
+##### Expanded Wake-Up Logic
+
+The CDB broadcast logic now checks **4 sources** instead of 2. Each waiting operand must compare its tag against all 4 possible broadcasts:
+
+```systemverilog
+always_ff @(negedge clk) begin
+    // ALU 1 broadcast
+    if (wb1_en) begin
+        for (int i = 0; i < DEPTH; i++) begin
+            if (entries[i].valid && !entries[i].src1_valid &&
+                (entries[i].src1_tag == wb1_tag)) begin
+                entries[i].src1_valid <= 1'b1;
+                entries[i].src1_value <= wb1_value;
+            end
+            if (entries[i].valid && !entries[i].src2_valid &&
+                (entries[i].src2_tag == wb1_tag)) begin
+                entries[i].src2_valid <= 1'b1;
+                entries[i].src2_value <= wb1_value;
+            end
+        end
+    end
+
+    // ALU 2 broadcast
+    if (wb2_en) begin
+        // ... same pattern
+    end
+
+    // Memory port 1 broadcast
+    if (wb3_en) begin
+        // ... same pattern
+    end
+
+    // Memory port 2 broadcast
+    if (wb4_en) begin
+        // ... same pattern
+    end
+end
+```
+
+##### Expanded Entry Structure
+
+Each RUU entry now includes **load-specific control signals**:
+
+**Before:**
+```systemverilog
+typedef struct packed {
+    logic                     valid;
+    logic                     issued;
+    logic [TAG_BITS-1:0]      dest_tag;
+    logic                     src1_valid;
+    logic [TAG_BITS-1:0]      src1_tag;
+    logic [31:0]              src1_value;
+    logic                     src2_valid;
+    logic [TAG_BITS-1:0]      src2_tag;
+    logic [31:0]              src2_value;
+    logic [CONTROL_WIDTH-1:0] ctrl;
+} ruu_entry_t;
+```
+
+**After:**
+```systemverilog
+typedef struct packed {
+    logic                     valid;
+    logic                     issued;
+    logic [TAG_BITS-1:0]      dest_tag;
+    logic                     src1_valid;
+    logic [TAG_BITS-1:0]      src1_tag;
+    logic [31:0]              src1_value;
+    logic                     src2_valid;
+    logic [TAG_BITS-1:0]      src2_tag;
+    logic [31:0]              src2_value;
+    logic [CONTROL_WIDTH-1:0] ctrl;
+    // New fields for load instructions
+    logic [1:0]               ResultSrc;      // 01 = load instruction
+    logic [1:0]               LoadSize;       // 00=byte, 01=half, 10=word
+    logic                     LoadUnsigned;   // 0=signed, 1=unsigned
+} ruu_entry_t;
+```
+
+##### Modified Issue Logic: Loads Need Only One Operand
+
+A critical change for load instructions: **loads only need `src1` (base address)**, not `src2`. The issue condition is modified:
+
+**Before (arithmetic only):**
+```systemverilog
+// Issue when BOTH operands ready
+if (!issue0_valid &&
+    entries[i].valid &&
+    !entries[i].issued &&
+    entries[i].src1_valid &&
+    entries[i].src2_valid) begin
+    issue0_valid = 1'b1;
+    issue0_idx   = i;
+end
+```
+
+**After (with loads):**
+```systemverilog
+// Issue when src1 ready AND (src2 ready OR it's a load)
+if (!issue0_valid &&
+    entries[i].valid &&
+    !entries[i].issued &&
+    entries[i].src1_valid &&
+    (entries[i].src2_valid || (entries[i].ResultSrc == 2'b01))) begin
+    issue0_valid = 1'b1;
+    issue0_idx   = i;
+end
+```
+
+The condition `(entries[i].src2_valid || (entries[i].ResultSrc == 2'b01))` means:
+- For arithmetic: both operands must be valid
+- For loads (`ResultSrc == 01`): only `src1` (base address) needs to be valid
+
+##### Expanded Execute Interface
+
+The execute outputs now include load control signals:
+
+```systemverilog
+// Execute interface outputs
+output logic [TAG_BITS-1:0]      exec0_dest_tag,
+output logic [31:0]              exec0_src1_value,
+output logic [31:0]              exec0_src2_value,
+output logic [CONTROL_WIDTH-1:0] exec0_ctrl,
+output logic [1:0]               exec0_ResultSrc,    // New
+output logic [1:0]               exec0_LoadSize,     // New
+output logic                     exec0_LoadUnsigned, // New
+
+// Same for exec1
+```
+
+These signals flow to the memory stage to control the load operation.
+
+##### Dispatch Interface Expansion
+
+The dispatch interface also accepts load control signals:
+
+```systemverilog
+input logic [1:0] dispatch1_ResultSrc,
+input logic [1:0] dispatch1_LoadSize,
+input logic       dispatch1_LoadUnsigned,
+
+input logic [1:0] dispatch2_ResultSrc,
+input logic [1:0] dispatch2_LoadSize,
+input logic       dispatch2_LoadUnsigned,
+```
 
 ---
 
