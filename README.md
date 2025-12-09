@@ -10,7 +10,7 @@
 | [Single Cycle](https://github.com/TahaMunir2/Team5/tree/single-cycle-cpu)  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
 |               | Data Path        |           *                |            **           |                 |                       |
-|               | Sign Extend        |              *             |                       |           **        |                     |
+|               | Sign Extend        |              *             |                       |                   |        **             |
 |               | Top Level Integration     |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |                    |        *       |               |
 | [Full 37 Instructions implementation](https://github.com/TahaMunir2/Team5/tree/FULL-RV32I)      | Control Unit             |                   |     **                  |                   |                       |
