@@ -3,13 +3,6 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Interrupts](#interrupts)
-    - [mtvec: 0x305](#mtvec-0x305)
-    - [mepc: 0x341](#mepc-0x341)
-    - [mecause: 0x342](#mecause-0x342)
-    - [mscratch: 0x340](#mscratch-0x340)
-    - [mstatus: 0x300](#mstatus-0x300)
-    - [mip: 0x344](#mip-0x344)
-    - [mie: 0x304](#mie-0x304)
   - [FPGA](#fpga)
 - [Implementation](#implementation)
   - [Interrupts](#interrupts-1)
