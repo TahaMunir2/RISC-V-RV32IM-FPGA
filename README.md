@@ -20,7 +20,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Testing                    |             **           |                    |        *       |               |
 |               |
 | Full 37 instructions implementation      | Control Unit             |                   |     **                  |                   |                       |
-|          | Data Path             |                       |                       |              **     |                       |
+|          | Data Path             |                       |                 **      |                  |                       |
 |        | Program Counter Block             |                       |                 **      |                   |                       |
 |      | Integration             |                       |                  **     |                   |                       |
 |      | Testing and Verification          |                       |            **           |                   |                       |
