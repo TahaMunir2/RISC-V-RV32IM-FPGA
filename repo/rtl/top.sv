@@ -273,7 +273,8 @@ logic false_prediction;
         .SizeWrite(SizeWriteD),
         .ALUsrc2(ALUSrc2D),
         .LoadSize(LoadSizeD),
-        .LoadUnsigned(LoadUnsignedD)
+        .LoadUnsigned(LoadUnsignedD),
+        .l1d_enable(cache_data_enable)
     );
 
 
@@ -300,7 +301,6 @@ l1i_cache l1i_cache_inst (
 
 
 logic cache_data_enable;
-assign cache_data_enable = (ResultSrcM == 2'b01);
 
 l1d_cache l1d_cache_inst (
     .clk(clk),
