@@ -691,7 +691,9 @@ Which matches up with the memory we expected. It is interesting to see that our 
 
 #### External Interrupt Test
 
-![video](https://github.com/TahaMunir2/Team5/blob/main/images/external.mp4)
+https://github.com/user-attachments/assets/71920d99-a521-49b0-a02c-273b732a5d86
+
+
 
 
 
