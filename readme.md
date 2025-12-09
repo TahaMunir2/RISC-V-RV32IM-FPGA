@@ -601,7 +601,9 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT3[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT4[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
 ```
+## 3 Schematic
 
+Quartus actually provides you with a RTL netlist diagram:
 
 
 ```systemverilog
