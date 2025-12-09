@@ -1,4 +1,11 @@
-# Team 5 CPU Project
+# Team 5 CPU Project team statement
+
+
+## Introduction
+
+
+## Quick Start
+
 
 ## Contributions table
 
