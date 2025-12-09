@@ -50,8 +50,8 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |                           |              FPGA Wrapper         |              **            |                      |                   |                      |
 |                           |          Testing             |                **          |                      |                   |                      |
 | Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
-|             |     Register-Update Unit                   |                           |                      |            **       |                      |
-|             |     Re-Order Buffer                   |                           |                      |              **     |                      |
+|             |     Register-Update Unit                   |                           |             **         |                  |                      |
+|             |     Re-Order Buffer                   |                           |           **           |                  |                      |
 |             |     Integration and Pipeline Division                   |                           |             **         |                   |                      |
 |             |     Testing and Verification                   |                           |                  **    |                   |                      |
 | Out of Order Superscalar full version           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
