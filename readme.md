@@ -395,9 +395,49 @@ We can then define these in the FPGA wrapper as follows, with each segment being
 
 #### Debouncer
 
-```systemverilog
+Now is where everything gets particularly tricky. We need to convert real-world actions into digital signals, only using digital logic. For example, we need a trigger pulse from pressing the button; however, if we just keep the button as an input (which we will do using the TCL file), without processing it first, it will lead to 100,000s of cycles of interrupt requests, which could very well break our program. We need something called a "debouncer" to wait for the signal to stop "bouncing" (as shown below) between high and low and become stable, and then an edge detector to only take in 1 pulse, so our external interrupt works as it does in simulation.
 
+/////////////////////////// insert bouncing image ////////////////////
+
+The debouncing logic relies on 2 stages, one stage which removes metastability and a second stage that implements a timer for 2^20 cycles (20 ms at 50 MHz) to wait for a non-bouncy signal
+
+```systemverilog
+  logic [TIMER_WIDTH-1:0] timer;
+
+    logic safety_stage, stable_input; // we need these to prevent metastability, as this adds a 1 clock cycle delay for the signal to stabilise before we put it into our logic circuit
+
+    always_ff @(posedge clk) begin // stability stage added for safekeeping
+        if (rst) begin
+            safety_stage <= 0; 
+            stable_input <= 0;
+        end else begin
+            safety_stage <= trigger; 
+            stable_input <= safety_stage; // adds a 1 clock cycle delay to stabilise the input
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin 
+            timer <= '0; 
+            trigger_clean <= 0;
+        end
+        else begin
+            if (stable_input) begin   // if trigger is high, we can start timing
+                if (trigger_clean == 0) begin // if we are still waiting for stability
+                    timer <= timer + 1;  // increment the timer
+                    if (&timer) trigger_clean <= 1; //  if we hit the max value of the timer, output the clean value
+                end
+            end 
+            else begin // if trigger is low, we can turn it off
+                timer <= 0; 
+                trigger_clean <= 0; 
+            end
+        end
+    end
 ```
+
+We then implement an edge detector in the FPGA wrapper because even after 20ms of holding the button will send a very large amount of external interrupts. Our Edge detector must operate under the logic that if the previous and next states are different, only then should the external interrupt go high.
+
 
 
 ```systemverilog
