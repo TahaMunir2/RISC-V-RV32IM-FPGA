@@ -54,7 +54,15 @@ For this project, in accordance with the guidance provided in the Project Brief,
 | Z-extension              |                        |                          |                      |                   |                      |
 | Interrupts & FPGA       |                        |                          |                      |                   |                      |
 |               |    Memory           |                           |                      |                 |                      |
-| Superscalar              |                        |                           |                      |                   |                      |
+| Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |                      |                   |                      |
+|             |     Register-Update Unit                   |                           |                      |                   |                      |
+|             |     Re-Order Buffer                   |                           |                      |                   |                      |
+|             |     Integration and Pipeline Division                   |                           |                      |                   |                      |
+|             |     Testing and Verification                   |                           |                      |                   |                      |
+| Out of Order Superscalar full version           |     Data Memory Adaptation                  |                           |                      |                   |                      |
+|             |     Common Data Bus Adaptation                   |                           |                      |                   |                      |
+|             |     Load Instruction Integratioon                  |                           |                      |                   |                      |
+|             |     Testing and Verification                   |                           |                      |                   |                      |
 
 
 
