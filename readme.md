@@ -601,9 +601,15 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT3[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT4[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
 ```
-## 3 Schematic
 
-Quartus actually provides you with a RTL netlist diagram:
+## 3 Schematics
+
+Quartus actually provides you with an RTL netlist diagram:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/FPGA_schematic.png)
+
+
+## Testing
 
 
 ```systemverilog
