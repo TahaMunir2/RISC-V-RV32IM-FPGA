@@ -666,5 +666,3 @@ assign imm_11_5 = instr[31:25];
         endcase
     end
 endmodule
-
-

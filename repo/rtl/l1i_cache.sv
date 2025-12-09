@@ -130,20 +130,27 @@ module l1i_cache #(
             // we don't update valid or dirty since we are only reading        
             cache[set].used = way; //now that way has been determined, assert current way as most recently used
             if (way == 1'b0) begin
-                case(block_offset)
-                2'b00: data_out = cache[set].block0.word0;
-                2'b01: data_out = cache[set].block0.word1;
-                2'b10: data_out = cache[set].block0.word2;
-                2'b11: data_out = cache[set].block0.word3;
-                endcase
-            end
-
+                        case(block_offset)
+                        2'b00: data_out = {cache[set].block0.word0.byte0, cache[set].block0.word0.byte1,
+                                        cache[set].block0.word0.byte2, cache[set].block0.word0.byte3};
+                        2'b01: data_out = {cache[set].block0.word1.byte0, cache[set].block0.word1.byte1,
+                                        cache[set].block0.word1.byte2, cache[set].block0.word1.byte3};
+                        2'b10: data_out = {cache[set].block0.word2.byte0, cache[set].block0.word2.byte1,
+                                        cache[set].block0.word2.byte2, cache[set].block0.word2.byte3};
+                        2'b11: data_out = {cache[set].block0.word3.byte0, cache[set].block0.word3.byte1,
+                                        cache[set].block0.word3.byte2, cache[set].block0.word3.byte3};
+                        endcase
+                    end
             else if (way == 1'b1) begin
                 case(block_offset)
-                2'b00: data_out = cache[set].block1.word0;
-                2'b01: data_out = cache[set].block1.word1;
-                2'b10: data_out = cache[set].block1.word2;
-                2'b11: data_out = cache[set].block1.word3;
+                2'b00: data_out = {cache[set].block1.word0.byte0, cache[set].block1.word0.byte1,
+                                cache[set].block1.word0.byte2, cache[set].block1.word0.byte3};
+                2'b01: data_out = {cache[set].block1.word1.byte0, cache[set].block1.word1.byte1,
+                                cache[set].block1.word1.byte2, cache[set].block1.word1.byte3};
+                2'b10: data_out = {cache[set].block1.word2.byte0, cache[set].block1.word2.byte1,
+                                cache[set].block1.word2.byte2, cache[set].block1.word2.byte3};
+                2'b11: data_out = {cache[set].block1.word3.byte0, cache[set].block1.word3.byte1,
+                                cache[set].block1.word3.byte2, cache[set].block1.word3.byte3};
                 endcase
             end
 
@@ -175,22 +182,24 @@ module l1i_cache #(
         end
     end
 
-    always_ff @(posedge clk) begin // only write is synchronous
-
-    //write logic
+    always_ff @(posedge clk) begin
         if (wr_en) begin
-
-            cache[set].used <= way; //now that way has been determined, assert current way as most recently used
+            cache[set].used <= way;
             
             if (~way) begin
-                cache[set].block0[127:0] <= (write_data);
-                cache[set].block0.tag <= tag_bits;
+                cache[set].block0.word0 <= write_data[127:96];
+                cache[set].block0.word1 <= write_data[95:64];
+                cache[set].block0.word2 <= write_data[63:32];
+                cache[set].block0.word3 <= write_data[31:0];
+                cache[set].block0.tag   <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end
-
             else begin
-                cache[set].block1[127:0] <= (write_data);
-                cache[set].block1.tag <= tag_bits;
+                cache[set].block1.word0 <= write_data[127:96];
+                cache[set].block1.word1 <= write_data[95:64];
+                cache[set].block1.word2 <= write_data[63:32];
+                cache[set].block1.word3 <= write_data[31:0];
+                cache[set].block1.tag   <= tag_bits;
                 cache[set].block1.valid <= 1'b1;
             end
         end

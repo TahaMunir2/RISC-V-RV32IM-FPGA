@@ -120,6 +120,19 @@ module l2_cache #(
     logic [ADDRESS_WIDTH-1:0] l2write_back_addr_buffer;
     logic [ADDRESS_WIDTH-1:0] l2write_back_addr_buffer_next;
 
+
+    logic [255:0] write_data_swapped;
+    assign write_data_swapped = {
+            write_data[31:0],  
+            write_data[63:32],  
+            write_data[95:64],   
+            write_data[127:96],   
+            write_data[159:128],   
+            write_data[191:160],  
+            write_data[223:192],   
+            write_data[255:224]    
+        };
+
     initial begin
         for (int i = 0; i < 128; i++) begin
             cache[i].block0.valid   = 1'b0;
@@ -479,7 +492,7 @@ module l2_cache #(
                     cache[set].block0.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set].block0[255:0] <= (cache[set].block0[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block0[255:0] <= (cache[set].block0[255:0] & ~wmask) | (write_data_swapped & wmask);
                 cache[set].block0.tag <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end
@@ -494,7 +507,7 @@ module l2_cache #(
                     cache[set].block1.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set].block1[255:0] <= (cache[set].block1[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block1[255:0] <= (cache[set].block1[255:0] & ~wmask) | (write_data_swapped & wmask);
                 cache[set].block1.tag <= tag_bits;
                 cache[set].block1.valid <= 1'b1;
             end
@@ -508,7 +521,7 @@ module l2_cache #(
                     cache[set].block2.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set].block2[255:0] <= (cache[set].block2[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block2[255:0] <= (cache[set].block2[255:0] & ~wmask) | (write_data_swapped & wmask);
                 cache[set].block2.tag <= tag_bits;
                 cache[set].block2.valid <= 1'b1;
             end
@@ -523,7 +536,7 @@ module l2_cache #(
                     cache[set].block3.dirty <= 1'b0; // if writing from main mem then clean
                 end
 
-                cache[set].block3[255:0] <= (cache[set].block3[255:0] & ~wmask) | (write_data & wmask);
+                cache[set].block3[255:0] <= (cache[set].block3[255:0] & ~wmask) | (write_data_swapped & wmask);
                 cache[set].block3.tag <= tag_bits;
                 cache[set].block3.valid <= 1'b1;
             end
@@ -543,8 +556,10 @@ module l2_cache #(
             // we don't update valid or dirty since we are only reading        
             if (way == 2'b00) begin
                 case(block_offset_rd[2])
-                1'b0: data_out <= cache[set].block0[127:0];
-                1'b1: data_out <= cache[set].block0[255:128];
+                1'b0: data_out <= {cache[set].block0.word0, cache[set].block0.word1,
+                                   cache[set].block0.word2, cache[set].block0.word3};
+                1'b1: data_out <= {cache[set].block0.word4, cache[set].block0.word5,
+                                   cache[set].block0.word6, cache[set].block0.word7};
                 endcase
                 cache[set].u01 <= 1;
                 cache[set].u02 <= 1;
@@ -552,9 +567,11 @@ module l2_cache #(
             end
 
             else if (way == 2'b01) begin
-                case(block_offset[2])
-                1'b0: data_out <= cache[set].block1[127:0];
-                1'b1: data_out <= cache[set].block1[255:128];
+                case(block_offset_rd[2])
+                1'b0: data_out <= {cache[set].block1.word0, cache[set].block1.word1,
+                                   cache[set].block1.word2, cache[set].block1.word3};
+                1'b1: data_out <= {cache[set].block1.word4, cache[set].block1.word5,
+                                   cache[set].block1.word6, cache[set].block1.word7};
                 endcase
                 cache[set].u01 <= 0;
                 cache[set].u12 <= 1;
@@ -562,9 +579,11 @@ module l2_cache #(
             end
 
             else if (way == 2'b10) begin
-                case(block_offset[2])
-                1'b0: data_out <= cache[set].block2[127:0];
-                1'b1: data_out <= cache[set].block2[255:128];
+                case(block_offset_rd[2])
+                1'b0: data_out <= {cache[set].block2.word0, cache[set].block2.word1,
+                                   cache[set].block2.word2, cache[set].block2.word3};
+                1'b1: data_out <= {cache[set].block2.word4, cache[set].block2.word5,
+                                   cache[set].block2.word6, cache[set].block2.word7};
                 endcase
                 cache[set].u02 <= 0;
                 cache[set].u12 <= 0;
@@ -573,8 +592,10 @@ module l2_cache #(
 
             else if (way == 2'b11) begin
                 case(block_offset_rd[2])
-                1'b0: data_out <= cache[set].block3[127:0];
-                1'b1: data_out <= cache[set].block3[255:128];
+                1'b0: data_out <= {cache[set].block3.word0, cache[set].block3.word1,
+                                   cache[set].block3.word2, cache[set].block3.word3};
+                1'b1: data_out <= {cache[set].block3.word4, cache[set].block3.word5,
+                                   cache[set].block3.word6, cache[set].block3.word7};
                 endcase
                 cache[set].u03 <= 0;
                 cache[set].u13 <= 0;
