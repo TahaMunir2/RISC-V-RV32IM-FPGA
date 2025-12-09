@@ -32,11 +32,15 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | [Register File]         |           *                |                       |                 |                       |
 |               | [ALU]               |               *          |                       |                 |                       | 
 |               | [Data Memory]          |             *         |                       |                   |                     |
-|               | [Datapath]               |           *                |                     |                 |                       |
 |               | [Sign Extend]        |              *             |                       |                   |                     |
 |               | [Top File]       |                  **       |                       |                   |                     |
 |               | Testing [pdf](https://github.com/luju1108/Team14/blob/55573bf5cd5188fad616eb12a406bb40f62c1772/RTL/README_PDF.md) [F1](https://youtu.be/zJto4plLvCE)                       |             **           |   **                 |        *       |               |
 |               |
+| Full 37 instructions implementation      | Control Unit             |                   |                       |                   |                       |
+|      | Data Path             |                       |                       |                   |                       |
+|      | Program Counter Block             |                       |                       |                   |                       |
+|      | Integration             |                       |                       |                   |                       |
+|      | Testing and Verification          |                       |                       |                   |                       |
 | Pipeline      | Pipeline Register             | **                         |                       |                   |                       |
 |               | [Hazard unit]               |                           |                       | **                 |                       |
 |               | [Forwarding Logic]            |                          |        **               |                   |                       |
