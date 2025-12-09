@@ -139,7 +139,7 @@ Obviously, for this new interrupt logic, we would need to update the Hazard Unit
 ```
 - Note: We don't flush the fd and de stages after mret is called in case there is some garbage data there.
 
-#### PC Block
+##### PC Block
 
 We also needed to update PC_block to jump to and from our new trap handler:
 
@@ -147,7 +147,7 @@ We also needed to update PC_block to jump to and from our new trap handler:
     else if(trap_en || mret_en) internal_pc <= handler_address;
 ```
 
-#### Timer
+##### Timer
 ```systemverilog
     always_ff @(posedge clk) begin
         if(rst) begin
