@@ -28,7 +28,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Hazard unit              |                           |                       | **                 |                       |
 |               | Forwarding Logic            |                          |        **               |                   |                       |
 |               | Top File           | *                         |    *                   |      *             |                       |
-|               | Testing                     |                          |                       | *                |                       |
+|               | Testing                     |                          |             *          | **                |                       |
 |       Branch prediction        |                        |                          |           **          |                   |                     |
 | Cache         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
