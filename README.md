@@ -17,7 +17,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Data Path        |           *                |            **           |                 |                       |
 |               | Sign Extend        |              *             |                       |           **        |                     |
 |               | Top File      |                  **       |                       |                   |                     |
-|               | Testing                    |             **           |   **                 |        *       |               |
+|               | Testing                    |             **           |                    |        *       |               |
 |               |
 | Full 37 instructions implementation      | Control Unit             |                   |     **                  |                   |                       |
 |          | Data Path             |                       |                       |              **     |                       |
