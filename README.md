@@ -32,14 +32,13 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | [Top File]            | *                         |    *                   |      *             |                       |
 |               | Testing [pdf](https://github.com/luju1108/Team14/blob/98bc1b035346cb44bc519077c4daae0fd198ed2f/RTL/README_PDF.md) [F1](https://youtu.be/59yWMzJzut0)                      |                          |                       | *                |                       |
 |       Branch prediction        |                        |                          |           **          |                   |                     |
-| Cache         | [Direct Mapped Cache]    |                      |                    |                   | **                 |
-|               | RAM Refactor                  |                           |                   |                   | **                 |
-|               | Data Memory                   |                           |                    |                   | **                  |
-|               | [Control Unit Refactor]      |                        |                   |                   | **                    |
-|               | [Pipelining Refactor]       |                      |                       |                   |        **               |
-|               | Testing                       |                    |                  |               |                    |
-|               | [Fully Associative Cache]    |                           |                     |                   |                    |
-| M-extension              |                        |                           |                      |                  |                      |
+| Cache         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
+|               | 4-way L2  cache  |                           |                   |                   | **                 |
+|               | Top Level Integration |                           |                    |                   | **                  |
+|               | Unit Testing   |                 *       |      *             |                   |                    |
+| M-extension              |              Control Path          |                           |                      |           **       |                      |
+|               |             ALU         |                           |                      |                  |              **        |
+|               |              Testing          |                           |                      |          **        |                      |
 | Z-extension              |          Zicsr            |          **                |                      |                   |                      |
 |                           |         Zba              |            **              |                      |                   |                      |
 |                           |         Testing               |         **                 |                      |                   |                      |
@@ -50,15 +49,15 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |                           |          Top Level Integration              |        **                  |                      |                   |                      |
 |                           |              FPGA Wrapper         |              **            |                      |                   |                      |
 |                           |          Testing             |                **          |                      |                   |                      |
-| Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |                      |                   |                      |
-|             |     Register-Update Unit                   |                           |                      |                   |                      |
-|             |     Re-Order Buffer                   |                           |                      |                   |                      |
-|             |     Integration and Pipeline Division                   |                           |                      |                   |                      |
-|             |     Testing and Verification                   |                           |                      |                   |                      |
-| Out of Order Superscalar full version           |     Data Memory Adaptation                  |                           |                      |                   |                      |
-|             |     Common Data Bus Adaptation                   |                           |                      |                   |                      |
-|             |     Load Instruction Integratioon                  |                           |                      |                   |                      |
-|             |     Testing and Verification                   |                           |                      |                   |                      |
+| Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
+|             |     Register-Update Unit                   |                           |                      |            **       |                      |
+|             |     Re-Order Buffer                   |                           |                      |              **     |                      |
+|             |     Integration and Pipeline Division                   |                           |             **         |                   |                      |
+|             |     Testing and Verification                   |                           |                  **    |                   |                      |
+| Out of Order Superscalar full version           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
+|             |     Common Data Bus Adaptation                   |                           |          **            |                   |                      |
+|             |     Load Instruction Integratioon                  |                           |       **               |                   |                      |
+|             |     Testing and Verification                   |                           |         **             |                   |                      |
 
 
 
