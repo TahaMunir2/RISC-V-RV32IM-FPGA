@@ -195,6 +195,8 @@ We needed to add some safeguarding for the **`we`** in the timer:
       assign timer_write_en = MemWriteM && (ALUResultM[31:4] == 28'h8000100);
 ```
 
+We also added a new wire called PCE_Special that didn't get flushed in the DE pipeline, as in simulation, we were getting an issue where PCE gets reset; however, for some reason, on the FPGA, it works just fine, and PCE_Special doesn't.
+
 ### FPGA:
 
 Before I describe what we implemented in the FPGA, I must tell you what we omitted; we branched off the Z extension branch, so superscalar and cache were not included in the rtl, due to time restraints, and they were still being developed, and fears of complexity added by them. M instructions were removed as division was causing huge timing delays in compilation in Quartus. Branch prediction and evalprediction modules had to be removed as memory was changed to synchronous, which meant their logic no longer applied, and a buffer and much more complex logic would need to be thought up to keep their functionality. This meant Z instructions and Full RV32I with Pipelining were still included in our FPGA implementation.
