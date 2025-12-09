@@ -34,7 +34,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
 |               | Top Level Integration |                 *          |        *            |                   |                  |
 |               | Unit Testing   |                        |                   |                 |    **                |
-| M-extension              |              Control Path          |                           |                 **     |                 |                      |
+| M-extension              |              Control Path          |                           |                      |   **              |                      |
 |               |             ALU         |                           |                      |        **          |                      |
 |               |              Testing          |                           |                      |          **        |                      |
 | Z-extension              |          Zicsr            |          **                |                      |                   |                      |
