@@ -8,10 +8,10 @@ This document describes how the RV32M integer multiply/divide extension was inte
 
 We implemented the full RV32M base extension (eight instructions):
 
-- **MUL** — low 32 bits of signed×signed product: `rd = (rs1 * rs2)[31:0]`
-- **MULH** — high 32 bits of signed×signed product: `rd = (signed(rs1) * signed(rs2))[63:32]`
-- **MULHSU** — high 32 bits of signed×unsigned product: `rd = (signed(rs1) * unsigned(rs2))[63:32]`
-- **MULHU** — high 32 bits of unsigned×unsigned product: `rd = (unsigned(rs1) * unsigned(rs2))[63:32]`
+- **MUL** — low 32 bits of signed×signed product
+- **MULH** — high 32 bits of signed×signed product
+- **MULHSU** — high 32 bits of signed×unsigned product
+- **MULHU** — high 32 bits of unsigned×unsigned product
 - **DIV** — signed quotient with RISC‑V special cases:
   - divisor == 0 → `q = -1` (`0xFFFFFFFF`)
   - overflow `-2^31 / -1` → `q = -2^31` (`0x80000000`)
@@ -54,6 +54,42 @@ All previous RV32I ALU codes remain unchanged in the lower range.
 ### 2.2 Multiplication implementation
 
 The RV32M multiplication instructions (`MUL`, `MULH`, `MULHSU`, `MULHU`) are all implemented inside the main ALU as purely combinational operations that produce a full 64-bit product and then select either the low or high 32 bits, with the correct signed/unsigned interpretation of the operands.
+
+```Systemverilog
+logic [63:0] ALUop1_ext;
+logic [63:0] ALUop2_ext;
+logic [63:0] product;
+
+always_comb begin
+    // default: something sensible
+    ALUop1_ext = $unsigned(ALUop1);
+    ALUop2_ext = $unsigned(ALUop2);
+
+    unique case (ALUCtrl)
+        5'b1100: begin // MUL: unsigned×unsigned low word
+            ALUop1_ext = $unsigned(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        5'b1101: begin // MULH: signed×signed high word
+            ALUop1_ext = $signed(ALUop1);
+        ALUop2_ext = $signed(ALUop2);
+        end
+        5'b1110: begin // MULHSU: signed×unsigned high word
+            ALUop1_ext = $signed(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        5'b1111: begin // MULHU: unsigned×unsigned high word
+            ALUop1_ext = $unsigned(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        default: begin
+            // non-M ops: a_sel/b_sel values don't matter
+        end
+    endcase
+end
+
+assign product = ALUop1_ext * ALUop2_ext;
+```
 
 
 ### 2.3. Division and remainder with edge cases
