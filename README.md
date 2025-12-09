@@ -65,7 +65,6 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |                           |          Top Level Integration              |                          |                      |                   |                      |
 |                           |              FPGA Wrapper         |                          |                      |                   |                      |
 |                           |          Testing             |                          |                      |                   |                      |
-|               |    Memory           |                           |                      |                 |                      |
 | Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |                      |                   |                      |
 |             |     Register-Update Unit                   |                           |                      |                   |                      |
 |             |     Re-Order Buffer                   |                           |                      |                   |                      |
