@@ -11,3 +11,13 @@ Overall, this CPU project has been a practical demonstration of technical cooper
 
 ## Quick Start
 For this project, in accordance with the guidance provided in the Project Brief, we implemented the full set of 37 instructions in the RISCV32I architecture, which we then extended by implementing the proposed extensions of Pipelining and Cache. We implemented 2 levels of cache: 2-way associative level 1 cache and 4-way associative level 2 cache. We then further complemented our design by implementing branch prediction, the RISCV M and Z extensions, and an out-of-order Superscalar architecture for arithmetic and load instructions. Finally, [basically describe FPGA now]
+
+
+
+
+https://github.com/user-attachments/assets/a9653630-7acd-4b2d-82f5-26503637fb27
+
+
+
+https://github.com/user-attachments/assets/ce9f71d5-9b74-4525-afd4-143ad1ea32ad
+
