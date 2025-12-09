@@ -10,46 +10,46 @@ For this project, in accordance with the guidance provided in the Project Brief,
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
 | General       | Shell Script        |                           |                    |      **           |                       |
 |               | F1 Assembly     |                        |                    |       **            |                       |
-| Single Cycle  | Program Counter       |        *                 |                       |        **          |                       |
+| [Single Cycle](https://github.com/TahaMunir2/Team5/tree/single-cycle-cpu)  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
 |               | Data Path        |           *                |            **           |                 |                       |
 |               | Sign Extend        |              *             |                       |           **        |                     |
 |               | Top Level Integration     |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |                    |        *       |               |
-| Full 37 instructions implementation      | Control Unit             |                   |     **                  |                   |                       |
+| [Full 37 Instructions implementation](https://github.com/TahaMunir2/Team5/tree/FULL-RV32I)      | Control Unit             |                   |     **                  |                   |                       |
 |          | Data Path             |                       |                 **      |                  |                       |
 |        | Program Counter Block             |                       |                 **      |                   |                       |
 |      | Integration             |                       |                  **     |                   |                       |
 |      | Testing and Verification          |                       |            **           |                   |                       |
-| Pipeline      | Pipeline Register             | **                         |                       |                   |                       |
+| [Pipelining](https://github.com/TahaMunir2/Team5/tree/PIPELINING)      | Pipeline Register             | **                         |                       |                   |                       |
 |               | Hazard unit              |                           |                       | **                 |                       |
 |               | Forwarding Logic            |                          |        **               |                   |                       |
 |               | Top File           | *                         |    *                   |      *             |                       |
 |               | Testing                     |                          |             *          | **                |                       |
-|       Branch prediction        |                        |                          |           **          |                   |                     |
-| Cache         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
+|       [Branch prediction](https://github.com/TahaMunir2/Team5/tree/branchprediction)        |                        |                          |           **          |                   |                     |
+| [Hierarchical Cache](https://github.com/TahaMunir2/Team5/tree/Hierarchical-cache)         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
 |               | Top Level Integration |                 *          |        *            |                   |                  |
 |               | Unit Testing   |                        |                   |                 |    **                |
-| M-extension              |              Control Path          |                           |                      |   **              |                      |
+| [M-extension](https://github.com/TahaMunir2/Team5/tree/M-Extension)              |              Control Path          |                           |                      |   **              |                      |
 |               |             ALU         |                           |                      |        **          |                      |
 |               |              Testing          |                           |                      |          **        |                      |
-| Z-extension              |          Zicsr            |          **                |                      |                   |                      |
+| [Z-extension](https://github.com/TahaMunir2/Team5/tree/Z-extensions)              |          Zicsr            |          **                |                      |                   |                      |
 |                           |         Zba              |            **              |                      |                   |                      |
 |                           |         Testing               |         **                 |                      |                   |                      |
-| Interrupts & FPGA       |              Interrupts           |       **                   |                      |                   |                      |
+| [Interrupts & FPGA](https://github.com/TahaMunir2/Team5/tree/Interrupts-and-FPGA)       |              Interrupts           |       **                   |                      |                   |                      |
 |                           |            Timer            |             **             |                      |                   |                      |
 |                           |             Memory           |                          |                      |    **               |                      |
 |                           |          MMIO        |              **            |                      |                   |                      |
 |                           |          Top Level Integration              |        **                  |                      |                   |                      |
 |                           |              FPGA Wrapper         |              **            |                      |                   |                      |
 |                           |          Testing             |                **          |                      |                   |                      |
-| Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
+| [Out of Order Superscalar arithmetic](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_arithmetic)            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
 |             |     Register-Update Unit                   |                           |             **         |                  |                      |
 |             |     Re-Order Buffer                   |                           |           **           |                  |                      |
 |             |     Integration and Pipeline Division                   |                           |             **         |                   |                      |
 |             |     Testing and Verification                   |                           |                  **    |                   |                      |
-| Out of Order Superscalar full version           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
+| [Out of Order Superscalar full version](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_full_version)           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
 |             |     Common Data Bus Adaptation                   |                           |          **            |                   |                      |
 |             |     Load Instruction Integratioon                  |                           |       **               |                   |                      |
 |             |     Testing and Verification                   |                           |         **             |                   |                      |
