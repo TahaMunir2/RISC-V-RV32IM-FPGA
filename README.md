@@ -8,9 +8,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (Cyllocoding)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
-| General       | Top Testbenches          |                           |                    |                 |                       |
-|               | Subfile Testbenches     |                        |                    |                |                     |
-|               | Shell Script            |                       |                       |                   |                       |
+| General       | Shell Script        |                           |                    |      **           |                       |
 |               | F1 Assembly     |                        |                    |       **            |                       |
 | Single Cycle  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
