@@ -57,8 +57,6 @@ We were able to get a variety of instructions running on our FPGA, including ari
 
 #### CSR:
 
-##### Initialisation:
-
 We simplified our 4096 address register to a register of size 7 with all other addresses mapping back to the mscratch register. This was so we didn't use up a whole lot of logic on the FPGA, but also because we would only be using these CSRs going forward. We did this using a case statement as shown below:
 
 ```systemverilog
@@ -121,7 +119,7 @@ And the interrupt logic is defined as shown:
             else if(en) csr_array[mapped_address] <= temp; // we only fully write into the scratch register
 ```
 
-##### Hazard Unit
+#### Hazard Unit
 
 Obviously, for this new interrupt logic, we would need to update the Hazard Unit for flush logic as we discussed in the overview, adding a new em flush:
 
@@ -139,7 +137,7 @@ Obviously, for this new interrupt logic, we would need to update the Hazard Unit
 ```
 - Note: We don't flush the fd and de stages after mret is called in case there is some garbage data there.
 
-##### PC Block
+#### PC Block
 
 We also needed to update PC_block to jump to and from our new trap handler:
 
@@ -147,7 +145,7 @@ We also needed to update PC_block to jump to and from our new trap handler:
     else if(trap_en || mret_en) internal_pc <= handler_address;
 ```
 
-##### Timer
+#### Timer
 ```systemverilog
     always_ff @(posedge clk) begin
         if(rst) begin
@@ -188,7 +186,7 @@ We also needed to update PC_block to jump to and from our new trap handler:
 - Once the time was set, the timer would restart and resend a high signal once it reached the reference time.
 - If untouched, the timer would not send out a timer interrupt for 1000s of years at a clock frequency of 50 MHz.
 
-##### Top Level Integration
+#### Top Level Integration
 
 We needed to add some safeguarding for the **`we`** in the timer
 
