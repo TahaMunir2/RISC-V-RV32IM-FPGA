@@ -196,7 +196,66 @@ We needed to add some safeguarding for the **`we`** in the timer
 
 ### FPGA:
 
-d
+Before I describe what we implemented in the FPGA, I must tell you what we omitted; we branched off the Z extension branch, so superscalar and cache were not included in the rtl, due to time restraints, and they were still being developed, and fears of complexity added by them. M instructions were removed as division was causing huge timing delays in compilation in Quartus. Branch prediction and evalprediction modules had to be removed as memory was changed to synchronous, which meant their logic no longer applied, and a buffer and much more complex logic would need to be thought up to keep their functionality. This meant Z instructions and Full RV32I with Pipelining were still included in our FPGA implementation.
+
+To program the FPGA, we had to use a program called Quartus. We were able to put our .sv files onto Quartus and use its many, many features to set up the right conditions for the FPGA to allow us to port our CPU onto it.
+
+The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. For this imem block, we would also need to initialise its memory content using a program. mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. We initialise a new block inside our in-memory block like so:
+
+```systemverilog
+    imem_ram imem_inst (
+        .clock   (clk),
+        .address (word_index),
+        .data    (32'b0),   // never write
+        .wren    (1'b0),
+        .q       (q)
+    );
+```
+
+- Note word_index is the address with the bottom 2 bits taken out, as they are always assumed to be 0.
+
+We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation. We would need to compute the byteena logic as follows:
+
+```systemverilog
+    always_comb begin
+        byteena = 4'b0000;
+        case (SizeWrite)
+            2'b00: begin
+                // store byte
+                byteena = 4'b0001 << byte_offset;
+            end
+            2'b01: begin
+                // store halfword 
+                if (byte_offset[1] == 1'b0)
+                    byteena = 4'b0011;
+                else
+                    byteena = 4'b1100;
+            end
+            default: begin
+                // store word
+                byteena = 4'b1111;
+            end
+        endcase
+    end
+```
+
+And now we would need to call the new dmem_ram inside the datamem module:
+
+```systemverilog
+    dmem_ram dmem_inst (
+        .clock   (clk),
+        .address (word_index),
+        .data    (WD),
+        .wren    (MemWrite),
+        .byteena (byteena),
+        .q       (raw_word)
+    );
+```
+- Note **`raw_word`** is the word without load-size or load-sign logic implemented.
+
+We must take note that, as reading memory is now synchronous, we must not pass the outputs of the memory blocks through the pipeline registers; instead, they can go straight to the next stage.
+
+However, this also means we must now change the logic for the hazard unit, as it relies on  
 
 ```systemverilog
 
