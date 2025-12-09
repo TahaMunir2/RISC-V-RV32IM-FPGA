@@ -95,7 +95,7 @@ module l1i_cache #(
                 else if (!valid1)           way = 1'b1; //way1 is invalid
                 else way = ~cache[set].used; //both bits are valid, we take into account which way was least recently used (LRU logic)                      
 
-                // On a miss, disable read and write and let L2 cache retrieve the data before writing it in.
+                // On a miss, disable read and write and stall the rest of the circuit, and let L2 cache retrieve the data before writing it in.
                 if (!ready) begin
                     rd_en      = 1'b0;
                     wr_en      = 1'b0;
