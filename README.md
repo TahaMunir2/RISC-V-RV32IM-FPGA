@@ -36,7 +36,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | [Sign Extend]        |              *             |                       |                   |                     |
 |               | [Top File]       |                  **       |                       |                   |                     |
 |               | Testing [pdf](https://github.com/luju1108/Team14/blob/55573bf5cd5188fad616eb12a406bb40f62c1772/RTL/README_PDF.md) [F1](https://youtu.be/zJto4plLvCE)                       |             **           |   **                 |        *       |               |
-|               
+|               |
 | Pipeline      | Pipeline Register             | **                         |                       |                   |                       |
 |               | [Hazard unit]               |                           |                       | **                 |                       |
 |               | [Forwarding Logic]            |                          |        **               |                   |                       |
