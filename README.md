@@ -1,4 +1,4 @@
-# Pipelined RISC-V Processor
+# Hierarchical Cache
 
 ## Table of Contents
 - [1. Overview](#1-overview)
