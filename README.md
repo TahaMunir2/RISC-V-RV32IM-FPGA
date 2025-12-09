@@ -267,6 +267,7 @@ Control Hazards are caused by branch instructions where the condition required f
 Our hazard unit encapsulates all of the regulatory logic required to tackle the issues introduced by pipelining, including both data hazards and control hazards. Hence, the hazard unit is a single comprehensive module that triggers and employs stalling, flushing, and forwarding mechanisms (what these mechanisms do will be explained later together with the solutions). We chose this unitary and holistic approach to resolving both kinds of hazards because the input signals required to generate the relevant control signals for stalling, flushing and forwarding are the same or similar.
 
 In summary, the primary goals of the Hazard Unit are:
+
 •	To resolve data hazards through forwarding whenever possible, minimizing performance loss.
 
 •	To detect and stall only when forwarding cannot supply the required operand in time (“Load” data dependency).
@@ -280,7 +281,7 @@ In summary, the primary goals of the Hazard Unit are:
 For most arithmetic and logical instructions, the result becomes available before Write-Back, either at the end of the `EX` or `MEM` stage, allowing us to resolve these hazards without inserting stalls by forwarding the result directly to the ALU inputs.
 The Hazard Unit implements this forwarding by checking whether the source registers used by the instruction currently in the Execute (EX) stage match the destination registers of instructions that are still in the Memory (MEM) or Write-Back (WB) stages.
 Forwarding Decision Conditions (PUT the code for forwarding only somewhere around here or right next)
-```
+```systemverilog
 always_comb begin
     //Default:no forwarding
     selectline1 = 2'b00;
@@ -330,7 +331,7 @@ Forwarding cannot resolve a dependency when the preceding instruction is a load.
 (Modify this diagram to show that the execute stage is actually flushed, not stalled)
 In this case, the Hazard Unit must stall the pipeline for exactly one cycle. It freezes the Program Counter and Fetch-to-Decode pipeline register and flushes the Decode-to-Execute pipeline register. The reason why Decode-to-Execute pipeline register is flushed is that if it were only stalled, the “lw” instruction would propagate through to the memory stage but also still remain in the Decode-to-Execute pipeline register, essentially duplicating the lw instruction. Thus, flushing this stage of the pipeline both achieves the stall required for synchronization (since the next register is not able to propagate into the execute stage) and prevents the duplication that would cause 2 back to back “lw” instructions.
 
-```
+```systemverilog
 logic wStall;
 //logic lw_write_back;
 
@@ -376,7 +377,7 @@ Thus, one cycle later, forwarding can resume as normal.
  
 In the image, the first instruction in the sequence is “beq s1, s2, L1”. In the first clock cycle, the instruction is fetched from instruction memory and fed to the pipeline register connecting the fetch stage to the decode stage. In the second clock cycle, the branch instruction is decoded and the relevant registers read from the register file. Meanwhile, the next instruction – “sub s8, t1, s3” – is fetched from instruction memory. Only by the third clock cycle, does the ALU determine that s1 and s2 are equal. However, two new instructions have been fetched already from instruction memory under the speculative assumption that the branch will not be taken. The solution is to “flush” the fetch and decode stages. To do this, the hazard unit outputs a control signal to the Fetch-to-Decode and Decode-to-Execute pipeline registers. Our pipeline registers have internal logic that synchronously sets the contents of the pipeline registers to 0 once the one-bit control signal from the hazard unit triggers flushing. Since the PC is updated to the branch target, the pipeline then continues with correct instructions.
 
-```
+```systemverilog
 if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
         flush_f_d = 1;
         flush_d_exec = 1;
