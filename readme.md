@@ -611,7 +611,7 @@ Quartus actually provides you with an RTL netlist diagram:
 
 ## 4 Testing
 
-### Interupts and Simulation
+### Interrupts and Simulation
 
 We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave
 
@@ -621,7 +621,7 @@ Our first successful port onto an FPGA showed us these statistics:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/fpga_stats.png)
 
-Which match up with the memory we expected.
+Which matches up with the memory we expected.
 
 
 
