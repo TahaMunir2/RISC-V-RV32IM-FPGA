@@ -15,7 +15,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 | Single Cycle  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
 |               | Data Path        |           *                |            **           |                 |                       |
-|               | Sign Extend        |              *             |                       |                   |                     |
+|               | Sign Extend        |              *             |                       |           **        |                     |
 |               | Top File      |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |   **                 |        *       |               |
 |               |
