@@ -39,7 +39,7 @@ module mainmemory #(
         timer_top = 32'h0;
         gpio = 32'h0;
         
-        $readmemh("gaussian.mem", ram_array);
+        $readmemh("reference/gaussian.mem", ram_array);
         $readmemh("program.hex", rom_array);
     end
 
