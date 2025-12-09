@@ -615,7 +615,67 @@ Quartus actually provides you with an RTL netlist diagram:
 
 ### Interrupts and Simulation
 
-We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave
+#### External Interupts
+
+We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave for debugging.
+
+This first test case shows a simple program where the address of the trap handler is first written into MTVEC, then global interrupts are enabled, and then external interrupts are enabled, then we turn on trigger in verify.cpp.cpp and that changes the value of a0 to CAFEBABE.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_interrupt.png)
+
+This is done in verify.cpp via turning on a0 for a few cycles:
+
+```
+	setupTest("interrupt_test"); 
+    initSimulation();
+    runSimulation(100);
+    top_->trigger = 1;
+    runSimulation(5); 
+    top_->trigger = 0; 
+    runSimulation(MAX_SIM_CYCLES);
+    EXPECT_EQ(top_->a0, 3405691582); // 0xCAFEBABE
+```
+We can see on gtkwave that after the trigger goes high, we escape the loop and a0 is set to CAFEBABE.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_gtk.png)
+
+#### Timer Interupts
+
+The next test was to set the clock; this once was a bit longer as I wanted to show how good programming practice would require saving the registers and then getting them back if using them in the trap handler (as they are not automatically saved by the hardware). 
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_interrupt.png)
+
+- Lines 12-17 just enable global and timer interrupts to allow the trap handler to be entered.
+- Lines 18-20 set the bottom LED to turn on.
+- Lines 21-25 set the timer to wait 500 cycles (this would be very fast on the FPGA, but for our purposes, this is fine).
+- Line 27 is an infinite wait loop.
+- Once the timer reaches 500, we enter the trap handler 
+- Lines 29-31 are the good programming practice I was talking about; they show how to save the registers in assembly.
+- Lines 32-34 just change the LED so we can see that the timer interrupt has occurred.
+- Lines 35-36 restart the timer (so this process repeats in 500 cycles).
+- Lines 37-39 get back the original registers.
+- Line 40 is mret, which returns to what we were doing before.
+
+This is done in verify.cpp by doing:
+```
+    setupTest("timer");
+    setData("reference/gaussian.mem");
+    initSimulation();
+    runSimulation(100);
+    EXPECT_EQ(top_->leds, 1); 
+    runSimulation(450); // over 500 cycles at this point (it's not exactly 500 cycles due to setting it up)
+    EXPECT_EQ(top_->leds, 255); 
+```
+
+Looking at GTKwave, we can see the LEDs flip after the time hits 500 and then flip back when it hits it the second time:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk1.png)
+
+After another ~500 cycles
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk2.png)
+
+
 
 ### FPGA
 
