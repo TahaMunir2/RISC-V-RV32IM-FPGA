@@ -202,6 +202,8 @@ To program the FPGA, we had to use a program called Quartus. We were able to put
 
 The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. For this imem block, we would also need to initialise its memory content using a program. mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. We initialise a new block inside our in-memory block like so:
 
+#### Memory:
+
 ```systemverilog
     imem_ram imem_inst (
         .clock   (clk),
@@ -253,6 +255,7 @@ And now we would need to call the new dmem_ram inside the datamem module:
 ```
 - Note **`raw_word`** is the word without load-size or load-sign logic implemented.
 
+#### Top:
 We must take note that, as reading memory is now synchronous, we must not pass the outputs of the memory blocks through the pipeline registers; instead, they can go straight to the next stage.
 
 However, this also means we must now change the logic, as our previous instructions assumed that we had synchronous reads. This includes adding a stall buffer in top, as when we call stall, our BRAM has already gotten our instruction, and if we don't hold onto it will get overwritten and lost:
@@ -280,6 +283,130 @@ We must also kill the cycle that occurs while we are branching, as even though w
 
     assign InstrF = (kill_cycle || rst) ? 32'h00000013 : // addi x0, x0, 0 or NOP
                     (Stall_Active) ? InstrD_Saved : InstrF_raw;
+```
+
+We also need to deal with RAW (read after write) hazards in the decode stage, while there are data dependancies in the writeback stage, by skipping the registers and forwarding directly:
+
+```systemverilog
+    always_comb begin
+    if (RegWriteW && (Rs1D != 0) && (Rs1D == RdW)) RD1D_Correct = ResultW;
+    else  RD1D_Correct = RD1D;
+
+    if (RegWriteW && (Rs2D != 0) && (Rs2D == RdW))  RD2D_Correct = ResultW;
+    else RD2D_Correct = RD2D;
+    end
+```
+
+Now that the hazards are all dealt with, we can focus on adding FPGA-specific hardware to our SystemVerilog code. This includes GPIO (for LEDS), 7-segment display mapping, a debouncer and an FPGA Wrapper.
+
+#### GPIO:
+
+The DE-10 lite has 10 addressable LEDs, so we can again use the unused memory addresses to map one address to change the pattern of the LEDs. We picked address 80002000 and store words instructions to that address would now be able to control the pattern by using the bottom 10 bits of the word they are storing, with each bit representing one of the LEDs. The actual mapping of LED bits to LEDS was done using a TCL file that will be described later.
+
+```systemverilog
+module gpio #(
+    parameter DATA_WIDTH = 32
+    )(
+    input  logic        clk,
+    input  logic        rst,
+    input  logic        we,
+    input  logic [DATA_WIDTH-1:0] data,
+    output logic [9:0]  leds     // 1 bit per LED
+);
+    always_ff @(posedge clk) begin
+        if (rst) leds <= 10'b0; // reset leds
+        else if (we) leds <= data[9:0]; // set leds
+    end
+```
+
+For the **`we`** signal, we made a simple assignment in top.sv:
+
+```systemverilog
+    assign gpio_wen = MemWriteM && (ALUResultM[DATA_WIDTH-1:0] == 32'h80002000);
+```
+
+#### 7-Segment Display:
+
+Since there are 6 7-segment displays, we can display the bottom 24 bits of a0 on the FPGA. To do this, we need to map 4 bits at a time to a display in the FPGA wrapper file and then map those displays in the TCL file.
+
+```systemverilog
+module sevensegment (
+    input  logic [3:0] hex_in,
+    output logic [7:0] hex_out 
+);
+    always_comb begin // for some reason the leds in a 7 segment display are active low
+        case (hex_in)
+            4'h0: hex_out = 8'b11000000;
+            4'h1: hex_out = 8'b11111001;
+            4'h2: hex_out = 8'b10100100;
+            4'h3: hex_out = 8'b10110000;
+            4'h4: hex_out = 8'b10011001;
+            4'h5: hex_out = 8'b10010010;
+            4'h6: hex_out = 8'b10000010;
+            4'h7: hex_out = 8'b11111000;
+            4'h8: hex_out = 8'b10000000;
+            4'h9: hex_out = 8'b10010000;
+            4'hA: hex_out = 8'b10001000;
+            4'hB: hex_out = 8'b10000011;
+            4'hC: hex_out = 8'b11000110;
+            4'hD: hex_out = 8'b10100001;
+            4'hE: hex_out = 8'b10000110;
+            4'hF: hex_out = 8'b10001110;
+            default: hex_out = 8'b1_1111111; // everything is off (1 is off and 0 is on)
+        endcase
+    end 
+endmodule
+```
+- Note: The bits on the 7-segment display are active low so to turn one on, we set it to 0.
+
+We can then define these in the FPGA wrapper as follows, with each segment being an output of the CPU:
+
+```systemverilog
+    sevensegment s0 ( // Lower 4 bits
+        .hex_in(cpu_a0[3:0]),
+        .hex_out(SEGMENT0)
+        ); 
+
+    sevensegment s1 (
+        .hex_in(cpu_a0[7:4]),   
+        .hex_out(SEGMENT1)
+        );
+
+    sevensegment s2 (
+        .hex_in(cpu_a0[11:8]),  
+        .hex_out(SEGMENT2)
+        );
+
+    sevensegment s3 (
+        .hex_in(cpu_a0[15:12]), 
+        .hex_out(SEGMENT3)
+        );
+
+    sevensegment s4 (
+        .hex_in(cpu_a0[19:16]), 
+        .hex_out(SEGMENT4)
+        );
+
+    sevensegment s5 ( // upper 4 bits
+        .hex_in(cpu_a0[23:20]), 
+        .hex_out(SEGMENT5)
+        ); 
+```
+
+#### Debouncer
+
+```systemverilog
+
+```
+
+
+```systemverilog
+
+```
+
+
+```systemverilog
+
 ```
 
 
