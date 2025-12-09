@@ -32,7 +32,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |       Branch prediction        |                        |                          |           **          |                   |                     |
 | Cache         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
-|               | Top Level Integration |                 *          |        *            |                   | **                  |
+|               | Top Level Integration |                 *          |        *            |                   |                  |
 |               | Unit Testing   |                        |                   |                 |    **                |
 | M-extension              |              Control Path          |                           |                 **     |                 |                      |
 |               |             ALU         |                           |                      |        **          |                      |
