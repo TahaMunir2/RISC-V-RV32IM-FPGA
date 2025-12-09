@@ -281,10 +281,12 @@ logic false_prediction;
 logic [1:0] LoadSizeDefault =2'b10;
 logic LoadUnsignedDefault = 0; //don't care
 
+logic cache_instruction_enable ;
+assign cache_instruction_enable =1'b1;
 
 l1i_cache l1i_cache_inst (
     .clk(clk),
-    .fetch(cache_enable),
+    .fetch(cache_instruction_enable),
     .addr(PCF),
     .line_from_mem(data_out_l2),
     .LoadSize(LoadSizeDefault),
@@ -296,13 +298,13 @@ l1i_cache l1i_cache_inst (
     .stall(stall_l1i)
 );
 
-logic cache_enable ;
-assign cache_enable =1'b1;
 
+logic cache_data_enable;
+assign cache_data_enable = (ResultSrcM == 2'b01);
 
 l1d_cache l1d_cache_inst (
     .clk(clk),
-    .fetch(cache_enable),
+    .fetch(cache_data_enable),
     .addr(ALUResultM),
     .wd(WriteDataM),
     .line_from_mem(data_out_l2),

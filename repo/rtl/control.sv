@@ -295,6 +295,7 @@ assign imm_11_5 = instr[31:25];
 
             // Store instructions
             OPC_STORE: begin
+                ResultSrc = 2'b01;
 
                 // SB
                 if (funct3 == 3'b000) begin
@@ -303,8 +304,7 @@ assign imm_11_5 = instr[31:25];
                     ALUSrc    = 1'b1;     // immediate
                     ImmSrc    = 3'b001;   // S-type imm
                     Branch     =0;    // normal PC+4
-                    Jump =0;
-                    ResultSrc = 2'b00;    // don't care
+                    Jump =0;   
                     MemWrite  = 1;        // write to memory
                     SizeWrite = 2'b00;    // BYTE
                 end
@@ -317,7 +317,6 @@ assign imm_11_5 = instr[31:25];
                     ImmSrc    = 3'b001;
                     Branch     =0;    // normal PC+4
                     Jump =0;
-                    ResultSrc = 2'b00;
                     MemWrite  = 1;
                     SizeWrite = 2'b01;    // HALFWORD
                 end
@@ -330,7 +329,6 @@ assign imm_11_5 = instr[31:25];
                     ImmSrc    = 3'b001;
                     Branch     =0;    // normal PC+4
                     Jump =0;
-                    ResultSrc = 2'b00;
                     MemWrite  = 1;
                     SizeWrite = 2'b10;    // WORD
                 end
@@ -666,3 +664,4 @@ assign imm_11_5 = instr[31:25];
         endcase
     end
 endmodule
+

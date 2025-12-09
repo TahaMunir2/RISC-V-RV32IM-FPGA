@@ -204,20 +204,28 @@ module l1d_cache #(
             // we don't update valid or dirty since we are only reading        
             cache[set].used = way; //now that way has been determined, assert current way as most recently used
             if (way == 1'b0) begin
-                case(block_offset)
-                2'b00: data_out = cache[set].block0.word0;
-                2'b01: data_out = cache[set].block0.word1;
-                2'b10: data_out = cache[set].block0.word2;
-                2'b11: data_out = cache[set].block0.word3;
-                endcase
-            end
+                        case(block_offset)
+                        2'b00: data_out = {cache[set].block0.word0.byte0, cache[set].block0.word0.byte1,
+                                        cache[set].block0.word0.byte2, cache[set].block0.word0.byte3};
+                        2'b01: data_out = {cache[set].block0.word1.byte0, cache[set].block0.word1.byte1,
+                                        cache[set].block0.word1.byte2, cache[set].block0.word1.byte3};
+                        2'b10: data_out = {cache[set].block0.word2.byte0, cache[set].block0.word2.byte1,
+                                        cache[set].block0.word2.byte2, cache[set].block0.word2.byte3};
+                        2'b11: data_out = {cache[set].block0.word3.byte0, cache[set].block0.word3.byte1,
+                                        cache[set].block0.word3.byte2, cache[set].block0.word3.byte3};
+                        endcase
+                    end
 
             else if (way == 1'b1) begin
                 case(block_offset)
-                2'b00: data_out = cache[set].block1.word0;
-                2'b01: data_out = cache[set].block1.word1;
-                2'b10: data_out = cache[set].block1.word2;
-                2'b11: data_out = cache[set].block1.word3;
+                2'b00: data_out = {cache[set].block1.word0.byte0, cache[set].block1.word0.byte1,
+                                cache[set].block1.word0.byte2, cache[set].block1.word0.byte3};
+                2'b01: data_out = {cache[set].block1.word1.byte0, cache[set].block1.word1.byte1,
+                                cache[set].block1.word1.byte2, cache[set].block1.word1.byte3};
+                2'b10: data_out = {cache[set].block1.word2.byte0, cache[set].block1.word2.byte1,
+                                cache[set].block1.word2.byte2, cache[set].block1.word2.byte3};
+                2'b11: data_out = {cache[set].block1.word3.byte0, cache[set].block1.word3.byte1,
+                                cache[set].block1.word3.byte2, cache[set].block1.word3.byte3};
                 endcase
             end
 
