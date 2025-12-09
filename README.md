@@ -631,7 +631,7 @@ The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ## 3. Schematic
 
-![diagram](ooofull.png)
+![diagram](ooofull_2.png)
 
 ---
 
