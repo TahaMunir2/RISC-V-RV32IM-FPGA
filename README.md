@@ -16,9 +16,8 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Control Unit            |        *                   |                       |                  |        **             |
 |               | Data Path        |           *                |            **           |                 |                       |
 |               | Sign Extend        |              *             |                       |           **        |                     |
-|               | Top File      |                  **       |                       |                   |                     |
+|               | Top Level Integration     |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |                    |        *       |               |
-|               |
 | Full 37 instructions implementation      | Control Unit             |                   |     **                  |                   |                       |
 |          | Data Path             |                       |                 **      |                  |                       |
 |        | Program Counter Block             |                       |                 **      |                   |                       |
