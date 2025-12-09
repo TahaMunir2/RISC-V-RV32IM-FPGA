@@ -26,7 +26,10 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Forwarding Logic            |                          |        **               |                   |                       |
 |               | Top File           | *                         |    *                   |      *             |                       |
 |               | Testing                     |                          |             *          | **                |                       |
-|       [Branch prediction](https://github.com/TahaMunir2/Team5/tree/branchprediction)        |                        |                          |           **          |                   |                     |
+|       [ Branch prediction](https://github.com/TahaMunir2/Team5/tree/branchprediction)        |          2-bit Branch Predictor Design                 |                          |           **          |                   |                     |
+|            |             Program Counter Logic Redefined         |                          |           **          |                   |                     |
+|            |       Top Level Integration                |                          |           **          |                   |                     |
+|            |     Testing and Verification                |                          |           **          |                   |                     |
 | [Hierarchical Cache](https://github.com/TahaMunir2/Team5/tree/Hierarchical-cache)         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
 |               | Top Level Integration |                 *          |        *            |                   |                  |
