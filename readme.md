@@ -44,5 +44,162 @@ Therefore, we need mstatus[3], mip[7] and mie[7] to all be high to enter the tra
 
 ### FPGA
 
-An FPGA (Field Programmable Gate Array) is a programmable integrated circuit which can form physical implementations of digital circuits described in HDLs. They are made of a matrix of configurable logic blocks (which can be further broken down into flip-flops, lookup tables and full adders) with configurable interconnects that allow FPGAs to create real digital circuits. The DE-10 lite FPGA that we were able to borrow from EEStore comes with 50,000 logic elements, 200 KB of BRAM, 6 7 segment displays and 10 individually addressable LEDs.
+An FPGA (Field Programmable Gate Array) is a programmable integrated circuit which can form physical implementations of digital circuits described in HDLs. They are made of a matrix of configurable logic blocks (which can be further broken down into flip-flops, lookup tables and full adders) with configurable interconnects that allow FPGAs to create real digital circuits. The DE-10 lite FPGA that we were able to borrow from EEStore comes with 50,000 logic elements, 200 KB of BRAM, 6 7-segment displays and 10 individually addressable LEDs.
 
+We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
+
+We were able to get a variety of instructions running on our FPGA, including arithmetic, store, load, jump and branch instructions, all running on our FPGA and partially get interrupts working as shown in the videos in the testing section however, it proved to be quite challenging as Quartus had quite a steep learning curve, we were limited for time and we couldn't simply pull out GTKWave everytime something went wrong which made debugging very challenging.
+
+
+## Implementation:
+
+### Interrupts:
+
+#### CSR:
+
+##### Initialisation:
+
+We simplified our 4096 address register to a register of size 7 with all other addresses mapping back to the mscratch register. This was so we didn't use up a whole lot of logic on the FPGA, but also because we would only be using these CSRs going forward. We did this using a case statement as shown below:
+
+```systemverilog
+    logic[DATA_WIDTH-1:0] csr_array[7];
+
+    always_comb begin
+        case(addr)
+            12'h300: mapped_address = 0; // mstatus 
+            12'h304: mapped_address = 1; // mie
+            12'h305: mapped_address = 2; // mtvec
+            12'h341: mapped_address = 3; // mepc
+            12'h342: mapped_address = 4; // mcause
+            12'h344: mapped_address = 5; // mip
+            default: mapped_address = 6; // scratch register
+        endcase
+
+        dout = csr_array[mapped_address]; 
+```
+
+We also needed to add logic to tell our CPU where to go (when going to or returning from the handler. **`mret_en`** is a signal from the control unit that tells us if an MRET assembly instruction has been called.
+
+```systemverilog
+  handler_address =   mret_en ? csr_array[3] : csr_array[2]; // are we going or returning
+```
+
+Some internal signals were defined for the interrupt logic with trap_en being an output signal to be used by the pc_block unit:
+
+```systemverilog
+    assign global_en = csr_array[0][3]; // the MIE bit allows all interrupts to occur
+    assign int_ext_en = csr_array[1][11]; // the MEIE bit tells us if an external interrupt can occur
+    assign int_tim_en = csr_array[1][7]; // the MTIE bit tells us if an external interrupt can occur
+    assign int_ext_p = csr_array[5][11]; // the MEIP bit tells us if there's an external interrupt pending
+    assign int_tim_p = csr_array[5][7]; // the MTIP bit tells us if there's a timer interrupt pending
+    assign trap_en = (global_en && ((int_ext_en && int_ext_p) || (int_tim_en && int_tim_p) ) );
+    // if interrupts are enabled and there is a certain type of interrupt pending, and that type is enabled, then enter the trap handler
+```
+
+And the interrupt logic is defined as shown:
+
+```systemverilog
+      csr_array[5][11] <= external_interrupt; // initialise pending que
+            csr_array[5][7] <= timer_interrupt; 
+
+            if(trap_en) begin
+
+                csr_array[3] <= PCE; // save the instruction we are on into mepc
+                csr_array[0][7] <= csr_array[0][3]; // save the value of MIE into MPIE
+                csr_array[0][3] <= 1'b0; // disable interrupts while we handle this one
+
+                if(int_ext_en && int_ext_p) csr_array[4] <= 32'h8000000B; // standard cause code for MEI
+                else if (int_tim_en && int_tim_p) csr_array[4] <= 32'h80000007; // standard cause code for MT
+           
+            end else if (mret_en) begin
+                
+                csr_array[0][3] <= csr_array[0][7]; // get back enable value
+                csr_array[0][7] <= 1'b1; // reset to 1
+                
+                end
+
+            else if(en) csr_array[mapped_address] <= temp; // we only fully write into the scratch register
+```
+
+##### Hazard Unit
+
+Obviously, for this new interrupt logic, we would need to update the Hazard Unit for flush logic as we discussed in the overview, adding a new em flush:
+
+```systemverilog
+        if (trap_en) begin 
+            flush_f_d    = 1'b1;
+            flush_d_exec = 1'b1;
+            flush_e_m    = 1'b1;
+        end
+
+        else if (mret_en) begin
+            flush_f_d = 1'b1;
+            flush_d_exec = 1'b1;
+        end
+```
+- Note: We don't flush the fd and de stages after mret is called in case there is some garbage data there.
+
+#### PC Block
+
+We also needed to update PC_block to jump to and from our new trap handler:
+
+```systemverilog
+    else if(trap_en || mret_en) internal_pc <= handler_address;
+```
+
+#### Timer
+```systemverilog
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            mtime     <= '0;
+            mtime_ref <= '1; // set to max value on reset so it doesn't trigger immediately
+        end else begin
+            // default
+            mtime <= mtime + 1;
+
+            if(we) begin
+                // lower 32 bits 
+                if (addr == 32'h80001000) begin
+                    mtime_ref[31:0] <= data;
+                    
+                    // Reset the counter to 0
+                    mtime <= '0; 
+                end
+                
+                // upper 32 bits
+                if (addr == 32'h80001004) begin
+                    mtime_ref[63:32] <= data;
+                end
+            end
+        end
+    end
+    
+
+    always_comb begin
+        if (mtime >= mtime_ref) 
+            timer_interrupt = 1'b1; // time is above ref
+        else 
+            timer_interrupt = 1'b0;
+    end
+```
+
+- We also implemented a Timer with the unused memory addresses 80001000 and 80001004 being used for the lower and upper 32 bits of the reference time, respectively. 
+- This meant store word instructions to those addresses actually set the time for the timer.
+- Once the time was set, the timer would restart and resend a high signal once it reached the reference time.
+- If untouched, the timer would not send out a timer interrupt for 1000s of years at a clock frequency of 50 MHz.
+
+##### Top Level Integration
+
+We needed to add some safeguarding for the **`we`** in the timer
+
+```systemverilog
+      assign timer_write_en = MemWriteM && (ALUResultM[31:4] == 28'h8000100);
+```
+
+### FPGA:
+
+
+
+```systemverilog
+
+```
