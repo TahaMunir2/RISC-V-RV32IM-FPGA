@@ -14,10 +14,3 @@ For this project, in accordance with the guidance provided in the Project Brief,
 
 
 
-
-https://github.com/user-attachments/assets/a9653630-7acd-4b2d-82f5-26503637fb27
-
-
-
-https://github.com/user-attachments/assets/ce9f71d5-9b74-4525-afd4-143ad1ea32ad
-
