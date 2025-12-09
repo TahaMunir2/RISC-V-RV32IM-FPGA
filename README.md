@@ -51,7 +51,42 @@ From the pipeline perspective, M instructions behave like ordinary R-type ALU op
 
 All previous RV32I ALU codes remain unchanged in the lower range.
 
-### 3. Control‑Path Changes for M Instructions
+### 2.2 Multiplication implementation
+
+The RV32M multiplication instructions (`MUL`, `MULH`, `MULHSU`, `MULHU`) are all implemented inside the main ALU as purely combinational operations that produce a full 64-bit product and then select either the low or high 32 bits, with the correct signed/unsigned interpretation of the operands.
+
+
+### 2.3. Division and remainder with edge cases
+The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
+•	DIV (ALUCtrl = 5'b10000)
+•	DIVU (ALUCtrl = 5'b10001)
+•	REM (ALUCtrl = 5'b10010)
+•	REMU (ALUCtrl = 5'b10011)
+They follow the RISC-V spec’s special cases:
+1.	Division by zero
+DIV / DIVU: result is −1 (all ones), i.e. 0xFFFFFFFF.
+REM / REMU: result is the original dividend (rs1).
+2.	Signed overflow (−2³¹ / −1):
+o	For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
+The result saturates to 0x80000000 (unchanged dividend).
+o	For REM in this special case, the remainder is 0.
+Implementation-wise, for DIV:
+5'b10000: begin // DIV
+    if (ALUop2 == 0) begin
+        ALUout = -1;
+    end
+    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
+        ALUout = 32'h80000000;
+    end
+    else begin
+        ALUout = $signed(ALUop1) / $signed(ALUop2);
+    end
+end
+and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
+Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
+
+
+## 3. Control‑Path Changes for M Instructions
 
 To support RV32M, the control unit (`control.sv`) was extended in two ways:
 

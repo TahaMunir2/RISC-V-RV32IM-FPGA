@@ -10,17 +10,42 @@ module alu#(
     output logic                   LTU
     );
 
+    
+logic [63:0] ALUop1_ext;
+logic [63:0] ALUop2_ext;
+logic [63:0] product;
 
-    logic [63:0] unsigned_mult; //I might need to get rid of these intermediaries
-    logic [63:0] signed_mult;   //because they are computed regardless of whether they are used
-    logic [63:0] signed_unsigned_mult; //... and I just did get rid of it
 
-    assign unsigned_mult = $unsigned(ALUop1) * $unsigned(ALUop2);
-    assign signed_mult = $signed(ALUop1) * $signed(ALUop2);
-    assign signed_unsigned_mult = $signed(ALUop1) * $unsigned(ALUop2);
 
-//extra signals:
-//branch signals: (currently we have EQ): LTU= Less Then Unsigned , LT = Less Then (Signed)
+always_comb begin
+    // default: something sensible
+    ALUop1_ext = $unsigned(ALUop1);
+    ALUop2_ext = $unsigned(ALUop2);
+
+    unique case (ALUCtrl)
+        5'b1100: begin // MUL: unsigned×unsigned low word
+            ALUop1_ext = $unsigned(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        5'b1101: begin // MULH: signed×signed high word
+            ALUop1_ext = $signed(ALUop1);
+			ALUop2_ext = $signed(ALUop2);
+        end
+        5'b1110: begin // MULHSU: signed×unsigned high word
+            ALUop1_ext = $signed(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        5'b1111: begin // MULHU: unsigned×unsigned high word
+            ALUop1_ext = $unsigned(ALUop1);
+			ALUop2_ext = $unsigned(ALUop2);
+        end
+        default: begin
+            // non-M ops: a_sel/b_sel values don't matter
+        end
+    endcase
+end
+
+assign product = ALUop1_ext * ALUop2_ext;
 
 
     always_comb
@@ -55,12 +80,10 @@ module alu#(
         5'b1001: ALUout = (ALUop1 < ALUop2) ? 32'b1 : 32'b0; // SLTU: Set Less Then Unsigned     
         5'b1010: ALUout = ALUop2; // Out = Entry for LUI: Load Upper Immediate
         5'b1011: ALUout = ALUop1 + ALUop2 - 32'd4;  // AUIPC : Add Upper Immediate and Program Counter (we need the current program counter: pc = pc_save -4)
-        5'b1100: ALUout = unsigned_mult[31:0]; //MUL
-        5'b1101: ALUout = signed_mult[63:32]; //MULH
-        5'b1110:
-            ALUout = signed_unsigned_mult[63:32]; //MULHSU
-        5'b1111:
-            ALUout = unsigned_mult[63:32]; //MULHU
+        5'b1100: ALUout = product[31:0]; //MUL
+        5'b1101: ALUout = product[63:32]; //MULH
+        5'b1110: ALUout = product[63:32]; //MULHSU
+        5'b1111: ALUout = product[63:32]; //MULHU
         5'b10000: begin //DIV
             if (ALUop2 == 0) begin
                 ALUout = -1;
