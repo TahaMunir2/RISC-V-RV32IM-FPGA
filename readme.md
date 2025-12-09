@@ -609,13 +609,19 @@ Quartus actually provides you with an RTL netlist diagram:
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/FPGA_schematic.png)
 
 
-## Testing
+## 4 Testing
+
+### Interupts and Simulation
+
+We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave
+
+### FPGA
+
+Our first successful port onto an FPGA showed us these statistics:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/fpga_stats.png)
+
+Which match up with the memory we expected.
 
 
-```systemverilog
 
-```
-
-```systemverilog
-
-```
