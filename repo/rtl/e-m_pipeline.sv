@@ -2,6 +2,7 @@ module e-m_pipeline #(
     DATA_WIDTH = 32
 ) (
     input logic clk,
+    input logic enable,
     // data logic
     input logic [DATA_WIDTH-1:0] pc_save_e,
     input logic [DATA_WIDTH-1:0] Rd_e,
@@ -29,20 +30,22 @@ module e-m_pipeline #(
 );
 
     always @(posedge clk) begin
-        // data
-        pc_save_m <= pc_save_e;
-        Rd_m <= Rd_e;
-        ALU_Result_m <= ALU_Result_e;
-        Write_Data_m <= Write_Data_e;
+        if (enable) begin
+            // data
+            pc_save_m <= pc_save_e;
+            Rd_m <= Rd_e;
+            ALU_Result_m <= ALU_Result_e;
+            Write_Data_m <= Write_Data_e;
 
 
-        // control
-        RegWrite_m <= RegWrite_e;
-        ResultSrc_m <= ResultSrc_e;
-        MemWrite_m <= MemWrite_e;
-        SizeWrite_m <= SizeWrite_e;
-        LoadSize_m <= LoadSize_e;
-        LoadUnsigned_m <= LoadUnsigned_e;
+            // control
+            RegWrite_m <= RegWrite_e;
+            ResultSrc_m <= ResultSrc_e;
+            MemWrite_m <= MemWrite_e;
+            SizeWrite_m <= SizeWrite_e;
+            LoadSize_m <= LoadSize_e;
+            LoadUnsigned_m <= LoadUnsigned_e;
+        end
     end
 
 endmodule

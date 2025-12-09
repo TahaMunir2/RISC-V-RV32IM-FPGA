@@ -1,4 +1,4 @@
-module main_memory #(
+module mainmemory #(
     parameter ADDRESS_WIDTH = 32,
     parameter DATA_WIDTH = 32,
     parameter RAM_SIZE = 131072,
