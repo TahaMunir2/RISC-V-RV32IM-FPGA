@@ -80,6 +80,9 @@ module l1d_cache #(
         end
     end
 
+    logic [DATA_WIDTH-1:0] wd_swapped;
+    assign wd_swapped = {wd[7:0], wd[15:8], wd[23:16], wd[31:24]};
+
     always_comb begin
          // hit detection
         hit0 = (cache[set].block0.tag == tag_bits && cache[set].block0.valid && fetch); // if the tags are the same, and its a valid set and we are working with the cache then its a hit0
@@ -172,7 +175,7 @@ module l1d_cache #(
                 if (MemWrite_m) begin // sb logic, determine size
                     wr_en = 1'b1;
                     wmask = '1;
-                    write_data = {4{wd}};
+                    write_data = {4{wd_swapped}};
 
                     if(SizeWrite_m == 2'b00) begin //sb
                         bottom_bit = block_offset * 32 + byte_offset * 8;
@@ -275,7 +278,10 @@ module l1d_cache #(
                 else begin
                     cache[set].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
                 end
-                cache[set].block0[127:0] <= (cache[set].block0[127:0] & ~wmask) | (write_data & wmask);
+                cache[set].block0.word0 <= write_data[127:96];
+                cache[set].block0.word1 <= write_data[95:64];
+                cache[set].block0.word2 <= write_data[63:32];
+                cache[set].block0.word3 <= write_data[31:0];
                 cache[set].block0.tag <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end
