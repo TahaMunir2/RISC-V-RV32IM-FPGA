@@ -6,6 +6,7 @@ module hazard_unit#(
     input logic [reg_addressing_width-1:0] rs2D,
     input logic [reg_addressing_width-1:0] rs1E, 
     input logic [reg_addressing_width-1:0] rs2E,
+    input logic                            branch_e,
     input logic [reg_addressing_width-1:0] rdM,
     input logic [reg_addressing_width-1:0] rdE, 
     input logic [reg_addressing_width-1:0] rdWB,
@@ -68,7 +69,7 @@ always_comb begin
     flush_d_exec = 0;
     flush_f_d = 0;
 
-    if(false_prediction || JumpE) begin
+    if((branch_e && false_prediction) || JumpE) begin
         flush_f_d = 1;
         flush_d_exec = 1;
     end

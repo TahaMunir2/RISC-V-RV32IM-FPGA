@@ -17,7 +17,7 @@ module fd_pipeline #(
 
     always @(posedge clk) begin
 
-        if (rst || flush) begin
+        if (rst || (flush && enable)) begin
             instr_d <= 32'h00000033;
             pc_d <= 0;
             pc_save_d <= 0;

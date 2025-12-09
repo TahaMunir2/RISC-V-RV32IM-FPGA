@@ -1,5 +1,7 @@
 module top #(
-    DATA_WIDTH = 32
+    parameter DATA_WIDTH = 32,
+    parameter ADDRESS_WIDTH = 32,
+    parameter BLOCK_SIZE = 8
 ) (
     input   logic clk,
     input   logic rst,
@@ -107,8 +109,6 @@ module top #(
      logic [1:0]LoadSizeE; 
      logic LoadUnsignedE;
      logic ALUSrc2E;
-     logic enable_de;
-     assign enable_de = 1;
      logic [1:0] PCSrcE;
 
 
@@ -142,6 +142,129 @@ logic pred_takenE;
 
 logic false_prediction;
 
+ logic stall_l1d, stall_l1i;
+
+     logic enable_fd;
+     logic enable_de;
+     logic enable_em;
+     logic enable_mw;
+     logic enable_pc_block;
+     logic enable_branch_predictor;
+
+    assign enable_fd = !(stall_l1i || stall_l1d);
+    assign enable_de = !(stall_l1i || stall_l1d);
+    assign enable_em = !(stall_l1i || stall_l1d);
+    assign enable_mw = !(stall_l1i || stall_l1d);
+    assign enable_branch_predictor = !(stall_l1i || stall_l1d);
+    assign enable_pc_block = !(stall_l1i || stall_l1d);
+
+
+    //we set default load size to 2'b10 because we always want to fetch a word :
+    logic [1:0] LoadSizeDefault =2'b10;
+    logic LoadUnsignedDefault = 0; //don't care
+
+    logic cache_instruction_enable ;
+    assign cache_instruction_enable =1'b1;
+
+    l1i_cache l1i_cache_inst (
+        .clk(clk),
+        .fetch(cache_instruction_enable),
+        .addr(PCF),
+        .line_from_mem(data_out_l2),
+        .LoadSize(LoadSizeDefault),
+        .LoadUnsigned(LoadUnsignedDefault),
+        .ready(ready_i),
+        .l2_addr(addr_i),
+        .l2_fetch(fetch_i),
+        .data_out(InstrF),
+        .stall(stall_l1i)
+    );
+
+logic cache_data_enable;
+assign cache_data_enable = (ResultSrcM == 2'b01) || MemWriteM;
+
+l1d_cache l1d_cache_inst (
+    .clk(clk),
+    .fetch(cache_data_enable),
+    .addr(ALUResultM),
+    .wd(WriteDataM),
+    .line_from_mem(data_out_l2),
+    .SizeWrite_m(SizeWriteM),
+    .MemWrite_m(MemWriteM),
+    .LoadSize(LoadSizeM),
+    .LoadUnsigned(LoadUnsignedM),
+    .ready(ready_d),
+    .wb_ready(wb_ready_d),
+    .data_out(ReadDataM),
+    .write_back(l1write_back_data),
+    .write_back_en(l1write_back_en),
+    .write_back_addr(l1write_back_addr),
+    .l2_addr(addr_d),
+    .l2_fetch(fetch_d),
+    .stall(stall_l1d)
+);
+
+logic fetch_i;
+logic fetch_d;
+logic [ADDRESS_WIDTH-1:0] addr_i;
+logic [ADDRESS_WIDTH-1:0] addr_d;
+logic [DATA_WIDTH*BLOCK_SIZE-1:0] line_from_mem;
+logic [DATA_WIDTH*4-1:0] l1write_back_data;
+logic l1write_back_en;
+logic [ADDRESS_WIDTH-1:0] l1write_back_addr;
+logic ready;
+logic ready_i;
+logic  ready_d;
+logic   wb_ready_d;
+logic [DATA_WIDTH*4-1:0] data_out_l2;
+
+l2_cache l2_cache_inst (
+    .clk(clk),
+    .fetch_i(fetch_i),
+    .fetch_d(fetch_d),
+    .addr_i(addr_i),
+    .addr_d(addr_d),
+    .line_from_mem(line_from_mem),
+    .l1write_back_data(l1write_back_data),
+    .l1write_back_en(l1write_back_en),
+    .l1write_back_addr(l1write_back_addr),
+    .ready(ready),
+    .wb_ready(wb_ready_mainmem),
+    .ready_i(ready_i),
+    .ready_d(ready_d),
+    .wb_ready_d(wb_ready_d),
+    .data_out(data_out_l2),
+    .write_back_data(w_data),
+    .write_back_addr(w_addr),
+    .write_back_en(w_en),
+    .main_mem_addr(r_addr),
+    .main_mem_fetch(r_en)
+);
+
+// Read Interface
+logic [ADDRESS_WIDTH-1:0] r_addr;
+logic r_en;
+
+// Write Interface
+logic [ADDRESS_WIDTH-1:0] w_addr;
+logic  w_en;
+logic [4*DATA_WIDTH-1:0]  w_data;
+logic wb_ready_mainmem;
+
+
+
+mainmemory main_memory (
+    .clk(clk),
+    .r_addr(r_addr),
+    .r_en(r_en),
+    .dout(line_from_mem),
+    .ready(ready),
+    .w_addr(w_addr),
+    .w_en(w_en),
+    .w_data(w_data),
+    .wb_ready(wb_ready_mainmem)
+);
+
 
     evalprediction evalprediction(
         .PCSrcE(PCSrcE),
@@ -166,6 +289,7 @@ logic false_prediction;
         .selectline2(ForwardBE),
         .flush_d_exec(flush_d_exec),
         .flush_f_d(flush_f_d),
+        .branch_e(BranchE),
         .F_Write(F_Write),
         .PCWrite(PCWrite),
         .JumpE(JumpE),
@@ -176,8 +300,8 @@ logic false_prediction;
     fd_pipeline fd_pip(
         .clk(clk),
         .rst(rst),
-        .flush(flush_f_d),/////////SEE WHAT TO PUT HERE
-        .enable(F_Write),/////////SEE WHAT TO PUT HERE
+        .flush(flush_f_d),
+        .enable(enable_fd && F_Write),
         .instr_f(InstrF),
         .pc_f(PCF),
         .pc_save_f(PCPlus4F),
@@ -282,10 +406,6 @@ logic false_prediction;
     );
 
 
-    insmem Instr_Mem (
-        .instr(InstrF),
-        .addr(PCF)
-    );
 
 logic actual_taken;
 logic [1:0] PCSrcF;
@@ -304,7 +424,7 @@ logic [1:0] PCSrcF;
     branchpredictor2bit branchpredictor (
         .clk(clk),
         .rst(rst),
-        .enable(BranchE),//enable signal for the FSM: we write in the FSM only when the instruction in the execute stage is a branch instruction
+        .enable(BranchE && enable_branch_predictor),//enable signal for the FSM: we write in the FSM only when the instruction in the execute stage is a branch instruction
         .update_index(PCE[7:2]), //index of that branch PC
         .actual_taken(actual_taken), //real outcome
         .predict_index(PCF[7:2]),//index from PC (we take the bus [7:2] corresponding to 6 bits from PC to identify the specific jump we are dealing with)
@@ -344,7 +464,7 @@ logic [31:0] target;
     pc_block pc_block (
         .clk(clk),
         .rst(rst),
-        .enable(PCWrite),
+        .enable(PCWrite && enable_pc_block),
         .Imm_op(target), //very important line 
         .pc_src(PCSrcF),
         .pc(PCF),
@@ -352,6 +472,7 @@ logic [31:0] target;
         .pc_save(PCPlus4F),
         .ALU(ALUResultE)
     );
+
 
      logic [4:0] AD2 = InstrD[24:20];
      logic [4:0] AD1 = InstrD[19:15];
@@ -430,6 +551,7 @@ em_pipeline em_pipeline(
     //control inputs coming from the previous pipeline register
     .rst(rst),
     .clk(clk),
+    .enable(enable_em),
     .RegWrite_e(RegWriteE),
     .ResultSrc_e(ResultSrcE),
     .MemWrite_e(MemWriteE),
@@ -460,16 +582,7 @@ em_pipeline em_pipeline(
 
 //data memory (Asynchronous input) :
 
-    datamem datamem(
-        .clk(clk),
-        .A(ALUResultM),
-        .dout(ReadDataM),
-        .MemWrite(MemWriteM),
-        .WD(WriteDataM),
-        .SizeWrite(SizeWriteM),
-        .LoadSize(LoadSizeM), //additional output signal
-        .LoadUnsigned(LoadUnsignedM) //additional output signal        
-    );
+
 
 
 
@@ -483,6 +596,7 @@ mw_pipeline mw_pipeline(
     .ResultSrc_w(ResultSrcW),
     .rst(rst),
     .clk(clk),
+    .enable(enable_mw),
 
 //inputs to the register processed in the memory stage
     .pc_save_m(PCPlus4M),

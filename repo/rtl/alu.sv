@@ -16,37 +16,34 @@ logic [63:0] ALUop2_ext;
 logic [63:0] product;
 
 
-
 always_comb begin
-    // default: something sensible
+    // default
     ALUop1_ext = $unsigned(ALUop1);
     ALUop2_ext = $unsigned(ALUop2);
 
     unique case (ALUCtrl)
-        5'b1100: begin // MUL: unsigned×unsigned low word
+        5'b1100: begin // MUL
             ALUop1_ext = $unsigned(ALUop1);
 			ALUop2_ext = $unsigned(ALUop2);
         end
-        5'b1101: begin // MULH: signed×signed high word
+        5'b1101: begin // MULH
             ALUop1_ext = $signed(ALUop1);
 			ALUop2_ext = $signed(ALUop2);
         end
-        5'b1110: begin // MULHSU: signed×unsigned high word
+        5'b1110: begin // MULHSU
             ALUop1_ext = $signed(ALUop1);
 			ALUop2_ext = $unsigned(ALUop2);
         end
-        5'b1111: begin // MULHU: unsigned×unsigned high word
+        5'b1111: begin // MULHU
             ALUop1_ext = $unsigned(ALUop1);
 			ALUop2_ext = $unsigned(ALUop2);
         end
         default: begin
-            // non-M ops: a_sel/b_sel values don't matter
         end
     endcase
 end
 
 assign product = ALUop1_ext * ALUop2_ext;
-
 
     always_comb
     begin
@@ -57,11 +54,6 @@ assign product = ALUop1_ext * ALUop2_ext;
         //the two instructions implemented
         if (ALUop1 == ALUop2) EQ = 1'b1;
         else EQ = 1'b0;
-
-        
-
-
-
 
         //the extra two signals for branch
         LT  = ($signed(ALUop1) < $signed(ALUop2));
@@ -75,10 +67,10 @@ assign product = ALUop1_ext * ALUop2_ext;
         5'b0100: ALUout = ALUop1 ^ ALUop2; // xor
         5'b0101 : ALUout = ALUop1 << (ALUop2 &32'h1F) ; // SLL
         5'b0110 : ALUout = ALUop1 >> (ALUop2 & 32'h1F) ; // SRL
-        5'b0111 : ALUout = $signed(ALUop1) >>> (ALUop2 & 32'h1F); //SRA : Shift Right Arithmetic
-        5'b1000: ALUout = ($signed(ALUop1) < $signed(ALUop2)) ? 32'b1 : 32'b0; // SLT: Set Less Then (Signed)
-        5'b1001: ALUout = (ALUop1 < ALUop2) ? 32'b1 : 32'b0; // SLTU: Set Less Then Unsigned     
-        5'b1010: ALUout = ALUop2; // Out = Entry for LUI: Load Upper Immediate
+        5'b0111 : ALUout = $signed(ALUop1) >>> (ALUop2 & 32'h1F); //SRA 
+        5'b1000: ALUout = ($signed(ALUop1) < $signed(ALUop2)) ? 32'b1 : 32'b0; // SLT
+        5'b1001: ALUout = (ALUop1 < ALUop2) ? 32'b1 : 32'b0; // SLTU
+        5'b1010: ALUout = ALUop2; // Out = Entry for LUI
         5'b1011: ALUout = ALUop1 + ALUop2 - 32'd4;  // AUIPC : Add Upper Immediate and Program Counter (we need the current program counter: pc = pc_save -4)
         5'b1100: ALUout = product[31:0]; //MUL
         5'b1101: ALUout = product[63:32]; //MULH
@@ -122,21 +114,8 @@ assign product = ALUop1_ext * ALUop2_ext;
                 ALUout = $unsigned(ALUop1) % $unsigned(ALUop2);
             end
         end
-        
-
-
-
-
+    
         default: ALUout = 32'b0;
         endcase
     end
 endmodule
-
-
-
-
-
-
-
-
-
