@@ -23,7 +23,7 @@
 - [4. Testing](#4-testing)
     - [4.1 Interrupts and Simulation](#interrupts-and-simulation)
         - [4.1.1 External Interrupts](#external-interupts)
-        - [4.1.2 Timer Interrupts](#timer-interupts)
+        - [4.1.2 Timer Interrupts](#timer-interrupts)
     - [4.2 FPGA](#fpga-2)
         - [4.2.1 LEDs and 7-Segment Displays Test](#leds-and-7-segment-displays-test)
         - [4.2.2 External Interrupt Test](#external-interrupt-test)
@@ -630,7 +630,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT4[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
 ```
 
-## 3 Schematics
+## 3 Schematic
 
 Quartus actually provides you with an RTL netlist diagram:
 
@@ -665,7 +665,7 @@ We can see on gtkwave that after the trigger goes high, we escape the loop and a
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_gtk.png)
 
-#### Timer Interupts
+#### Timer Interrupts
 
 The next test was to set the clock; this once was a bit longer as I wanted to show how good programming practice would require saving the registers and then getting them back if using them in the trap handler (as they are not automatically saved by the hardware). 
 
