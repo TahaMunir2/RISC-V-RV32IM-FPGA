@@ -55,8 +55,16 @@ For this project, in accordance with the guidance provided in the Project Brief,
 |               | Testing                       |                    |                  |               |                    |
 |               | [Fully Associative Cache]    |                           |                     |                   |                    |
 | M-extension              |                        |                           |                      |                  |                      |
-| Z-extension              |                        |                          |                      |                   |                      |
-| Interrupts & FPGA       |                        |                          |                      |                   |                      |
+| Z-extension              |          Zicsr            |          **                |                      |                   |                      |
+|                           |         Zba              |            **              |                      |                   |                      |
+|                           |         Testing               |         **                 |                      |                   |                      |
+| Interrupts & FPGA       |              Interrupts           |                          |                      |                   |                      |
+|                           |            Timer            |                          |                      |                   |                      |
+|                           |             Memory           |                          |                      |                   |                      |
+|                           |          MMIO        |                          |                      |                   |                      |
+|                           |          Top Level Integration              |                          |                      |                   |                      |
+|                           |              FPGA Wrapper         |                          |                      |                   |                      |
+|                           |          Testing             |                          |                      |                   |                      |
 |               |    Memory           |                           |                      |                 |                      |
 | Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |                      |                   |                      |
 |             |     Register-Update Unit                   |                           |                      |                   |                      |
