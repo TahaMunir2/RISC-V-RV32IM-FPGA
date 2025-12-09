@@ -3,7 +3,7 @@
 ## Table of Contents
 - [1. Overview](#1-overview)
 - [2. Implementation](#2-implementation)
-  - [2.1 Adapting Data Memory for Superscalar](#21-adapting-data-memory-for-superscalar)
+  - [2.1 Adapting Data Memory in the Out of Order Superscalar circuit](#21-adapting-data-memory-for-superscalar)
   - [2.2 Doubling the Common Data Bus Width](#22-doubling-the-common-data-bus-width)
   - [2.3 Load Instruction Integration](#23-load-instruction-integration)
 - [3. Schematic](#3-schematic)
@@ -404,13 +404,234 @@ input logic       dispatch2_LoadUnsigned,
 
 ### 2.3 Load Instruction Integration
 
+This section details the specific changes required to integrate load instructions into the out-of-order superscalar processor. We compare the arithmetic-only version with the load-enabled version to highlight each modification.
+
+#### Control Unit Expansion
+
+The control unit now generates additional signals for load instructions:
+
+**Before (arithmetic only):**
+```systemverilog
+sup_control control1 (
+    .instr(Instr1D),
+    .ALUCtrl(ALUCtrl1D),
+    .ALUSrc(ALU1Src1),
+    .ImmSrc(ImmSrc1D),
+    .ALUsrc2(ALU1Src2)
+);
+```
+
+**After (with loads):**
+```systemverilog
+sup_control control1 (
+    .instr(Instr1D),
+    .ALUCtrl(ALUCtrl1D),
+    .ALUSrc(ALU1Src1),
+    .ImmSrc(ImmSrc1D),
+    .ALUsrc2(ALU1Src2),
+    .ResultSrc(ResultSrc1D),      // New: 01 = load instruction
+    .LoadSize(LoadSize1D),        // New: byte/half/word
+    .LoadUnsigned(LoadUnsigned1D) // New: sign extension control
+);
+```
+
+| New Signal | Width | Purpose |
+|------------|-------|---------|
+| `ResultSrc` | 2 bits | `00` = ALU result, `01` = memory result |
+| `LoadSize` | 2 bits | `00` = byte, `01` = half, `10` = word |
+| `LoadUnsigned` | 1 bit | `0` = sign-extend, `1` = zero-extend |
+
+---
+
+#### Critical Change (Key design choice): Address Calculation in Decode Stage
+
+The most significant change in the Decode/Rename stage is **pre-computing the effective address** for load instructions.
+
+Load instructions have the form: `lw rd, offset(rs1)`
+
+The effective address is: `address = rs1 + offset`
+
+In the arithmetic-only design, operand 1 (`ALU_op1`) was simply the register value. For loads, we need to **add the immediate offset before storing in the RUU**.
+
+##### Implementation
+
+**Before (arithmetic only):**
+```systemverilog
+mux mux_ALU1_pcVSreg(
+    .in0(value_source1),
+    .in1(PCPlus8D - 8),
+    .sel(ALU1Src2),
+    .out(ALU1_op1D)      // Direct output to pipeline
+);
+```
+
+**After (with loads):**
+```systemverilog
+logic [DATA_WIDTH-1:0] tmp_ALU1_op1D;
+
+mux mux_ALU1_pcVSreg(
+    .in0(value_source1),
+    .in1(PCPlus8D - 8),
+    .sel(ALU1Src2),
+    .out(tmp_ALU1_op1D)  // Intermediate value
+);
+
+// If load instruction, pre-add the offset
+assign ALU1_op1D = (ResultSrc1D == 2'b00) ? tmp_ALU1_op1D : tmp_ALU1_op1D + ExtImm1D;
+```
+
+This means:
+- **Arithmetic instructions** (`ResultSrc == 00`): `ALU_op1 = rs1` (unchanged)
+- **Load instructions** (`ResultSrc == 01`): `ALU_op1 = rs1 + offset` (pre-computed address)
+
+##### Justifying This Design Choice
+
+This design decision involves a trade-off between **Decode stage complexity** and **RUU storage efficiency**.
+
+**Option A: Pre-compute address in Decode (Our Choice)**
+- Add an adder and mux in Decode stage
+- Store only the computed address in RUU
+
+**Option B: Store offset separately, compute in Execute**
+- Store both `rs1_value` (32 bits) AND `offset` (32 bits) in each RUU entry
+- Compute `rs1 + offset` in Execute stage
+
+We chose Option A for the following reasons:
+
+**1. RUU Entry Size Matters**
+
+Each RUU entry already stores:
+```
+valid (1) + issued (1) + dest_tag (6) + 
+src1_valid (1) + src1_tag (6) + src1_value (32) +
+src2_valid (1) + src2_tag (6) + src2_value (32) +
+ctrl (4) + ResultSrc (2) + LoadSize (2) + LoadUnsigned (1)
+= 95 bits per entry
+```
+
+Adding a separate 32-bit offset field would increase this to **127 bits per entry**. With 64 entries, this adds **2,048 bits (256 bytes)** of storage.
+
+**2. RUU Scan Performance**
+
+The RUU performs multiple operations that scan all 64 entries every cycle:
+- **Issue logic**: Find 2 oldest ready instructions
+- **Wake-up logic**: Compare 4 CDB tags against all waiting operands
+- **Free logic**: Find entries matching commit tags
+
+Larger entries mean:
+- More comparators and wider buses
+- Increased wire delay across the array
+- Higher power consumption
+
+**3. Decode Stage Can Absorb the Cost**
+
+The Decode stage already performs:
+- Control decoding (t_dec = 25 ps)
+- Register file read (t_RFread = 100 ps)
+- RAT/ROB lookups
+- Sign extension (t_ext = 35 ps)
+- Operand validity logic
+
+Adding one 32-bit adder in parallel with existing logic has minimal impact on the critical path, since:
+- The adder operates on `value_source1` (already available from regfile/ROB)
+- The immediate `ExtImm1D` is already computed by sign extension
+- A 32-bit adder delay ≈ 30-40 ps (similar to t_mux)
+
+**4. Pipeline Stage Timing Comparison**
+
+| Stage | Without Pre-compute | With Pre-compute |
+|-------|---------------------|------------------|
+| Decode | 245 ps | ~275 ps (+adder) |
+| RUU Scan | Slower (larger entries) | Faster (smaller entries) |
+| Execute | +adder for loads | No change |
+
+The Decode stage increase (~30 ps) is acceptable because:
+- Decode (275 ps) is still faster than Fetch (290 ps)
+- The clock period is limited by Fetch, not Decode
+- RUU efficiency benefits every cycle, not just load cycles
+
+The trade-off favors pre-computing: a small Decode stage penalty for significant RUU efficiency gains.
+
+---
+
+#### Conditional Writeback Enable
+
+A critical change: writeback enables are now **conditional** based on instruction type.
+
+**Before (arithmetic only):**
+```systemverilog
+// ROB writeback lways enabled
+.wb1_en(write_back_rob),  // Constant 1
+.wb1_tag(ALU1_tagE),
+.wb1_value(ALU1ResultE),
+```
+
+**After (with loads):**
+```systemverilog
+// Execute stage writeback only for arithmetic
+.wb1_en((ResultSrc1E == 2'b00)),  
+.wb1_tag(ALU1_tagE),
+.wb1_value(ALU1ResultE),
+
+// Memory stage writeback only for loads
+.wb3_en((ResultSrc1M == 2'b01)),  
+.wb3_tag(mem1_tag),
+.wb3_value(MemoryOut1),
+```
+
+This ensures:
+- **Arithmetic results** write back from Execute stage (immediate)
+- **Load results** write back from Memory stage (one cycle later)
+- No double-writeback for the same instruction
+
+---
+
+#### New Execute Memory Pipeline
+
+A completely new pipeline register is added:
+
+```systemverilog
+em_sup_pipeline em_pipeline(
+    .clk(clk),
+    .rst(rst),
+
+    // Control signals
+    .ResultSrc1_e(ResultSrc1E),
+    .LoadSize1_e(LoadSize1E), 
+    .LoadUnsigned1_e(LoadUnsigned1E),
+    .ResultSrc1_m(ResultSrc1M),
+    .LoadSize1_m(LoadSize1M), 
+    .LoadUnsigned1_m(LoadUnsigned1M),
+
+    .ResultSrc2_e(ResultSrc2E),
+    .LoadSize2_e(LoadSize2E), 
+    .LoadUnsigned2_e(LoadUnsigned2E),
+    .ResultSrc2_m(ResultSrc2M),
+    .LoadSize2_m(LoadSize2M), 
+    .LoadUnsigned2_m(LoadUnsigned2M),
+
+    // Address (computed in Execute, used in Memory)
+    .address1_e(ALU1_op1E),
+    .address1_m(A1),
+    .address2_e(ALU2_op1E),
+    .address2_m(A2),
+
+    // ROB tags (for writeback identification)
+    .ALU1_tagE(ALU1_tagE),
+    .ALU2_tagE(ALU2_tagE),
+    .ALU1_tagM(mem1_tag),
+    .ALU2_tagM(mem2_tag)
+);
+```
+
+The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ---
 
 
 ## 3. Schematic
 
-<!-- TODO: Circuit diagram showing memory integration -->
+
 
 ---
 
