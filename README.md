@@ -24,6 +24,7 @@
 |               | [Refactoring]            | X                         |                       |                   |                       |
 |               | [Top File]            | X                         |                       |                   |                       |
 |               | Testing [pdf](https://github.com/luju1108/Team14/blob/98bc1b035346cb44bc519077c4daae0fd198ed2f/RTL/README_PDF.md) [F1](https://youtu.be/59yWMzJzut0)                      | X                         |                       | X                 |                       |
+|       Branch prediction        |                        |                           |                     |                   |                     |
 | Cache         | [Direct Mapped Cache]    | C                         | X                     |                   | X                     |
 |               | RAM Refactor                  |                           | X                     |                   | X                     |
 |               | Data Memory                   |                           | X                     |                   | X                     |
@@ -32,3 +33,10 @@
 |               | Testing                       | X                         | X                     | X                 | X                     |
 |               | [Fully Associative Cache]    |                           | X                     |                   | X                     |
 |               | Testing                       |                           | X                     |                   | X                     |
+| M-extension              |                        |                           |                      |                   |                      |
+| Z-extension              |                        |                           |                      |                   |                      |
+| Interrupts & FPGA              |                        |                           |                      |                   |                      |
+| Superscalar              |                        |                           |                      |                   |                      |
+
+
+
