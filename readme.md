@@ -19,25 +19,25 @@ Now we need to define how interrupts can happen in our CPU. We will define 2 typ
 
 To allow these interrupts to occur, we need to define 7 special registers that will aid us with these interrupts:
 
-#### mtvec:
+#### mtvec: 0x305
 This CSR simply stores the address of where the trap handler program is stored. Theoretically, there are also utvec and stvec for the trap handlers of different privilege levels. This needs to be written by the programmer using the CSR instructions we previously defined, or else we will not know where to jump to for the trap handler. 
 
-#### mepc:
+#### mepc: 0x341
 This CSR stores the return address after we finish running the trap handler. This is written by the hardware right before we enter the trap handler.
 
-#### mecause:
+#### mecause: 0x342
 This CSR tells us what caused us to enter the trap handler. The top bit is high for interrupts (always will be true for our case) and low for exceptions. We set bit 7 for M-mode timer interrupts and bit 11 for M-mode external interrupts. This can be used by the trap handler to determine how to deal with the trap.
 
-#### mscratch:
+#### mscratch: 0x340
 This is an extra register that can be used for "scratch work"; it is essentially a general-purpose register.
 
-#### mstatus:
+#### mstatus: 0x300
 This is the status register; it is the global interrupt enable and tells us if any type of interrupt can occur (there are also interrupt-specific enables for each type of interrupt that we define later, and both need to be enabled for a trap to be taken). Bit 3 of mstatus tells us if interrupts can occur or not, and when an interrupt is called, that state is saved in bit 7 and bit 3 is overwritten with 0 (to stop infinite loops of going back into the trap handler) and bit 3 is restored once mret is called.
 
-#### mip:
+#### mip: 0x344
 This CSR tells us if there is an interrupt pending. When an interrupt comes in, either bit 7 (for timer interrupts) is set, or bit 11 is set (for external interrupts). This is so that an interrupt that comes in as a pulse is not missed if we are already in the trap handler, for example.
 
-#### mie:
+#### mie: 0x304
 This is the interrupt enable; bit 7 needs to be high for timer interrupts to be able to occur, and bit 11 for external interrupts. This needs to be set by the programmer. We can think of this like a local enable if mstatus is a global enable.
 
 Therefore, we need mstatus[3], mip[7] and mie[7] to all be high to enter the trap handler for a timer interrupt (and for external interrupts, replace the 7's with 11's).
