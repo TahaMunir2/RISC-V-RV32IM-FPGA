@@ -161,6 +161,7 @@ logic false_prediction;
         .selectline2(ForwardBE),
         .flush_d_exec(flush_d_exec),
         .flush_f_d(flush_f_d),
+        .branch_e(BranchE),
         .F_Write(F_Write),
         .PCWrite(PCWrite),
         .JumpE(JumpE),
@@ -273,8 +274,7 @@ logic false_prediction;
         .SizeWrite(SizeWriteD),
         .ALUsrc2(ALUSrc2D),
         .LoadSize(LoadSizeD),
-        .LoadUnsigned(LoadUnsignedD),
-        .l1d_enable(cache_data_enable)
+        .LoadUnsigned(LoadUnsignedD)
     );
 
 
@@ -301,6 +301,7 @@ l1i_cache l1i_cache_inst (
 
 
 logic cache_data_enable;
+assign cache_data_enable = (ResultSrcM == 2'b01) || MemWriteM;
 
 l1d_cache l1d_cache_inst (
     .clk(clk),
@@ -439,6 +440,7 @@ logic [31:0] target;
         .ALU(ALUResultE)
     );
 
+
     regfile regfile(
         .clk(clk),
         .trigger(trigger),
@@ -569,6 +571,8 @@ mw_pipeline mw_pipeline(
     .dout_w(ReadDataW)
 );
 
+
+    
     always_comb begin
         case (ResultSrcW)
             2'b00: ResultW = ALUResultW;     // ALU
@@ -578,8 +582,5 @@ mw_pipeline mw_pipeline(
         endcase
     end
 
-
 endmodule
-
-
 

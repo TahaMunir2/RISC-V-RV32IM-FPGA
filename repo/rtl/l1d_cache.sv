@@ -80,8 +80,8 @@ module l1d_cache #(
         end
     end
 
-    logic [DATA_WIDTH-1:0] wd_swapped;
-    assign wd_swapped = {wd[7:0], wd[15:8], wd[23:16], wd[31:24]};
+    logic [DATA_WIDTH-1:0] wd_aligned;
+    assign wd_aligned = wd << (byte_offset * 8);
 
     always_comb begin
          // hit detection
@@ -175,7 +175,7 @@ module l1d_cache #(
                 if (MemWrite_m) begin // sb logic, determine size
                     wr_en = 1'b1;
                     wmask = '1;
-                    write_data = {4{wd_swapped}};
+                    write_data = {4{wd_aligned}};
 
                     if(SizeWrite_m == 2'b00) begin //sb
                         bottom_bit = block_offset * 32 + byte_offset * 8;
@@ -207,28 +207,20 @@ module l1d_cache #(
             // we don't update valid or dirty since we are only reading        
             cache[set].used = way; //now that way has been determined, assert current way as most recently used
             if (way == 1'b0) begin
-                        case(block_offset)
-                        2'b00: data_out = {cache[set].block0.word0.byte0, cache[set].block0.word0.byte1,
-                                        cache[set].block0.word0.byte2, cache[set].block0.word0.byte3};
-                        2'b01: data_out = {cache[set].block0.word1.byte0, cache[set].block0.word1.byte1,
-                                        cache[set].block0.word1.byte2, cache[set].block0.word1.byte3};
-                        2'b10: data_out = {cache[set].block0.word2.byte0, cache[set].block0.word2.byte1,
-                                        cache[set].block0.word2.byte2, cache[set].block0.word2.byte3};
-                        2'b11: data_out = {cache[set].block0.word3.byte0, cache[set].block0.word3.byte1,
-                                        cache[set].block0.word3.byte2, cache[set].block0.word3.byte3};
-                        endcase
-                    end
+                case(block_offset)
+                2'b00: data_out = cache[set].block0.word0;
+                2'b01: data_out = cache[set].block0.word1;
+                2'b10: data_out = cache[set].block0.word2;
+                2'b11: data_out = cache[set].block0.word3;
+                endcase
+            end
 
             else if (way == 1'b1) begin
                 case(block_offset)
-                2'b00: data_out = {cache[set].block1.word0.byte0, cache[set].block1.word0.byte1,
-                                cache[set].block1.word0.byte2, cache[set].block1.word0.byte3};
-                2'b01: data_out = {cache[set].block1.word1.byte0, cache[set].block1.word1.byte1,
-                                cache[set].block1.word1.byte2, cache[set].block1.word1.byte3};
-                2'b10: data_out = {cache[set].block1.word2.byte0, cache[set].block1.word2.byte1,
-                                cache[set].block1.word2.byte2, cache[set].block1.word2.byte3};
-                2'b11: data_out = {cache[set].block1.word3.byte0, cache[set].block1.word3.byte1,
-                                cache[set].block1.word3.byte2, cache[set].block1.word3.byte3};
+                2'b00: data_out = cache[set].block1.word0;
+                2'b01: data_out = cache[set].block1.word1;
+                2'b10: data_out = cache[set].block1.word2;
+                2'b11: data_out = cache[set].block1.word3;
                 endcase
             end
 
@@ -278,10 +270,7 @@ module l1d_cache #(
                 else begin
                     cache[set].block0.dirty <= 1'b1; // if we are writing over it then it is dirty
                 end
-                cache[set].block0.word0 <= write_data[127:96];
-                cache[set].block0.word1 <= write_data[95:64];
-                cache[set].block0.word2 <= write_data[63:32];
-                cache[set].block0.word3 <= write_data[31:0];
+                cache[set].block0[127:0] <= (cache[set].block0[127:0] & ~wmask) | (write_data & wmask);
                 cache[set].block0.tag <= tag_bits;
                 cache[set].block0.valid <= 1'b1;
             end

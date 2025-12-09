@@ -14,8 +14,7 @@ module control #(
     output logic LoadUnsigned, //additional output signal
     output logic Jump,
     output logic Branch,
-    output logic [2:0] funct3OUT,
-    output logic l1d_enable
+    output logic [2:0] funct3OUT
 
 );
 
@@ -60,7 +59,6 @@ assign imm_11_5 = instr[31:25];
         ALUsrc2 = 0; //indicates if the second source of the ALU is rs1 (ALUsrc2 =0) or the current value of pc from pc_save (ALUsrc2 =1)
         LoadSize     = 2'b10; // default=word
         LoadUnsigned = 1'b0;  // signed by default
-        l1d_enable = 1'b0;
 
         case(op)
 
@@ -76,7 +74,6 @@ assign imm_11_5 = instr[31:25];
                         MemWrite  = 0;
                         SizeWrite = 0;
                         ALUsrc2 = 0;
-                        l1d_enable = 1'b0;
             end
             //Add Upper Immediate AND Program Counter and store it into the destination register (RD)
             OPC_AUIPC:begin  RegWrite  = 1;
@@ -89,7 +86,6 @@ assign imm_11_5 = instr[31:25];
                         MemWrite  = 0;
                         SizeWrite = 0;
                         ALUsrc2 = 1; //WE WANT THE VALUE OF PC AS OPERAND INTO THE ALU (AND NOT THE RS1) (but it is not the same value of pc because we need the value of pc of the current cycle and not the one corresponding to the next cycle)
-                        l1d_enable = 1'b0;
             end
             //Jump And Link
             OPC_JAL:begin    RegWrite = 1; // as we are saving the old value in the destination register specified when calling this instruction
@@ -101,7 +97,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b10; // don't care
                         MemWrite = 0; // don't care
                         SizeWrite = 0; // don't care
-                        l1d_enable = 1'b0;
             end
             // Jump And Link Register
             OPC_JALR:begin   RegWrite = 1; // as we are saving the old value
@@ -113,7 +108,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b10; // don't care
                         MemWrite = 0; // don't care
                         SizeWrite = 0; // don't care
-                        l1d_enable = 1'b0;
                        
             end
 //3 important signals in the branch instructions:
@@ -169,8 +163,7 @@ assign imm_11_5 = instr[31:25];
                             SizeWrite = 0;
                             Jump =0;
                             Branch =1;
-                            ResultSrc = 0; // don't care (no regfile write)      
-                            l1d_enable = 1'b0;   
+                            ResultSrc = 0; // don't care (no regfile write)         
                     end
                     
                     3'b001:begin
@@ -183,7 +176,6 @@ assign imm_11_5 = instr[31:25];
                             Jump =0;
                             Branch = 1;
                             ResultSrc = 0; //Don't care can take any value (because we are not writing to the regfile)
-                            l1d_enable = 1'b0;
                     end
 
                     //Less Then (Signed)
@@ -197,7 +189,6 @@ assign imm_11_5 = instr[31:25];
                             Jump =0;
                             Branch =1;
                             ResultSrc = 0; // don't care
-                            l1d_enable = 1'b0;
                     end
 
                     3'b101:begin
@@ -210,7 +201,6 @@ assign imm_11_5 = instr[31:25];
                             Jump =0;
                             Branch =1;
                             ResultSrc = 0; // don't care
-                            l1d_enable = 1'b0;
 
                     end
 
@@ -225,7 +215,6 @@ assign imm_11_5 = instr[31:25];
                             Jump =0;
                             Branch =1;
                             ResultSrc = 0; // don't care
-                            l1d_enable = 1'b0;
 
                     end
                     3'b111:begin
@@ -238,7 +227,6 @@ assign imm_11_5 = instr[31:25];
                             Jump =0;
                             Branch =1;
                             ResultSrc = 0; // don't care
-                            l1d_enable = 1'b0;
 
                     end
                     default:begin
@@ -252,7 +240,6 @@ assign imm_11_5 = instr[31:25];
                                 MemWrite  = 0; //enabling writing to memory
                                 SizeWrite = 0; //byte addressing or word addressing
                                 ALUsrc2 = 0; //indicates if the second source of the ALU is rs1 (ALUsrc2 =0) or the current value of pc from pc_save (ALUsrc2 =1);
-                                l1d_enable = 1'b0;
                     end
                 endcase
             end
@@ -270,7 +257,6 @@ assign imm_11_5 = instr[31:25];
                 MemWrite  = 0;
                 ResultSrc = 2'b01;
                 SizeWrite = 0; // don't care for loads
-                l1d_enable = 1'b1;
 
 
  //2 IMPORTANT ADDITIONAL SIGNALS FOR LOAD INSTRUCTIONS:
@@ -321,7 +307,6 @@ assign imm_11_5 = instr[31:25];
                     Jump =0;   
                     MemWrite  = 1;        // write to memory
                     SizeWrite = 2'b00;    // BYTE
-                    l1d_enable = 1'b1;
                 end
 
                 // SH
@@ -334,7 +319,6 @@ assign imm_11_5 = instr[31:25];
                     Jump =0;
                     MemWrite  = 1;
                     SizeWrite = 2'b01;    // HALFWORD
-                    l1d_enable = 1'b1;
                 end
 
                 // SW
@@ -347,7 +331,6 @@ assign imm_11_5 = instr[31:25];
                     Jump =0;
                     MemWrite  = 1;
                     SizeWrite = 2'b10;    // WORD
-                    l1d_enable = 1'b1;
                 end
 
             end
@@ -366,7 +349,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;     // from ALU
                     MemWrite  = 0;
                     ALUsrc2   = 0;         // operand A = rs1
-                    l1d_enable = 1'b0;
                 end
 
                 // SLTI (signed)
@@ -380,7 +362,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
-                    l1d_enable = 1'b0;
                 end
 
                 // SLTIU (unsigned)
@@ -394,7 +375,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
-                    l1d_enable = 1'b0;
                 end
 
                 //XORI
@@ -408,7 +388,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
-                    l1d_enable = 1'b0;
                 end
 
                 //ORI
@@ -422,7 +401,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
-                    l1d_enable = 1'b0;
                 end
 
                 //ANDI
@@ -436,7 +414,6 @@ assign imm_11_5 = instr[31:25];
                     ResultSrc = 2'b00;
                     MemWrite  = 0;
                     ALUsrc2   = 0;
-                    l1d_enable = 1'b0;
                 end
 
                 // SLLI (shift left logical imm)
@@ -451,7 +428,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         // illegal encoding (reserved imm[11:5])
@@ -472,7 +448,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else if (imm_11_5 == 7'b0100000) begin
                         // SRAI
@@ -485,7 +460,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         // illegal encoding for shift-immediate
@@ -520,7 +494,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;     // from ALU
                         MemWrite  = 0;
                         ALUsrc2   = 0;         // A = rs1
-                        l1d_enable = 1'b0;
                     end
 
                     // SUB
@@ -534,7 +507,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;          // illegal encoding
@@ -553,7 +525,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
@@ -572,7 +543,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
@@ -591,7 +561,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
@@ -610,7 +579,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
@@ -631,7 +599,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
 
                     // SRA
@@ -645,7 +612,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
 
                     else begin
@@ -665,7 +631,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
@@ -684,7 +649,6 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 2'b00;
                         MemWrite  = 0;
                         ALUsrc2   = 0;
-                        l1d_enable = 1'b0;
                     end
                     else begin
                         RegWrite = 0;
