@@ -19,7 +19,7 @@
         - [2.2.5 Debouncer](#debouncer)
         - [2.2.6 FPGA Wrapper](#fpga-wrapper)
         - [2.2.7 Pins](#pins)
-- [3. Schematics](#3-schematics)
+- [3. Schematic](#3-schematic)
 - [4. Testing](#4-testing)
     - [4.1 Interrupts and Simulation](#interrupts-and-simulation)
         - [4.1.1 External Interrupts](#external-interupts)
