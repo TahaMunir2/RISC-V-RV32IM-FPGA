@@ -436,12 +436,27 @@ The debouncing logic relies on 2 stages, one stage which removes metastability a
     end
 ```
 
-We then implement an edge detector in the FPGA wrapper because even after 20ms of holding the button will send a very large amount of external interrupts. Our Edge detector must operate under the logic that if the previous and next states are different, only then should the external interrupt go high.
-
-
+We then implement an edge detector in the FPGA wrapper because even after 20ms of holding the button will send a very large amount of external interrupts. Our Edge detector must operate under the logic that if the previous and next states are different, only then should the external interrupt go high. We use key[0] on the DE-10 lite as trigger.
 
 ```systemverilog
+   assign trigger_raw = ~KEY[0]; // active low
 
+    debouncer debouncer(
+        .clk(cpu_clk),
+        .rst(cpu_rst),
+        .trigger(trigger_raw),
+        .trigger_clean(trigger_clean)
+    );
+	
+	 logic trigger_clean_prev;
+	 logic trigger_pulse;
+		
+
+    always_ff @(posedge cpu_clk) begin
+        trigger_clean_prev <= trigger_clean;
+    end
+	 
+    assign trigger_pulse = trigger_clean && !trigger_clean_prev; // only high when trigger_clean is 1 and prev is 0
 ```
 
 
