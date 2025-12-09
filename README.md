@@ -4,10 +4,6 @@
 ## Introduction
 
 This Team Statement details the design and testing processes carried out by Team 5 for the implementation of the RISCV 32-bit CPU architecture, including a number of its extensions. 
-Our team are all very passionate about computer architecture, and we saw this assignment as an
-opportunity to do something great. We set ourselves incredibly ambitious goals, which were only achievable
-by working effectively as a team. For this reason, we have chosen to spend more time highlighting the
-results of our work in this document, with shorter individual statements to declare contributions.
 
 We all worked with passion, which we believe drove us to produce the results that we revel in.
 
