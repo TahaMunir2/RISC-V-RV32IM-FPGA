@@ -4,15 +4,15 @@
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (utsav254)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
-| General       | [Top Testbenches]          |             **              |              **         |        *         |                       |
-|               | [Subfile Testbenches]     | **                        | **                   | *               |                     |
+| General       | [Top Testbenches]          |                           |                    |                 |                       |
+|               | [Subfile Testbenches]     |                        |                    |                |                     |
 |               | [Shell Script]             |                       |                       |                   |                       |
 |               | [F1 Assembly]     |                        |                    |       **            |                       |
-| Single Cycle  | [Program Counter]        |                         |                       |            **       |                       |
+| Single Cycle  | [Program Counter]        |                         |                       |                  |                       |
 |               | [Main Decoder]        |                          |                  |                   |                       |
 |               | [Alu Decoder]           |                           |                       |                   |                  |
 |               | [Control Unit]             |                           |                       |                  |                     |
-|               | [Register File]         |                           |                       | X                 |                       |
+|               | [Register File]         |                           |                       |                 |                       |
 |               | [ALU]               |                         |                       |                 |                       | 
 |               | [Data Memory]          |                      |                       |                   |                     |
 |               | [Datapath]               |                           |                     |                 |                       |
@@ -35,7 +35,7 @@
 | M-extension              |                        |                           |                      |                  |                      |
 | Z-extension              |                        |                          |                      |                   |                      |
 | Interrupts & FPGA       |                        |                          |                      |                   |                      |
-|               |    Memory           |                           |                      |  *                |                      |
+|               |    Memory           |                           |                      |                 |                      |
 | Superscalar              |                        |                           |                      |                   |                      |
 
 
