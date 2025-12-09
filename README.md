@@ -199,6 +199,8 @@ These were the only changes we had to make for the Zba instructions in the ALU, 
 The main challenge was working out where to put this new CSR module. It made the most sense to integrate it into the Execute stage with the ALU, as it also operates on the regular registers, so we would not need to change any of the forwarding logic, as it is essentially an extended version of the ALU, but with its own register that only it deals with.
 
 ```systemverilog
+    assign csr_addrD = InstrD[31:20];
+
     csr csr ( // belongs in the execute stage
         .clk(clk),
         .CSR_OP(csr_typeE),
