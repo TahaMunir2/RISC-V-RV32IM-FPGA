@@ -58,13 +58,13 @@ For this project, in accordance with the guidance provided in the Project Brief,
 | Z-extension              |          Zicsr            |          **                |                      |                   |                      |
 |                           |         Zba              |            **              |                      |                   |                      |
 |                           |         Testing               |         **                 |                      |                   |                      |
-| Interrupts & FPGA       |              Interrupts           |                          |                      |                   |                      |
-|                           |            Timer            |                          |                      |                   |                      |
-|                           |             Memory           |                          |                      |                   |                      |
-|                           |          MMIO        |                          |                      |                   |                      |
-|                           |          Top Level Integration              |                          |                      |                   |                      |
-|                           |              FPGA Wrapper         |                          |                      |                   |                      |
-|                           |          Testing             |                          |                      |                   |                      |
+| Interrupts & FPGA       |              Interrupts           |       **                   |                      |                   |                      |
+|                           |            Timer            |             **             |                      |                   |                      |
+|                           |             Memory           |                          |                      |    **               |                      |
+|                           |          MMIO        |              **            |                      |                   |                      |
+|                           |          Top Level Integration              |        **                  |                      |                   |                      |
+|                           |              FPGA Wrapper         |              **            |                      |                   |                      |
+|                           |          Testing             |                **          |                      |                   |                      |
 | Out of Order Superscalar arithmetic            |     Register-Aliasing Table                   |                           |                      |                   |                      |
 |             |     Register-Update Unit                   |                           |                      |                   |                      |
 |             |     Re-Order Buffer                   |                           |                      |                   |                      |
