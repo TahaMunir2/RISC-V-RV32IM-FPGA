@@ -22,8 +22,8 @@ set_location_assignment PIN_B11 -to LED_FPGA[9]
 # Set Voltage for ALL LEDs
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_FPGA[*]
 
-# 4. 7-SEGMENT DISPLAYS (The part causing your error)
-# HEX0 -> SEGMENT0
+#3 Displays
+# SEGMENT0
 set_location_assignment PIN_C14 -to SEGMENT0[0]
 set_location_assignment PIN_E15 -to SEGMENT0[1]
 set_location_assignment PIN_C15 -to SEGMENT0[2]
@@ -33,7 +33,7 @@ set_location_assignment PIN_D17 -to SEGMENT0[5]
 set_location_assignment PIN_C17 -to SEGMENT0[6]
 set_location_assignment PIN_D15 -to SEGMENT0[7]
 
-# HEX1 -> SEGMENT1
+# SEGMENT1
 set_location_assignment PIN_C18 -to SEGMENT1[0]
 set_location_assignment PIN_D18 -to SEGMENT1[1]
 set_location_assignment PIN_E18 -to SEGMENT1[2]
@@ -43,7 +43,7 @@ set_location_assignment PIN_A18 -to SEGMENT1[5]
 set_location_assignment PIN_B17 -to SEGMENT1[6]
 set_location_assignment PIN_A16 -to SEGMENT1[7]
 
-# HEX2 -> SEGMENT2
+# SEGMENT2
 set_location_assignment PIN_B20 -to SEGMENT2[0]
 set_location_assignment PIN_A20 -to SEGMENT2[1]
 set_location_assignment PIN_B19 -to SEGMENT2[2]
@@ -53,7 +53,7 @@ set_location_assignment PIN_C22 -to SEGMENT2[5]
 set_location_assignment PIN_B22 -to SEGMENT2[6]
 set_location_assignment PIN_A19 -to SEGMENT2[7]
 
-# HEX3 -> SEGMENT3
+#  SEGMENT3
 set_location_assignment PIN_F21 -to SEGMENT3[0]
 set_location_assignment PIN_E22 -to SEGMENT3[1]
 set_location_assignment PIN_E21 -to SEGMENT3[2]
@@ -63,7 +63,7 @@ set_location_assignment PIN_D19 -to SEGMENT3[5]
 set_location_assignment PIN_E17 -to SEGMENT3[6]
 set_location_assignment PIN_D22 -to SEGMENT3[7]
 
-# HEX4 -> SEGMENT4
+#  SEGMENT4
 set_location_assignment PIN_F18 -to SEGMENT4[0]
 set_location_assignment PIN_E20 -to SEGMENT4[1]
 set_location_assignment PIN_E19 -to SEGMENT4[2]
@@ -73,7 +73,7 @@ set_location_assignment PIN_F19 -to SEGMENT4[5]
 set_location_assignment PIN_F20 -to SEGMENT4[6]
 set_location_assignment PIN_F17 -to SEGMENT4[7]
 
-# HEX5 -> SEGMENT5
+#SEGMENT5
 set_location_assignment PIN_J20 -to SEGMENT5[0]
 set_location_assignment PIN_K20 -to SEGMENT5[1]
 set_location_assignment PIN_L18 -to SEGMENT5[2]
@@ -83,7 +83,7 @@ set_location_assignment PIN_N19 -to SEGMENT5[5]
 set_location_assignment PIN_N20 -to SEGMENT5[6]
 set_location_assignment PIN_L19 -to SEGMENT5[7]
 
-# CRITICAL FIX: FORCE ALL SEGMENTS TO 3.3V
+# FORCE ALL SEGMENTS TO 3.3V
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT0[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT1[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT2[*]
