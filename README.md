@@ -459,37 +459,8 @@ And all the tests passed:
 
 https://github.com/user-attachments/assets/36d3a1a0-e795-473e-b112-f805138e5dc2
 
-```cpp
-TEST_F(CpuTestbench, F1StartLights)
-{
-    setupTest("f1");
 
-    initSimulation();
-
-    // Initialise VBuddy
-    vbdOpen();
-    vbdSetMode(1);
-
-    // Main simulation loop
-    for (int i = 0; i < MAX_SIM_CYCLES && !Verilated::gotFinish(); ++i)
-    {
-        // delay introduced
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        // Advance one clock cycle
-        runSimulation(1);
-
-        // Drive the bargraph with the lower 8 bits of the F1 output signal
-        vbdBar(top_->F1_SIGNAL & 0xFF);
-        // & 0xFF is to truncate the result to fit the number of LEDs
-    }
-
-    vbdClose();
-
-    // CpuTestbench::TearDown() will be called by gtest automatically
-}
-
-```
-
+Here is the assembly code that we used to implement the F1 countdown mechanism:
 ```
 
 .text
@@ -523,6 +494,40 @@ iloop:
 end:
     addi a0, zero, 0
 ```
+
+
+```cpp
+TEST_F(CpuTestbench, F1StartLights)
+{
+    setupTest("f1");
+
+    initSimulation();
+
+    // Initialise VBuddy
+    vbdOpen();
+    vbdSetMode(1);
+
+    // Main simulation loop
+    for (int i = 0; i < MAX_SIM_CYCLES && !Verilated::gotFinish(); ++i)
+    {
+        // delay introduced
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Advance one clock cycle
+        runSimulation(1);
+
+        // Drive the bargraph with the lower 8 bits of the F1 output signal
+        vbdBar(top_->F1_SIGNAL & 0xFF);
+        // & 0xFF is to truncate the result to fit the number of LEDs
+    }
+
+    vbdClose();
+
+    // CpuTestbench::TearDown() will be called by gtest automatically
+}
+
+```
+
+
 
     
 
