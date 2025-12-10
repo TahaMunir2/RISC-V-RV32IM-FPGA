@@ -19,7 +19,7 @@
   - [5.2 Top-Level Integration](#52-top-level-integration)
   - [5.3 Testing](#53-testing)
 - [6. Branch Prediction](#6-branch-prediction)
-  - [6.1 Branch Predictor (2-Bit Saturating Counter)](#61-branch-predictor-2-bit-saturating-counter)
+  - [6.1 Branch Predictor](#61-branch-predictor)
   - [6.2 PCSrcF Assertion Logic](#62-pcsrcf-assertion-logic)
   - [6.3 Top-Level Integration](#63-top-level-integration)
   - [6.4 Testing](#64-testing)
@@ -93,7 +93,7 @@
 
 ## 6. Branch Prediction
 
-### 6.1 Branch Predictor (2-Bit Saturating Counter)
+### 6.1 Branch Predictor
 
 
 ### 6.2 PCSrcF Assertion Logic
