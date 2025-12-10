@@ -6,14 +6,14 @@
 - [3 Schematic](#schematic)
 - [4 Testing](#testing)
 
-## 1 Overview
+## Overview
 
-## 2 Implementation
+## Implementation
 
-## 3 Schematic
+## Schematic
 
 ![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
 
-## 4 Testing
+## Testing
 https://github.com/user-attachments/assets/36d3a1a0-e795-473e-b112-f805138e5dc2
 
