@@ -736,7 +736,7 @@ At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
 
 1. Navigate to the testbench ( `tb` ) folder:
    ```bash
-   cd testbench
+   cd repo/tb
    ```
 
 2. Make scripts executable:
