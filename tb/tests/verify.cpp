@@ -91,6 +91,7 @@ TEST_F(CpuTestbench, TestShift)
     EXPECT_EQ(top_->a0, 8);
 }
 
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
