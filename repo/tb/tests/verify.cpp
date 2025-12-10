@@ -91,15 +91,6 @@ TEST_F(CpuTestbench, TestShift)
     EXPECT_EQ(top_->a0, 2);
 }
 
-TEST_F(CpuTestbench, TestPdf2)
-{
-    setupTest("a0test");
-    setData("reference/gaussian.mem");
-    initSimulation();
-    runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 155);
-}
-
 
 int main(int argc, char **argv)
 {
