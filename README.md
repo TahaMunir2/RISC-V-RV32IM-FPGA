@@ -175,12 +175,14 @@ The registers are made using a much smaller array of 32 32-bit registers used by
         RD2= regfile_array[AD2];
         A0 = regfile_array[10];
         regfile_array[0] = 0;
+        regfile_array[8][0] = trigger; // we do not use trigger for now, besides allocating it to the bottom bit of a random register we don't use in our asms 
     end
 ```
 
 - We have 2 read ports for the register
 - A0 is connected to x10 and is our output port
 - x0 is always 0 in RISCV
+- Trigger is implemented later in our FPGA implementation; for now, it just lets our CPU always run.
 
 #### Write Logic
 
@@ -411,5 +413,26 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 ![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
 
 ## Testing
+
+### Test Benches:
+
+For lab 4 (which covered the first 3 instructions), we made unit tests for every block:
+
+![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/units.png)
+
+With each test bench containing many test cases:
+
+![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/pc_tb.png)
+
+For a single cycle, we used the testbenches provided in the project brief for our testing:
+
+![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/asms.png)
+
+And all the tests passed:
+
+![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/singlecyclepass.png)
+
+### F1 Lights
+
 https://github.com/user-attachments/assets/36d3a1a0-e795-473e-b112-f805138e5dc2
 
