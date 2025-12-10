@@ -319,14 +319,6 @@ main:
 | 0x02 | 0x00 | `sb t1, 2(zero)` |
 | 0x03 | 0x00 | `sb t1, 3(zero)` |
 
-##### Word Construction (Little-Endian)
-
-```
-Address:    0x03    0x02    0x01    0x00
-Value:      0x00    0x00    0x01    0x01
-            ────────────────────────────
-Word:              0x00000101 = 257
-```
 
 ##### Expected Output
 ```
@@ -337,9 +329,6 @@ a0 = 257 (0x00000101)
 -`SB` (Store Byte) instruction
 - `LW` (Load Word) instruction
 - Little-endian byte ordering
-- Memory addressing with zero base register
-- Multi-byte value construction from individual bytes
-
 ---
 
 #### Test 8: Inequality Branching (`8_inequality_branching.s`)
@@ -389,7 +378,6 @@ a0 = 2
 - `BGEU` (Branch if Greater or Equal, unsigned)
 - Signed vs unsigned comparison semantics
 - Negative number handling in comparisons
-- Complex control flow with multiple branch targets
 
 ---
 
