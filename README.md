@@ -37,6 +37,8 @@ As shown in the diagram above, the processor reads and writes from the L1 caches
 We have also decided to implement the cache controller and cache array in the same SystemVerilog sheet for all of the caches due to simplicity when integrating all of the submodules into the CPU.
 
 ### 2.2 L1 Instruction Cache
+The instruction cache is reponsible for temporarily storing instructions so that they can be quickly accessed by the processor (control path).
+
 The specifications for our instruction cache are as follows:
 
 | Parameter | Selected Value |
@@ -108,9 +110,48 @@ end
 ```
 ### 2.3 L1 Data Cache
 
-#### Different Load Sizes
-Our data cache also supports different load sizes, with the cache being able to load only a single byte, 2 bytes (or half a word), or a full word (4 bytes). For our purposes though,
+The data cache is reponsible for storing data so that it can be quickly accessed by the processor (datapath). It also performs write-backs more efficiently, further increasing processor performance.
 
+The specifications for our data cache are as follows:
+
+| Parameter | Selected Value |
+| --------- | -------------- |
+| Total Cache Size | 4096 kB |
+| Associativity | 2 |
+| Block Size | 4 words |
+
+The data cache implements the same functions as the instruction cache, such as reading, LRU-based eviction, and loading data from the L2 cache. In addition, the data cache supports several more operations.
+
+#### Different Load Sizes
+Our data cache supports different load sizes, with the cache being able to load only a single byte, 2 bytes (or half a word), and a full word (4 bytes).
+
+```SystemVerilog
+// lw logic
+case (LoadSize)
+    // LB / LBU
+    2'b00: begin
+        bottom_bit = 8 * byte_offset;
+        if (LoadUnsigned)
+            data_out = {24'b0, data_out[bottom_bit[4:0] +:8]};
+        else
+            data_out = {{24{data_out[bottom_bit[4:0] + 7]}}, data_out[bottom_bit[4:0] +:8]};
+    end
+
+    // LH / LHU
+    2'b01: begin
+        bottom_bit = 16 * byte_offset;
+        if (LoadUnsigned)
+            data_out = {16'b0, data_out[bottom_bit[4:0] +:16]};
+        else
+            data_out = {{16{data_out[bottom_bit[4:0] + 15]}},data_out[bottom_bit[4:0]+:16]};
+    end
+
+    // LW
+    default: begin
+        data_out = data_out;
+    end
+endcase
+```
 ### 2.4 L2 Cache
 
 ## 3. Schematic
