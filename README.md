@@ -704,8 +704,33 @@ The signals causing the stall are also shown in the waveform.
 #### 4) Control Hazards: Branch Misprediction
 Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/Team5/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
 
+We will use the assembly code `6_beq` with a small modification consisting of adding 2 instructions after the branch to illustrate how a flush occurs to discard the incorrectly fetched instructions.
+```
+.text
+.globl main
+main:
+    addi t1, zero, 1
+    li a0, 0
+iloop:
+    addi a0, a0, 1
+    beq t1, a0, iloop
+    addi a0, a0, 0
+    addi a0, a0, 0
+```
+
+In the following waveform, we observe the flush signals high when `beq t1, a0, iloop` is in the Execute stage. 
+We identify that `beq t1, a0, iloop` is in the Execute stage using the `PCE` signal. 
+
+Crucialy we observe the value of the program counter being redirected correctly to the address of `iloop` corresponding to the value of the   ` (program counter at `beq t1, a0, iloop`) -4 ` : 
+
+Value of PCE for `beq t1, a0, iloop` in the Execute stage : **0xBFC0000C**
+
+At the next cycle the value of PCF is: **0xBFC00008** ( 'PCE - 4 ` )
+
+
 **Waveform:**
 
+![diagram](verifybranches.jpg)
 
 #### Running the code
 
