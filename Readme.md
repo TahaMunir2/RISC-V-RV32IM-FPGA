@@ -454,7 +454,7 @@ We created a c++ testbench ( `predictor_tb.cpp ` ) that isolates the branch pred
 
 Here are the results:
 
-![diagram](verifyingpredictor.png)
+![diagram](verifyingpredictor.jpg)
 
 
 ---
