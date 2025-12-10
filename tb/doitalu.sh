@@ -19,11 +19,14 @@ if [[ $# -eq 0 ]]; then
     # If no arguments provided, run all tests
     files=(${TEST_FOLDER}/*.cpp)
 else
-    # If arguments provided, use them as input files
-    files=("$@")
+    # If arguments provided, resolve them to absolute paths
+    files=()
+    for arg in "$@"; do
+        files+=("$(realpath "$arg")")
+    done
 fi
 
-cd $SCRIPT_DIR
+cd "$SCRIPT_DIR"
 
 # Wipe previous test output
 rm -rf test_out/*
@@ -33,15 +36,15 @@ for file in "${files[@]}"; do
     name=$(basename "$file" _tb.cpp | cut -f1 -d\-)
 
     # If verify.cpp -> we are testing the top module
-    if [ $name == "alu" ]; then
+    if [ "$name" == "alu" ]; then
         name="alu"
     fi
 
     # Translate Verilog -> C++ including testbench
     verilator   -Wall --trace \
-                -cc ${RTL_FOLDER}/${name}.sv \
-                --exe ${file} \
-                -y ${RTL_FOLDER} \
+                -cc "${RTL_FOLDER}/${name}.sv" \
+                --exe "$file" \
+                -y "${RTL_FOLDER}" \
                 --prefix "Vdut" \
                 -o Vdut \
                 -CFLAGS "-std=c++17 -isystem /opt/homebrew/opt/googletest/include" \
