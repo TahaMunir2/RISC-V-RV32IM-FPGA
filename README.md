@@ -1050,7 +1050,7 @@ We created a testbench ( `rat_tb.cpp ` , in ` tb/tests ` ) that verifies the RAT
 
 Here are the results:
 
-[diagram](verifyingrat.jpg)
+![diagram](verifyingrat.jpg)
 
 ---
 
@@ -1098,7 +1098,7 @@ We created a testbench ( `rob_tb.cpp ` , in ` tb/tests ` ) that verifies the ROB
 
 Here are the results:
 
-[diagram](verifyingrob.jpg)
+![diagram](verifyingrob.jpg)
 
 
 ---
@@ -1133,7 +1133,7 @@ We created a testbench ( `ruu_tb.cpp ` , in ` tb/tests ` ) that verifies the RUU
 
 Here are the results:
 
-[diagram](verifyingruu.jpg)
+![diagram](verifyingruu.jpg)
 
 
 ---
