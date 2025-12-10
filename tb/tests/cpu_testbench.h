@@ -87,7 +87,7 @@ public:
     void setData(const std::string &data_file)
     {
         // Fill data.hex with program data
-        std::ignore = system(("cp " + data_file + " data.hex").c_str());
+        std::ignore = system(("cp " + data_file + " reference/data.hex").c_str());
     }
 
 protected:
