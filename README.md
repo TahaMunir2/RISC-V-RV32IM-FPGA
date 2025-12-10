@@ -721,11 +721,11 @@ iloop:
 In the following waveform, we observe the flush signals high when `beq t1, a0, iloop` is in the Execute stage. 
 We identify that `beq t1, a0, iloop` is in the Execute stage using the `PCE` signal. 
 
-Crucialy we observe the value of the program counter being redirected correctly to the address of `iloop` corresponding to the value of the   ` (program counter at `beq t1, a0, iloop`) -4 ` : 
+Crucialy we observe the value of the program counter being redirected correctly to the address of `iloop` corresponding to the value of the   ` (program counter at beq t1, a0, iloop) -4 ` : 
 
 Value of PCE for `beq t1, a0, iloop` in the Execute stage : **0xBFC0000C**
 
-At the next cycle the value of PCF is: **0xBFC00008** ( 'PCE - 4 ` )
+At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
 
 
 **Waveform:**
