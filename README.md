@@ -155,7 +155,7 @@ end
 - The write logic is clocked since reading does not alter the memory, but writing does, so we need it to only do so when we are absolutely ready.
 - MemWrite tells us if the instruction is a Store Word instruction, hence requiring writing to the memory; else, we must NOT write to it.
 
-### Registers
+### Register File
 
 The registers are made using a much smaller array of 32 32-bit registers used by the instructions. 
 
@@ -173,6 +173,166 @@ The registers are made using a much smaller array of 32 32-bit registers used by
 - x0 is always 0 in RISCV
 
 #### Write Logic
+
+```systemverilog
+    always_ff @(posedge clk) begin
+        if(WE3) regfile_array[AD3] <= WD3;
+    end
+```
+- WE3 is an input from the decoder that tells us if we are supposed to be writing to the register or not.
+- WD3 is the input that tells us what we should write into AD3.
+- We only have 1 write port.
+
+### Decoder
+
+Our decoder takes the 32-bit instruction and breaks it down into different segments to determine what logic we should perform for that given instruction.
+
+#### Initialisation
+```systemverilog
+logic [6:0] op;
+logic [2:0] funct3;
+logic [6:0] funct7;
+assign op = instr[6:0];
+assign funct3 = instr[14:12];
+assign funct7 = instr [31:25];
+```
+
+The 3 segments that the decoder uses are the OPcode, the funct3 (if available) and the funct7 (if available) to determine what type of instruction we are decoding. The OPcode is always mapped to the bottom 7 bits, and the locations of funct3 and funct7 don't change; however, whether they are available depends on the type of instruction, however. They simply aren't used if they don't exist for that OPcode.
+
+![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/functions.png)
+
+#### Control Signals
+
+Here, we describe what each type of control signal does and set them to 0 to prevent latching:
+
+```systemverilog
+always_comb begin
+    RegWrite  = 0; // 1 for writing 
+    ALUCtrl   = 3'b000; // determines operation of alu
+    ALUSrc    = 0; // imm (1) or rd2 (0) for alu
+    ImmSrc    = 3'b000; // determines type of sign extension
+    PCSrc     = 2'b00; // determines next pc
+    ResultSrc = 2'b00; // alu result(0) or RD[alu_result] (1)
+    MemWrite  = 0; // write enable for data mem
+    ByteWrite = 0; // determines if we are doing word(0) or byte(1) logic
+```
+
+#### Instructions
+
+Here, we reassign control signals for each instruction; later on, we will not assign signals to 0 (as they already have been), but we do it here to help illustrate what each signal does and where they do and don't matter.
+
+```systemverilog
+// i type instructions
+    if (op == 7'b0010011) begin  // ADDI
+        if (funct3 == 3'b0) begin
+            RegWrite = 1; // enable write to write the result into
+            ALUCtrl = 3'b000; // addition
+            ALUSrc = 1; // we need imm for addi
+        end
+    end
+
+    else if (op == 7'b1100011) begin  // BNE
+        if (funct3 == 3'b001) begin
+            ALUCtrl = 3'b001; // subtraction
+            ImmSrc = 3'b010; // type of signext for bne
+            if (EQ == 0) begin
+                PCSrc = 1; // pc + imm
+            end
+        end
+    end
+
+    else if (op == 7'b0110011) begin
+        if (funct3 == 3'b000)  begin
+            if (funct7 == 7'b0000000) begin // ADD
+                RegWrite = 1; // we are writing into rd
+                ALUCtrl = 3'b000; // we are adding
+                ALUSrc = 0; // use ALU_op2
+            end
+        end
+    end
+
+    else if (op== 7'b0000011) begin
+        if (funct3 == 3'b010) begin // LW
+            RegWrite=1;
+            ALUSrc = 1'b1; // we need the imm to write 
+            ImmSrc = 3'b000; //must be 00 because it is an immediate type instruction
+            ResultSrc = 1; //we are writing the output of the data mem to the regfile
+        end
+    else if (funct3 == 3'b100) begin // LBU
+            RegWrite=1;
+            ALUSrc = 1'b1; 
+            ImmSrc = 3'b000; //must be 000 because it is an immediate type instruction
+            ResultSrc = 1; //we are writing the output of the data mem to the regfile
+            ByteWrite = 1; // bytwwise logic
+        end
+    end
+
+    else if (op == 7'b1100111) begin // JALR    
+        RegWrite = 1; // as we are saving the old value
+        ALUCtrl = 3'b0; // we need to add r1 and imm
+        ALUSrc = 1; // to add imm
+        ImmSrc = 3'b000; // 000 for jalr  instruction
+        PCSrc = 2'b10; // for adding an offset to PC and register
+        ResultSrc = 2'b10; // for jump instruction
+    end
+
+    // S type instructions
+    else if (op == 7'b0100011) begin // SB
+        ALUCtrl  = 3'b000; // adding rs1 and imm
+        ALUSrc   = 1; // we need imm
+        ImmSrc   = 3'b001;  // for store
+        MemWrite = 1; // need to write into memory
+        ByteWrite = 1; // byte wise logic
+    end
+
+    // J type instructions
+    else if (op == 7'b1101111) begin // JAL 
+        RegWrite = 1; // as we are saving the old value
+        ALUCtrl = 3'b0; // doesn't matter, ALU not used
+        ALUSrc = 0; // // doesn't matter
+        ImmSrc = 3'b011; // 11 for j type instruction
+        PCSrc = 1; // for adding an offset to PC
+        ResultSrc = 2'b10; // for jump instruction
+    end
+
+    // U type instructions
+    else if (op == 7'b0110111) begin // LUI 
+        RegWrite = 1; // to write into R[Rd]
+        ALUCtrl = 3'b100; // just makes ALUout rd
+        ALUSrc = 1; // we need to use the imm
+        ImmSrc = 3'b100; // 4 for U type instructions
+    end
+end
+```
+
+### Sign Extender
+
+The Immediate we get from the instruction will always be less than 32 bits; however, its location, length and type of extension we need to apply varies from instruction to instruction as shown by the diagram above. Hence, we must use a case statement as below:
+
+```systemverilog
+always_comb begin
+    if (ImmSrc == 3'b000) begin   // for I instructions
+        immext = {{20{instr[31]}}, instr[31:20]};
+    end
+    else if (ImmSrc == 3'b001) begin // for S instructions
+        immext = {{20{instr[31]}}, instr[31:25], instr[11:7]};
+    end
+    else if (ImmSrc == 3'b010) begin // for B instructions
+        immext = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+    end
+
+    else if (ImmSrc == 3'b100) begin // for U instructions
+        immext = {{instr[31:12]}, 12'b0};
+    end
+
+    else if (ImmSrc == 3'b011) begin  // for J instructions
+        immext = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+    end
+    
+
+    else immext = 32'b0;
+end
+```
 
 
 ## Schematic
