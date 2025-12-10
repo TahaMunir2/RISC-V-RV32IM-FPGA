@@ -608,5 +608,49 @@ selectline2  = 2'b00
 
 ### 4.2 Full Pipeline Testing
 
+This section verifies the pipelined design through four test scenarios, each targeting a specific aspect of pipeline behavior and hazard handling.
+
+#### 1) Pipelined Overlapping (No Hazards)
+This test demonstrates correct instruction overlapping in the pipeline when no data or control hazards are present, confirming that multiple instructions execute simultaneously across different pipeline stages.
+
+Here is the assembly code run by the processor and the results are shown in the waveform below:
+
+
+**Waveform:**
+
+
+---
+
+#### 2) Data Hazards: Read After Write (RAW)
+This test verifies the forwarding unit by demonstrating how RAW hazards are resolved through the forwarding muxes, showing the change in the forward select lines when a dependent instruction requires data from a previous instruction still in the pipeline.
+
+**Waveform:**
+
+
+**Forwarding Mux Select Lines:**
+
+
+---
+
+#### 3) Load-Use Hazards
+This test demonstrates the 1-cycle stall required when a load instruction is immediately followed by a dependent instruction. The stall is achieved by:
+- Disabling (freezing) the FD pipeline register for 1 cycle
+- Preventing the program counter from incrementing for 1 cycle
+- Flushing the DE pipeline register
+
+**Waveform:**
+
+
+**Stall Signal Behavior:**
+
+
+---
+
+#### 4) Control Hazards: Branch Misprediction
+Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/Team5/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
+
+**Waveform:**
+### 4.2 Full Pipeline Testing
+
 ---
 
