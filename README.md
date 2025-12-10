@@ -8,7 +8,6 @@
   - [2.3 Load Instruction Integration](#23-load-instruction-integration)
 - [3. Schematic](#3-schematic)
 - [4. Testing & Verification](#4-testing--verification)
-- [5. References](#5-references)
 
 ---
 
