@@ -328,12 +328,58 @@ always_comb begin
     else if (ImmSrc == 3'b011) begin  // for J instructions
         immext = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
     end
-    
-
-    else immext = 32'b0;
+    else immext = 32'b0; // no Imm
 end
 ```
 
+- Note there is actually no sign extension happening for U instructions, just bit shifting
+- For J instructions, the last bit is always 0, as we can't jump to half of an instruction
+
+### ALU
+
+The ALU is the Arithmetic Logic Unit, where register and immediate operations happen, with the type of operation happening depending on the input ALUCtrl.
+
+```systemverilog
+    always_comb
+    begin
+        //default to avoid latches
+        ALUout = 0;
+        EQ = 1'b0;
+
+        if (ALUop1 - ALUop2 == 0) EQ = 1'b1;
+        else EQ = 1'b0;
+
+        case (ALUctrl)
+        3'b000 : ALUout = ALUop1 + ALUop2; // add
+        3'b001 : ALUout = ALUop1 - ALUop2; // subtract
+        3'b010 : ALUout = ALUop1 & ALUop2; // and
+        3'b011 : ALUout = ALUop1 | ALUop2; // or
+        3'b100: ALUout = ALUop2; // for LUI
+        default: ALUout = 32'b0;
+        endcase
+    end
+```
+- We added some extra operations that would be useful in future additions, such as AND and OR.
+- We use the EQ "flag" for branch instructions that depend on equality of the registers.
+
+
+### Top
+
+We need to add some multiplexers in the top-level file to determine the inputs to certain modules:
+
+To determine what we are writing to the register, we use this MUX:
+
+```systemverilog
+    always_comb begin
+        case (ResultSrc)
+            2'b00: write_to_reg = output_ALU;     // ALU
+            2'b01: write_to_reg = output_DataMem; // Memory
+            2'b10: write_to_reg = pc_save;        // for jump instructions
+            default: write_to_reg = 32'b0;
+        endcase
+    end
+```
+We also have a MUX in our top-level schematic (below) for determining PC; however, we implemented that one in the PC_block.
 
 ## Schematic
 
