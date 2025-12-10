@@ -310,8 +310,11 @@ end
 
 ```
 The forwarding logic compares decoded operands rs1E and rs2E with the destination registers rdM and rdWB:
+
 •	If the instruction in the MEM stage writes a register (regWriteM = 1) and its destination rdM matches the operand in EX, then the operand should be forwarded from MEM.
+
 •	Else if the instruction in the WB stage writes a register (WriteBack_Regfile = 1) and its destination rdWB matches, then forward from WB.
+
 •	Register x0 is never forwarded, so matches must ignore rd = 0.
 
 
@@ -333,8 +336,11 @@ What this diagram does not cover is how the hazard unit tackles load word data d
 Why forwarding ignores loads here
 Even though this logic covers most RAW hazards, it does not prevent a load word hazard, because a load instruction does not produce valid data until the end of the MEM stage. In such cases, forwarding would still not provide the correct value in time, which is why the Hazard Unit must insert a stall (described in Section 4).
 Forwarding entirely removes stalls that would otherwise be caused by data dependencies for:
+
 •	ALU-to-ALU dependency chains (e.g., add, sub, and, or, etc.)
+
 •	Immediate arithmetic dependencies (e.g., addi, ori)
+
 •	Register-producing control instructions if value is known early (e.g., jalr)
 
 #### 4. Load word data dependency
