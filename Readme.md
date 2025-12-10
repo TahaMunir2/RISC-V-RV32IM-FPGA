@@ -425,10 +425,119 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ### 4.1 Branch Predictor Testing
 
+We created a c++ testbench ( `predictor_tb.cpp ` ) that isolates the branch predictor module and verifies the correct FSM transitions across all four states: STRONGLY_NOT_TAKEN, WEAKLY_NOT_TAKEN, WEAKLY_TAKEN, and STRONGLY_TAKEN.
+
+**Tests performed:**
+- **Initial State:** All entries initialize to WEAKLY_NOT_TAKEN after reset
+- **State Transitions:** Correct transitions on taken/not-taken outcomes
+- **Saturation:** Counter remains at STRONGLY_TAKEN or STRONGLY_NOT_TAKEN when saturated
+- **Misprediction Tolerance:** Two consecutive mispredictions required to flip prediction
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doitpredictor.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doitpredictor.sh tests/predictor_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verifypredictor.png)
+
 
 ---
 
 ### 4.2 Full Circuit Testing
+
+For examination, we will use the assembly program : `1_addi_bne`
+
+```
+.text
+.globl main
+# this is a modified version of the Lab4 test program
+# which doesn't run in an infinite loop
+main:
+    addi    t1, zero, 0xff      # t1 = 255
+    addi    a0, zero, 0x0       # output = 0
+mloop:
+    addi    a1, zero, 0x0       # i = 0
+iloop:
+    addi    a0, a1, 0           # output = i
+    addi    a1, a1, 1           # i++
+    bne     a1, t1, iloop       # if i != 255, goto iloop
+    bne     a0, zero, finish    # enter finish state
+
+finish:      # expected result is 254
+    bne     a0, zero, finish     # loop forever
+```
+
+This program runs an inner loop that counts a1 from 0 up to 255, continuously copying the current value of i into a0, so when the loop stops a0 holds 254 (the last value before the branch fails).
+
+##### Correct Prediction (No Flush)
+
+When the branch predictor correctly predicts the branch outcome, no pipeline flush occurs and execution continues without penalty.
+
+Since the branch predictor's initial state is `WEAKLY_NOT_TAKEN`, it will start prediciting correctly at the second iteration of the loop. 
+
+In the following waveform, we observe that the value of `PCF` ( PC at the fetch stage) decreases by 8 (jumps back by 2 to `iloop`) automaticaly when the branch instruction is fetched.
+
+Thus, we avoid the penalty of waiting 2 extra cycles (until the branch instruction reaches the Execute stage) to jump back to the correct address. 
+
+Note that:
+- `0xFE659CE3` corresponds to the instruction : ` bne     a1, t1, iloop `
+- `0x00058513` corresponds to the instruction : ` bne     a0, a1, 0 `
+
+
+**Waveform:**
+
+![diagram](verifycorrectpred.jpg)
+
+
+##### Performance Comparison
+Comparison of pipeline behavior with and without branch prediction, showing reduced flush cycles for predictable branch patterns.
+
+**Without Branch Prediction:**
+
+
+**With Branch Prediction:**
+
+
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x assemble.sh
+   chmod +x doit.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verify.jpg)
 
 
 ---
