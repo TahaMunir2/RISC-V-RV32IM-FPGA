@@ -3,7 +3,8 @@ module top #(
 ) (
     input   logic clk,
     input   logic rst,
-    output  logic [DATA_WIDTH-1:0] a0,  
+    input   logic trigger,
+    output  logic [DATA_WIDTH-1:0] a0
 );
     
 
@@ -62,6 +63,7 @@ module top #(
         .clk(clk),
         .A0(a0),
         .EQ(EQ),
+        .trigger(trigger),
         .AD3(instr[11:7]),
         .AD2(instr[24:20]),
         .AD1(instr[19:15]),

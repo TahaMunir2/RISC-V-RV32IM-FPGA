@@ -3,6 +3,7 @@ module regfile#(
     REG_FILE_WIDTH=32
     )(
     input logic clk,
+    input logic trigger,
     input logic [DATA_WIDTH-1:0] WD3,
     input logic WE3,
     input logic [4:0] AD3,
@@ -24,6 +25,7 @@ module regfile#(
         RD2= regfile_array[AD2];
         A0 = regfile_array[10];
         regfile_array[0] = 0;
+        regfile_array[8][0] = trigger;
     end
 
     

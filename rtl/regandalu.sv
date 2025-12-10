@@ -3,6 +3,7 @@ module regandalu#(
     )(
     input logic clk,
     input logic WE3,
+    input logic trigger,
     input logic MemWrite,
     input logic ByteWrite,
     input logic [DATA_WIDTH-1:0] pc_save,
@@ -40,6 +41,7 @@ module regandalu#(
 
 
     regfile regfile(
+        .trigger(trigger),
         .clk(clk),
         .WD3(write_to_reg), 
         .AD3(AD3),
