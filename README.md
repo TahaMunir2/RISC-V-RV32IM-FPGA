@@ -8,7 +8,7 @@
 
 ## Overview
 
-This section goes over the baseline foundation of our RV32I CPU. Working on the single-cycle CPU gave our team an introduction to working with each other and designing and testing a CPU using SystemVerilog and shell script testing environments. Our single-cycle CPU implements the following 9 instructions:
+This section goes over the baseline foundation of our RV32I CPU and includes the work covered in Lab 4. Working on the single-cycle CPU gave our team an introduction to working with each other and designing and testing a CPU using SystemVerilog and shell script testing environments. Our single-cycle CPU implements the following 9 instructions:
 
 
 | # | Mnemonic | Type | Opcode (binary) | funct3 | funct7   | Brief description                            |
