@@ -463,7 +463,7 @@ Here are the results:
 
 For examination, we will use the assembly program : `1_addi_bne`
 
-```
+```assembly
 .text
 .globl main
 # this is a modified version of the Lab4 test program
