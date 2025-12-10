@@ -34,7 +34,8 @@ We can break our implementation into each new module we have made for our RV32I 
 ### PC 
 
 
-#### Inputs:
+#### Inputs
+
 ```systemverilog
     input logic clk,
     input logic [WIDTH-1:0] Imm_op, 
@@ -51,6 +52,7 @@ We can break our implementation into each new module we have made for our RV32I 
 - We output pc_save for saving return addresses for jump instructions
 
 #### Logic
+
 ```systemverilog
 logic [WIDTH-1:0] branch_pc, inc_pc, internal_pc;
 assign branch_pc = internal_pc+Imm_op;
@@ -69,6 +71,7 @@ always_ff @(posedge clk)
     end
 assign pc = internal_pc;
 ```
+
 - Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
@@ -85,6 +88,7 @@ Our instruction memory effectively acts like a ROM:
         $readmemh("program.hex", rom_array);
     end
 ```
+
 - It will have a size of 4096 in line with the memory map
 -We will initialise it using the program.hex, which is the byte converted version of our asm file using the assemble.sh script.
 
@@ -102,6 +106,7 @@ Our instruction memory effectively acts like a ROM:
             instr = 32'b0; 
         end
 ```
+
 - We remove the offset from the address so we can have an array that starts with index 0
 - If we are trying to access an address that isn't in the instruction memory, then don't output anything (illegal operation).
 
@@ -110,6 +115,7 @@ Our instruction memory effectively acts like a ROM:
 Our data memory is very similar to the instruction memory, but it is a RAM instead, meaning that in addition to reading from it, we can write to it as well.
 
 #### Initialisation
+
 ```systemverilog
 logic [7:0] ram_array [2**17-1:0];
 
@@ -118,10 +124,12 @@ initial begin
     $readmemh("reference/gaussian.mem", ram_array, 0x10000);
 end
 ```
+
 - We now make an array of size 131,072 in compliance with our memory map.
 - We read from gaussian.mem for the pdf.s testcase provided in the project brief. To pass the test, we need an offset of 0x10,0000.
 
 #### Read Logic
+
 ```systemverilog
 always_comb begin
     if(ByteWrite) begin
@@ -160,6 +168,7 @@ end
 The registers are made using a much smaller array of 32 32-bit registers used by the instructions. 
 
 #### Read Logic:
+
 ```systemverilog
     always_comb begin
         RD1= regfile_array[AD1];
@@ -168,6 +177,7 @@ The registers are made using a much smaller array of 32 32-bit registers used by
         regfile_array[0] = 0;
     end
 ```
+
 - We have 2 read ports for the register
 - A0 is connected to x10 and is our output port
 - x0 is always 0 in RISCV
@@ -179,6 +189,7 @@ The registers are made using a much smaller array of 32 32-bit registers used by
         if(WE3) regfile_array[AD3] <= WD3;
     end
 ```
+
 - WE3 is an input from the decoder that tells us if we are supposed to be writing to the register or not.
 - WD3 is the input that tells us what we should write into AD3.
 - We only have 1 write port.
@@ -188,6 +199,7 @@ The registers are made using a much smaller array of 32 32-bit registers used by
 Our decoder takes the 32-bit instruction and breaks it down into different segments to determine what logic we should perform for that given instruction.
 
 #### Initialisation
+
 ```systemverilog
 logic [6:0] op;
 logic [2:0] funct3;
@@ -359,6 +371,7 @@ The ALU is the Arithmetic Logic Unit, where register and immediate operations ha
         endcase
     end
 ```
+
 - We added some extra operations that would be useful in future additions, such as AND and OR.
 - We use the EQ "flag" for branch instructions that depend on equality of the registers.
 
@@ -379,6 +392,18 @@ To determine what we are writing to the register, we use this MUX:
         endcase
     end
 ```
+
+To determine if the 2nd operator in the ALU comes from the register or is an immediate:
+
+```systemverilog
+        mux mux(
+        .in0(regOp2),
+        .in1(ImmOp),
+        .sel(ALUsrc),
+        .out(ALUop2)
+    );
+```
+
 We also have a MUX in our top-level schematic (below) for determining PC; however, we implemented that one in the PC_block.
 
 ## Schematic
