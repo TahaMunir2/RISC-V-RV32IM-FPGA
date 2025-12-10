@@ -527,6 +527,62 @@ end:
 
 
 ### PDF tests
+```cpp
+TEST_F(CpuTestbench, noisy)
+{
+
+    setupTest("5_pdf");
+    setData("reference/noisy.mem"); // the .mem file from which we read was changed for each test
+
+
+    // Create Vdut, set up tracing, reset, etc.
+    initSimulation();
+
+    // Initialise VBuddy
+    vbdOpen();
+    vbdSetMode(1);
+    vbdHeader("Single PDF");
+
+
+    const int MAX_FUNC_CYC = 1000650;   // this gives pdf.s enough time to build the PDF
+    int  bins = 0;     // display-cycle counter
+    bool display = false;
+    int  prev_a0 = top_->a0; // value of a0 before display phase, which will allow us to track when it first changes
+    
+    // Main simulation loop
+    for (int i = 0;i <MAX_FUNC_CYC && !Verilated::gotFinish(); ++i)
+    {
+
+        runSimulation(1);
+
+
+
+        // display turns on the first time the program changes a0
+        if (!display && top_->a0 != prev_a0) {
+            prev_a0 = top_->a0;
+            display = true;
+        }
+
+        if (display) {
+                ++bins;
+
+                // a0 only changes every 4 instructions in display loop
+                // so that we can fit the shape in a single or less windows
+                //we can change this value as we see fit, which we did during testing and documentation (see videos)
+                 if (bins % 4 == 0) {
+                    vbdCycle(i);
+                    vbdPlot(int(top_->a0) & 0xFF, 0, 255);
+                 }
+            // }
+        }
+    }
+
+    vbdClose();
+
+    // CpuTestbench::TearDown() will be called by gtest automatically
+}
+```
+
 #### triangle.mem
 
 
