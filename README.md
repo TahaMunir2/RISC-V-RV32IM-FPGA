@@ -23,6 +23,9 @@ This section goes over the baseline foundation of our RV32I CPU. Working on the 
 | 8 | `JAL`    | J    | `1101111`       | –      | –        | PC-relative jump, write return PC to `rd`.   |
 | 9 | `LUI`    | U    | `0110111`       | –      | –        | Load 20-bit upper immediate into `rd`.       |
 
+> *In the reduced version, `JALR` is treated as its own control-flow case and the funct3 field is not fully generalised.
+
+To do so, we had to implement a control path and a datapath for our CPU, as well as learning how to initialise the ROM and RAM with memory.
 
 ## Implementation
 
