@@ -1,5 +1,5 @@
 module insmem #(
-    parameter DATA_WIDTH = 32,
+    parameter DATA_WIDTH = 32
 )(
     input  logic [DATA_WIDTH-1:0] addr,
     output logic [DATA_WIDTH-1:0] instr
@@ -9,14 +9,14 @@ module insmem #(
 
     initial begin
         $display("Loading rom.", );
-        $readmemh("program.hex", rom_array, 32'hBFC00000);
+        $readmemh("program.hex", rom_array);
     end
 
-    logic [ADDR_WIDTH-1 : 0] local_addr;
+    logic [DATA_WIDTH-1 : 0] local_addr;
 
     always_comb begin // asynchronous read
-        local_addr = addr - BASE_ADDR;
-        if (addr >= BASE_ADDR && local_addr < (MEM_DEPTH - 3)) begin
+        local_addr = addr - 32'hBFC00000;
+        if (addr >= 32'hBFC00000 && local_addr < (2**12 - 3)) begin
             instr = {
                 rom_array[local_addr + 3], 
                 rom_array[local_addr + 2], 
