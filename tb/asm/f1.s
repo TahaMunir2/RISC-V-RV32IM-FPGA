@@ -5,6 +5,7 @@ main:
     li t2, 1
     li a0, 0
     jal t3, iloop
+    jal t3, end
 iloop:
     li a0, 0
     bne t1, zero, iloop
@@ -24,5 +25,8 @@ iloop:
     bne t1, zero, iloop
     addi    a0, a0, 128
     bne t1, zero, iloop
-    jalr t3, t3, -4
+    jalr t3, t3, 0
+end:
+    addi a0, zero, 0
+
     
