@@ -585,7 +585,25 @@ selectline2  = 2'b00
 - Both F/D and D/EX pipeline registers are flushed
 - No unnecessary stall of PC or fetch stage
 
+---
+```bash
+[==========] Running 4 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 4 tests from HazardUnitTestbench
+[ RUN      ] HazardUnitTestbench.ForwardOperand1FromMem
+[       OK ] HazardUnitTestbench.ForwardOperand1FromMem (1 ms)
+[ RUN      ] HazardUnitTestbench.LoadUseStall
+[       OK ] HazardUnitTestbench.LoadUseStall (1 ms)
+[ RUN      ] HazardUnitTestbench.ForwardOperand2FromWb
+[       OK ] HazardUnitTestbench.ForwardOperand2FromWb (0 ms)
+[ RUN      ] HazardUnitTestbench.BranchFlushWithoutStall
+[       OK ] HazardUnitTestbench.BranchFlushWithoutStall (0 ms)
+[----------] 4 tests from HazardUnitTestbench (4 ms total)
 
+[----------] Global test environment tear-down
+[==========] 4 tests from 1 test suite ran. (4 ms total)
+[  PASSED  ] 4 tests.
+```
 ---
 
 ### 4.2 Full Pipeline Testing
