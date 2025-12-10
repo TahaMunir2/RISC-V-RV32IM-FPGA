@@ -458,7 +458,72 @@ And all the tests passed:
 
 https://github.com/user-attachments/assets/36d3a1a0-e795-473e-b112-f805138e5dc2
 
+```cpp
+TEST_F(CpuTestbench, F1StartLights)
+{
+    setupTest("f1");
 
+    initSimulation();
+
+    // Initialise VBuddy
+    vbdOpen();
+    vbdSetMode(1);
+
+    // Main simulation loop
+    for (int i = 0; i < MAX_SIM_CYCLES && !Verilated::gotFinish(); ++i)
+    {
+        // delay introduced
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Advance one clock cycle
+        runSimulation(1);
+
+        // Drive the bargraph with the lower 8 bits of the F1 output signal
+        vbdBar(top_->F1_SIGNAL & 0xFF);
+        // & 0xFF is to truncate the result to fit the number of LEDs
+    }
+
+    vbdClose();
+
+    // CpuTestbench::TearDown() will be called by gtest automatically
+}
+
+```
+
+```
+
+.text
+.globl main
+main:
+    li t1, 0
+    li t2, 1
+    li a0, 0
+    jal t3, iloop
+    jal t3, end
+iloop:
+    li a0, 0
+    bne t1, zero, iloop
+    addi    a0, a0, 1
+    bne t1, zero, iloop
+    addi    a0, a0, 2
+    bne t1, zero, iloop
+    addi    a0, a0, 4
+    bne t1, zero, iloop
+    addi    a0, a0, 8
+    bne t1, zero, iloop
+    addi    a0, a0, 16
+    bne t1, zero, iloop
+    addi    a0, a0, 32
+    bne t1, zero, iloop
+    addi    a0, a0, 64
+    bne t1, zero, iloop
+    addi    a0, a0, 128
+    bne t1, zero, iloop
+    jalr t3, t3, 0
+end:
+    addi a0, zero, 0
+```
+
+    
 
 
 ### PDF tests
