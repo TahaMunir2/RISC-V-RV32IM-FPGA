@@ -102,8 +102,8 @@ Our instruction memory effectively acts like a ROM:
             instr = 32'b0; 
         end
 ```
-- We simply remove the offset from the address so we can have an array that starts with index 0
-- If we are trying to access an address that isn't in the instruction memory, then simply don't output anything (illegal operation).
+- We remove the offset from the address so we can have an array that starts with index 0
+- If we are trying to access an address that isn't in the instruction memory, then don't output anything (illegal operation).
 
 ### Data Memory
 
@@ -119,7 +119,7 @@ initial begin
 end
 ```
 - We now make an array of size 131,072 in compliance with our memory map.
-- We read from gaussian.mem for the pdf.s testcase provided in the project brief, to pass the test, we need an offset of 0x10,0000.
+- We read from gaussian.mem for the pdf.s testcase provided in the project brief. To pass the test, we need an offset of 0x10,0000.
 
 #### Read Logic
 ```systemverilog
@@ -157,7 +157,24 @@ end
 
 ### Registers
 
-The registers are a much smaller array of 32 
+The registers are made using a much smaller array of 32 32-bit registers used by the instructions. 
+
+#### Read Logic:
+```systemverilog
+    always_comb begin
+        RD1= regfile_array[AD1];
+        RD2= regfile_array[AD2];
+        A0 = regfile_array[10];
+        regfile_array[0] = 0;
+    end
+```
+- We have 2 read ports for the register
+- A0 is connected to x10 and is our output port
+- x0 is always 0 in RISCV
+
+#### Write Logic
+
+
 ## Schematic
 
 ![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
