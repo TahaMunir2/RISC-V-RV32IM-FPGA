@@ -605,7 +605,7 @@ end
 
 ---
 
-#### Timing strategy: Negative Edge for Writeback?
+#### Timing strategy: Negative Edge for Writeback
 
 ```systemverilog
 always_ff @(negedge clk) begin
@@ -1020,15 +1020,120 @@ mux mux_ALU1_immVSreg(
 #### 4.1.1 RAT Testing
 
 
+We created a testbench ( `rat_tb.cpp ` , in ` tb/tests ` ) that verifies the RAT module's ability to eliminate false dependencies through register renaming:
+
+- **Initial State:** All entries map to tag 0 after reset
+- **Tag Assignment:** Correct tag allocation (inst1 gets counter-1, inst2 gets counter)
+- **Counter Increment:** Producer counter increments by 2 each cycle
+- **x0 Handling:** Writes to x0 are ignored
+- **WAW Hazard:** Younger instruction wins when both write the same register
+- **Source Lookup:** All 4 source registers return correct producer tags
+
+#### Running the test
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make script executable:
+   ```bash
+   chmod +x doitrat.sh
+   ```
+   Grant execution permissions to the run script.
+
+3. Run the test:
+   ```bash
+   ./doitrat.sh tests/rat_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+[diagram](verifyingrat.jpg)
 
 ---
 
 #### 4.1.2 ROB Testing
 
+We created a testbench ( `rob_tb.cpp ` , in ` tb/tests ` ) that verifies the ROB module's three critical functions: tracking in-flight instructions, storing execution results, and ensuring in-order commit.
+
+**Allocation Interface:**
+- **Single/Dual Allocation:** 1 or 2 instructions allocated per cycle at the tail pointer
+- **Entry Initialization:** `dest_reg` set and `ready` bit cleared on allocation
+
+**Writeback Interface:**
+- **Single/Dual Writeback:** Results written via both CDB ports
+- **Ready Flag:** Entry marked ready with correct value after writeback
+
+**Query Interface:**
+- **4-Port Lookup:** All query ports return correct ready status and values
+- **Out-of-Order Access:** Results accessible before commit via tag lookup
+
+**Commit Interface:**
+- **In-Order Retirement:** Head commits only when ready and younger instructions must wait
+- **Dual Commit:** Both head and head+1 commit when both are ready
+- **Commit2 Dependency:** Second commit requires first to be valid (cannot skip head)
+- **Ready Cleared:** Ready bit reset after successful commit for entry reuse
+
+
+#### Running the test
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make script executable:
+   ```bash
+   chmod +x doitrob.sh
+   ```
+   Grant execution permissions to the run script.
+
+3. Run the test:
+   ```bash
+   ./doitrob.sh tests/rob_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+[diagram](verifyingrob.jpg)
+
 
 ---
 
 #### 4.1.3 RUU Testing
+
+We created a testbench ( `ruu_tb.cpp ` , in ` tb/tests ` ) that verifies the RUU's ability to buffer instructions, wake up waiting operands via Common Data Bus broadcast, and issue ready instructions to the ALUs.
+
+- **Initial State:** No instructions issued after reset
+- **Dispatch Ready:** Instructions with both sources ready issue immediately
+- **Waiting Does Not Issue:** Instructions with missing operands wait
+- **Writeback Wakeup:** CDB broadcast wakes waiting instructions
+
+#### Running the test
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make script executable:
+   ```bash
+   chmod +x doitruu.sh
+   ```
+   Grant execution permissions to the run script.
+
+3. Run the test:
+   ```bash
+   ./doitruu.sh tests/ruu_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+[diagram](verifyingruu.jpg)
 
 
 ---
