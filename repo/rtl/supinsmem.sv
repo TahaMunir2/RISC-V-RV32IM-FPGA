@@ -7,10 +7,8 @@ module supinsmem #(
     output logic [31:0]              instr2    // second instruction at addr+4
 );
 
-  // Byte-addressable ROM
   logic [DATA_WIDTH-1:0] romArray [2**16-1:0];
 
-  // Use only lower 16 bits as byte address into ROM
   logic [15:0] instrAddr = addr[15:0];
   logic [15:0] unused;
 
@@ -20,7 +18,6 @@ module supinsmem #(
   end
 
   always_comb begin
-    // Zero-out upper address bits (kept from your original logic)
     unused = addr[31:16];
     unused = unused & 16'b0;
 
