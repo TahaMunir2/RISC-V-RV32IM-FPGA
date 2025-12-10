@@ -454,7 +454,7 @@ We created a c++ testbench ( `predictor_tb.cpp ` ) that isolates the branch pred
 
 Here are the results:
 
-![diagram](verifypredictor.png)
+![diagram](verifyingpredictor.png)
 
 
 ---
@@ -502,7 +502,7 @@ Note that:
 
 **Waveform:**
 
-![diagram](verifycorrectpred.jpg)
+![diagram](verifyingcorrectpred.jpg)
 
 
 ##### Performance Comparison
