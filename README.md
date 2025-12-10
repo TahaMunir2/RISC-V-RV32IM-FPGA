@@ -410,6 +410,175 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 ## 4. Testing & Verification
 
 ### 4.1 Hazard Unit Testing
+#### Test 1: Forward From MEM to Operand1 (`T1_MEM_Fwd_Op1`)
+
+##### Purpose
+Ensures the hazard unit forwards data from the MEM stage when `rdM` matches `rs1E`.
+
+##### Signal Setup
+```text
+rs1E      = 5
+rdM       = 5
+regWriteM = 1
+```
+
+##### Input Signals
+
+| Signal             | Value  |
+|--------------------|--------|
+| `rs1D`             | 0      |
+| `rs2D`             | 0      |
+| `rs1E`             | 5      |
+| `rs2E`             | 0      |
+| `rdM`              | 5      |
+| `rdE`              | 0      |
+| `rdWB`             | 0      |
+| `regWriteM`        | 1      |
+| `resultSrCE`       | 0      |
+| `WriteBack_Regfile`| 0      |
+| `PCSrcE`           | 0b00   |
+
+##### Expected Output
+```text
+selectline1  = 2'b10
+selectline2  = 2'b00
+PCWrite      = 1
+F_Write      = 1
+flush_d_exec = 0
+flush_f_d    = 0
+```
+
+##### What It Tests
+- RAW hazard on operand 1 resolved via forwarding from MEM stage
+- No stall or flush when there is no load-use or branch/jump
+---
+#### Test 2: Forward From WB to Operand2 (`T2_WB_Fwd_Op2`)
+
+##### Purpose
+Ensures the hazard unit forwards data from the WB stage when `rdWB` matches `rs2E` and MEM does not write.
+
+##### Signal Setup
+```text
+rs2E              = 9
+rdWB              = 9
+WriteBack_Regfile = 1
+regWriteM         = 0
+```
+
+##### Input Signals
+
+| Signal             | Value  |
+|--------------------|--------|
+| `rs1D`             | 0      |
+| `rs2D`             | 0      |
+| `rs1E`             | 0      |
+| `rs2E`             | 9      |
+| `rdM`              | 0      |
+| `rdE`              | 0      |
+| `rdWB`             | 9      |
+| `regWriteM`        | 0      |
+| `resultSrCE`       | 0      |
+| `WriteBack_Regfile`| 1      |
+| `PCSrcE`           | 0b00   |
+
+##### Expected Output
+```text
+selectline1  = 2'b00
+selectline2  = 2'b01
+PCWrite      = 1
+F_Write      = 1
+flush_d_exec = 0
+flush_f_d    = 0
+```
+
+##### What It Tests
+- RAW hazard on operand 2 resolved via forwarding from WB stage
+- WB forwarding only used when MEM does not provide a matching destination
+---
+#### Test 3: Load-Use Stall via `rs1D` (`T3_LW_Stall_rs1D`)
+
+##### Purpose
+Ensures a load-use dependency between the instruction in EX and the instruction in Decode triggers a stall and inserts a bubble into EX.
+
+##### Signal Setup
+```text
+resultSrCE = 2'b01   (load in EX)
+rdE        = rs1D    (true dependency)
+```
+
+##### Input Signals
+
+| Signal             | Value  |
+|--------------------|--------|
+| `rs1D`             | 3      |
+| `rs2D`             | 0      |
+| `rs1E`             | 0      |
+| `rs2E`             | 0      |
+| `rdM`              | 0      |
+| `rdE`              | 3      |
+| `rdWB`             | 0      |
+| `regWriteM`        | 0      |
+| `resultSrCE`       | 2'b01  |
+| `WriteBack_Regfile`| 0      |
+| `PCSrcE`           | 0b00   |
+
+##### Expected Output
+```text
+PCWrite      = 0
+F_Write      = 0
+flush_d_exec = 1
+flush_f_d    = 0
+selectline1  = 2'b00
+selectline2  = 2'b00
+```
+
+##### What It Tests
+- Load-use hazard detection (`wStall = 1`)
+- Program counter and fetch stage are stalled
+- Decode→Execute pipeline register is flushed (bubble inserted)
+---
+#### Test 4: Branch Flush Without Stall (`T4_Branch_Flush`)
+
+##### Purpose
+Ensures that when a branch/jump is taken in EX (`PCSrcE != 2'b00`), the hazard unit flushes F/D and D/EX but does not stall the PC or fetch.
+
+##### Signal Setup
+```text
+PCSrcE = 2'b01   (taken branch)
+no load-use hazards
+```
+
+##### Input Signals
+
+| Signal             | Value  |
+|--------------------|--------|
+| `rs1D`             | 0      |
+| `rs2D`             | 0      |
+| `rs1E`             | 0      |
+| `rs2E`             | 0      |
+| `rdM`              | 0      |
+| `rdE`              | 0      |
+| `rdWB`             | 0      |
+| `regWriteM`        | 0      |
+| `resultSrCE`       | 0      |
+| `WriteBack_Regfile`| 0      |
+| `PCSrcE`           | 2'b01  |
+
+##### Expected Output
+```text
+flush_f_d    = 1
+flush_d_exec = 1
+PCWrite      = 1
+F_Write      = 1
+selectline1  = 2'b00
+selectline2  = 2'b00
+```
+
+##### What It Tests
+- Control hazard handling for taken branches/jumps
+- Both F/D and D/EX pipeline registers are flushed
+- No unnecessary stall of PC or fetch stage
+
 
 ---
 
