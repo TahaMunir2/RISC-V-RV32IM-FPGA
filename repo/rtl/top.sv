@@ -1,4 +1,4 @@
-module topsupoooarith #(
+module top #(
     parameter DATA_WIDTH = 32,
     parameter PROD_BITS = 6
 ) (
