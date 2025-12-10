@@ -587,20 +587,30 @@ TEST_F(CpuTestbench, noisy)
 #### triangle.mem
 
 
-https://github.com/user-attachments/assets/cb89a4df-f3b5-4987-b71a-efa5ea49e173
+
+
+https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
 
 
 
 #### noisy.mem, 1
 
 
-https://github.com/user-attachments/assets/9e0d64e0-badd-4fba-9e9e-f388c20e1365
+
+
+
+https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
+
 
 
 
 #### noisy.mem, 2
 
-https://github.com/user-attachments/assets/f923ec7d-f5e8-4bc1-80a5-95472052d7ba
+
+
+
+https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
+
 
 
 
