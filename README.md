@@ -616,20 +616,60 @@ GTKWave was an invaluable tool for visualizing signal transitions and debugging 
 This test demonstrates correct instruction overlapping in the pipeline when no data or control hazards are present, confirming that multiple instructions execute simultaneously across different pipeline stages.
 
 Here is the assembly code run by the processor and the results are shown in the waveform below:
+This assembly code can be found in the `asm` folder and was created for testing the instruction overlapping characteristic introduced by pipelining.
 
+```
+.text
+.globl main
+main:
+    addi    t0, zero, 10        # t0 = 10 
+    addi    t1, zero, 20        # t1 = 20 
+    addi    t2, zero, 30        # t2 = 30 
+    addi    t3, zero, 40        # t3 = 40
+    addi    a0, t3, 0           # a0 = t3 = 40
+```
 
 **Waveform:**
 
+![diagram](parrallelism.jpg)
 
 ---
 
 #### 2) Data Hazards: Read After Write (RAW)
 This test verifies the forwarding unit by demonstrating how RAW hazards are resolved through the forwarding muxes, showing the change in the forward select lines when a dependent instruction requires data from a previous instruction still in the pipeline.
 
+Here is the assembly code run by the processor and the results are shown in the waveform below:
+
+We modified the assembly code provided in the  `asm` folder :`2_li_add` such that `li` is replaced with `addi`.
+
+`li` is broken down into `lui` and `addi`, thus when `add a0, t1, t2` is in the execute stage of the original program `2_li_add` only one of the operand depends on a previous instruction still in the pipeline.
+
+With this modification we have both `addi t1, zero, -900` and `addi t2, 10000` still in the pipeline when `add a0, t1, t2` is in the execute stage.
+
+Note that since `addi` is an I-type instruction -9000 and 10000 are outside the range allowed for the immediate operand. Thus we changed the immediates to 1000 and -900 to adapt to our previous modifications.
+
+Note that we also removed the branch instructions here because they don't provide any insights in demonstrating how RAW hazards are resolved through the forwarding muxes.
+
+```
+.text
+.globl main
+main:
+    # li is broken into lui and addi for >12-bit values
+    # don't forget that addi sign-extends
+    addi t1, zero, -9000    # t1 = -900
+    addi t2, zero, 10000    # t2 = 1000
+    add a0, t1, t2  # a0 = t1 + t2      (=1000)
+```
+
+The `add a0, t1, t2` instruction depends on the values of t1 and t2, which are written by the immediately preceding `addi` instructions still in the pipeline. 
+
+Since these values have not yet been written back to the register file, the forwarding unit detects the RAW hazard and routes the results directly from the Memort and Writeback pipeline registers to the ALU inputs. 
+
+This allows the add instruction to execute correctly without stalling, demonstrating the effectiveness of our forwarding mechanism.
+
 **Waveform:**
 
-
-**Forwarding Mux Select Lines:**
+![diagram](verifyforwarding.jpg)
 
 
 ---
@@ -640,10 +680,23 @@ This test demonstrates the 1-cycle stall required when a load instruction is imm
 - Preventing the program counter from incrementing for 1 cycle
 - Flushing the DE pipeline register
 
+To illustrate these points on gtkwave we use the assembly test: `3_lbu_sb`, where we are only interested in the following part:
+
+```
+    lbu t3, 0(s0)   # t3 = *(0x00010000)    (=100)
+    lbu t4, 1(s0)   # t4 = *(0x00010001)    (=200)
+    add a0, t3, t4  # a0 = t3 + t4          (=300)
+```
+
+In the following waveform , we can track the cycle in which the `add a0, t3, t4` reaches the Decode stage through the sign `InstrD` and the cycle in which it reaches the Execute stage through the ALU operands value (0xC8 corresponds to 200 and 0x64 corresponds to 100).
+
+An important observation is that the Decode stage and the Execute stage are seperated by 1 cycle caused by the stall.
+
+The signals causing the stall are also shown in the waveform.
+
 **Waveform:**
 
-
-**Stall Signal Behavior:**
+![diagram](verifyload.jpg)
 
 
 ---
