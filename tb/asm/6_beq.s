@@ -6,3 +6,5 @@ main:
 iloop:
     addi a0, a0, 1
     beq t1, a0, iloop
+
+    
