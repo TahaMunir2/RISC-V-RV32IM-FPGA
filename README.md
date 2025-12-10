@@ -650,7 +650,6 @@ This test demonstrates the 1-cycle stall required when a load instruction is imm
 Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/Team5/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
 
 **Waveform:**
-### 4.2 Full Pipeline Testing
 
 ---
 
