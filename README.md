@@ -636,10 +636,201 @@ The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ## 4. Testing & Verification
 
+This section documents the testing for the complete out-of-order superscalar processor . The test suite consists of 17 tests: 10 reused from the ALU-only version and 7 new tests specifically designed to verify load instruction functionality.
 
+### Test Data Memory
 
-## 5. References
+All load tests use `reference/testing.mem` as the data memory, which contains a sequential byte pattern from `0x01` to `0xFF`:
 
-<!-- TODO: References -->
+```
+01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10
+...
+F1 F2 F3 F4 F5 F6 F7 F8 F9 FA FB FC FD FE FF
+```
+
+This predictable pattern allows easy verification of load operations at any address. 
+
+---
+
+### Reused Tests (1-10)
+
+The following 10 tests from the ALU-only superscalar processor are reused to ensure backward compatibility:
+
+| # | Test Name | Assembly File | Expected `a0` | Purpose |
+|---|-----------|---------------|---------------|---------|
+| 1 | TestLiAdd | `2_li_add.s` | 1000 | Basic arithmetic, `li` pseudo-instruction |
+| 2 | TestSubAdd | `sup_sub_add.s` | 4 | Mixed add/sub with dependencies |
+| 3 | TestRAWChain | `straight_raw_chain.s` | 24 | RAW dependency chain, CDB wakeup |
+| 4 | SimpleWAW | `waw_simple.s` | 99 | WAW hazard, in-order commit |
+| 5 | warsimple | `war_simple.s` | 5 | WAR hazard, register renaming |
+| 6 | parrallelism | `parrallelism.s` | 40 | ILP demonstration, parallel execution |
+| 7 | ReUsingRegisters | `reg_reuse.s` | 100 | RAT stress test with alternating writes |
+| 8 | logicalops | `logical.s` | 100 | Bitwise OR/AND/XOR operations |
+| 9 | shifts | `sup_shifts.s` | 128 | Shift operations with RAW dependencies |
+| 10 | complexshifts | `complexshifts.s` | 44 | Immediate + register shifts |
+
+---
+
+### New Load Tests (11-17)
+
+#### Test 11: Basic Word Load (`loadword.s`)
+
+```asm
+main:
+    lw a0, 0(x0)
+```
+
+**Purpose:** Verifies basic `lw` instruction functionality.
+
+**Execution:**
+- Loads 4 bytes from address 0: `01 02 03 04`
+- Little-endian assembly: `0x04030201`
+
+**Expected:** `a0 = 67305985` (0x04030201)
+
+---
+
+#### Test 12: Load with RAW Dependency (`multidependency.s`)
+
+```asm
+main:
+    lw   a2, 0(x0)        # a2 = 0x04030201
+    lw   a1, 4(x0)        # a1 = 0x08070605
+    add  a0, a2, a1       # a0 = a2 + a1
+```
+
+**Purpose:** Tests RAW dependencies between load instructions and subsequent ALU operations. The `add` must wait for both loads to complete via CDB wakeup.
+
+**Execution:**
+- `a2 = MEM[0] = 0x04030201`
+- `a1 = MEM[4] = 0x08070605`
+- `a0 = 0x04030201 + 0x08070605 = 0x0C0A0806`
+
+**Expected:** `a0 = 201984006` (0x0C0A0806)
+
+---
+
+#### Test 13: Load WAW Hazard (`loadwaw.s`)
+
+```asm
+main:
+    lw   a0, 0(x0)        # older: a0 = 0x04030201
+    lw   a0, 4(x0)        # younger: a0 = 0x08070605
+    addi a0, a0, 1        # a0 = 0x08070606
+```
+
+**Purpose:** Verifies WAW hazard handling with load instructions. The younger load to `a0` must overwrite the older load's result, and the `addi` must use the correct (younger) value.
+
+**Execution:**
+- First `lw` writes `0x04030201` to `a0` (stale)
+- Second `lw` writes `0x08070605` to `a0` (this value persists)
+- `addi` uses `0x08070605 + 1 = 0x08070606`
+
+**Expected:** `a0 = 134678022` (0x08070606)
+
+---
+
+#### Test 14: Independent Load Chains (`independentchains.s`)
+
+```asm
+main:
+    lw   a3, 0(x0)        # chain 1: load
+    addi a1, a3, 1        # chain 1: depends on a3
+
+    lw   a2, 8(x0)        # chain 2: load
+    addi a0, a2, 2        # chain 2: depends on a2
+```
+
+**Purpose:** Tests the processor's ability to identify and execute two independent chains in parallel.
+
+**Execution:**
+- Chain 1: `a3 = 0x04030201`, `a1 = 0x04030202`
+- Chain 2: `a2 = 0x0C0B0A09`, `a0 = 0x0C0B0A0B`
+
+**Expected:** `a0 = 202050059` (0x0C0B0A0B)
+
+---
+
+#### Test 15: Signed vs Unsigned Byte Load (`loadbytes.s`)
+
+```asm
+main:
+    addi a3, x0, 127      # a3 = 127
+    lb   a2, 0(a3)        # a2 = sign-extended 0x80 → 0xFFFFFF80
+    lbu  a1, 0(a3)        # a1 = zero-extended 0x80 → 0x00000080
+    add  a0, a2, a1       # a0 = 0xFFFFFF80 + 0x00000080 = 0x00000000
+```
+
+**Purpose:** Verifies correct sign-extension (`lb`) vs unsigned-extension (`lbu`) for byte loads. Address 127 contains `0x80`, which has its MSB set, making it ideal for testing sign behavior.
+
+**Expected:** `a0 = 0`
+
+---
+
+#### Test 16: Signed vs Unsigned Halfword Load (`loadhalf.s`)
+
+```asm
+main:
+    lh   a2, 0(x0)        # a2 = sign-extended 0x0201 → 0x00000201
+    lhu  a1, 0(x0)        # a1 = zero-extended 0x0201 → 0x00000201
+    add  a0, a2, a1       # a0 = 0x00000402
+```
+
+**Purpose:** Verifies `lh` and `lhu` instructions. Since `0x0201` is positive (MSB=0), both produce the same result.
+
+**Expected:** `a0 = 1026` (0x0402)
+
+---
+
+#### Test 17: Mixed Load Operations (`mixedloads.s`)
+
+```asm
+main:
+    lw   a7, 0(x0)        # a7 = 0x04030201
+
+    lb   a1, 1(x0)        # a1 = sign-ext 0x02 → 0x00000002
+    lbu  a2, 127(x0)      # a2 = zero-ext 0x80 → 0x00000080
+    lb   a3, 127(x0)      # a3 = sign-ext 0x80 → 0xFFFFFF80
+
+    lh   a4, 0(x0)        # a4 = sign-ext 0x0201 → 0x00000201
+    lhu  a5, 126(x0)      # a5 = zero-ext 0x807F → 0x0000807F
+    lh   a6, 126(x0)      # a6 = sign-ext 0x807F → 0xFFFF807F
+
+    add  a0, a1, a2       # a0 = 0x02 + 0x80 = 0x82
+```
+
+**Purpose:** test combining `lw`, `lb`, `lbu`, `lh`, and `lhu` with various addresses. Tests multiple in-flight loads and verifies the scheduler correctly handles all load types.
+
+**Execution:**
+- 7 different loads to various registers
+- Final computation: `a0 = 0x02 + 0x80 = 0x82 = 130`
+
+**Expected:** `a0 = 130` (0x82)
+
+---
+
+### Test Results
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make script executable:
+   ```bash
+   chmod +x doit.sh
+   chmod +x assemble.sh
+   ```
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verify.jpg)
+
 
 ---
