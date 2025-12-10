@@ -1,5 +1,6 @@
 module pc_block #(
-    parameter WIDTH = 32
+    parameter WIDTH = 32,
+    parameter RESET_ADDR = 32'hBFC00000
 )
 (
     input logic clk,
@@ -21,7 +22,7 @@ assign pc_save = inc_pc;
 
 always_ff @(posedge clk)
     if (!enable) internal_pc <=pc;
-    else if (rst) internal_pc <={WIDTH{1'b0}};
+    else if (rst) internal_pc <= RESET_ADDR;
     else begin
         case (pc_src)
             2'b00: internal_pc <= inc_pc;    // PC + 4
