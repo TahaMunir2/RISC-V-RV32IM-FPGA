@@ -19,7 +19,7 @@ assign pc_save = inc_pc;
 
 
 always_ff @(posedge clk)
-    if (rst) internal_pc <={WIDTH{1'b0}};
+    if (rst) internal_pc <= 32'hBFC00000;
     else begin
         case (pc_src)
             2'b00: internal_pc <= inc_pc;    // PC + 4
