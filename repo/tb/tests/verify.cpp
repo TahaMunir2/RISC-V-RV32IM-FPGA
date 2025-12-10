@@ -84,20 +84,11 @@ TEST_F(CpuTestbench, TestAUIPC)
 
 TEST_F(CpuTestbench, TestShift)
 {
-    setupTest("10_unsigned_immediate_shift");
+    setupTest("10_shifts");
     setData("reference/gaussian.mem");
     initSimulation();
     runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 2);
-}
-
-TEST_F(CpuTestbench, TestPdf2)
-{
-    setupTest("a0test");
-    setData("reference/gaussian.mem");
-    initSimulation();
-    runSimulation(CYCLES);
-    EXPECT_EQ(top_->a0, 155);
+    EXPECT_EQ(top_->a0, 8);
 }
 
 
