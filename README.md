@@ -261,7 +261,7 @@ This testbench verifies the control unit by feeding raw 32-bit RISC-V instructio
 - **R-Type ALU:** ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
 
 This testbench is available in ` tb/tests ` and in order to run it we need :
-1. Navigate to the testbench ( `tb` ) folder:
+1. Navigate to the testbench ( `tb` ) folder
 2. Make script executable:
    ```bash
    chmod +x doitcontrol.sh
@@ -287,7 +287,7 @@ This testbench verifies the ALU by testing all 13 supported operations with vari
 - **Flags:** EQ, LT, LTU
 
 This testbench is available in `tb/tests` and in order to run it we need:
-1. Navigate to the testbench (`tb`) folder:
+1. Navigate to the testbench (`tb`) folder
 2. Make script executable:
    ```bash
    chmod +x doitalu.sh
@@ -514,7 +514,6 @@ These files containing the additional assembly code are in the asm folder contai
    ```bash
    cd testbench
    ```
-   Ensure you're in the correct directory containing the test scripts.
 
 2. Make scripts executable:
    ```bash
