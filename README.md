@@ -29,6 +29,135 @@ To do so, we had to implement a control path and a datapath for our CPU, as well
 
 ## Implementation
 
+We can break our implementation into each new module we have made for our RV32I CPU.
+
+### PC 
+
+
+#### Inputs:
+```systemverilog
+    input logic clk,
+    input logic [WIDTH-1:0] Imm_op, 
+    input logic [WIDTH-1:0] ALU,
+    input logic rst,
+    input logic [1:0] pc_src,
+    output logic [WIDTH-1:0] pc,
+    output logic [WIDTH-1:0] pc_save
+```
+> Width is 32 as our CPU is 32-bit
+- We need Imm_op to add an offset to PC for JAL instructions
+- We need ALU to add PC and rs1 for JALR instructions
+- We need pc_src to determine how to increment PC
+- We output pc_save for saving return addresses for jump instructions
+
+#### Logic
+```systemverilog
+logic [WIDTH-1:0] branch_pc, inc_pc, internal_pc;
+assign branch_pc = internal_pc+Imm_op;
+assign inc_pc = internal_pc+4;
+assign pc_save = inc_pc;
+
+always_ff @(posedge clk)
+    if (rst) internal_pc <= 32'hBFC00000;
+    else begin
+        case (pc_src)
+            2'b00: internal_pc <= inc_pc;    // PC + 4
+            2'b01: internal_pc <= branch_pc; // JAL
+            2'b10: internal_pc <= ALU;       // JALR
+            default: internal_pc <= inc_pc;  
+        endcase
+    end
+assign pc = internal_pc;
+```
+- Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+
+### Instruction Memory 
+
+Our instruction memory effectively acts like a ROM:
+
+```systemverilog
+   logic [7:0] rom_array [2**12-1:0];
+
+    initial begin
+        $display("Loading rom.", );
+        $readmemh("program.hex", rom_array);
+    end
+```
+- It will have a size of 4096 in line with the memory map
+-We will initialise it using the program.hex, which is the byte converted version of our asm file using the assemble.sh script.
+
+```systemverilog
+ always_comb begin // asynchronous read
+        local_addr = addr - 32'hBFC00000;
+        if (addr >= 32'hBFC00000 && local_addr < (2**12 - 3)) begin
+            instr = {
+                rom_array[local_addr + 3], 
+                rom_array[local_addr + 2], 
+                rom_array[local_addr + 1], 
+                rom_array[local_addr]
+            };
+        end else begin
+            instr = 32'b0; 
+        end
+```
+- We simply remove the offset from the address so we can have an array that starts with index 0
+- If we are trying to access an address that isn't in the instruction memory, then simply don't output anything (illegal operation).
+
+### Data Memory
+
+Our data memory is very similar to the instruction memory, but it is a RAM instead, meaning that in addition to reading from it, we can write to it as well.
+
+#### Initialisation
+```systemverilog
+logic [7:0] ram_array [2**17-1:0];
+
+initial begin
+    $display("Loading ram.");
+    $readmemh("reference/gaussian.mem", ram_array, 0x10000);
+end
+```
+- We now make an array of size 131,072 in compliance with our memory map.
+- We read from gaussian.mem for the pdf.s testcase provided in the project brief, to pass the test, we need an offset of 0x10,0000.
+
+#### Read Logic
+```systemverilog
+always_comb begin
+    if(ByteWrite) begin
+        dout[7:0] = ram_array[A];
+        dout[31:8] = 24'b0;
+    end
+    else  begin
+        dout[7:0] = ram_array[A];
+        dout[15:8] = ram_array[A+1];
+        dout[23:16] = ram_array[A+2];
+        dout[31:24] = ram_array[A+3];
+    end
+end
+```
+- We use ByteWrite to determine if we are trying to read just 1 byte or the whole word.
+- The rest of the logic is the same as the ROM.
+- We use little-endian logic.
+
+#### Write Logic
+
+```systemverilog
+always_ff @(posedge clk) begin
+    if (MemWrite) begin
+        if (ByteWrite) begin
+        ram_array[A] <= WD[7:0];
+        end
+    end
+end
+```
+
+- The write logic is clocked since reading does not alter the memory, but writing does, so we need it to only do so when we are absolutely ready.
+- MemWrite tells us if the instruction is a Store Word instruction, hence requiring writing to the memory; else, we must NOT write to it.
+
+### Registers
+
+The registers are a much smaller array of 32 
 ## Schematic
 
 ![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
