@@ -610,6 +610,7 @@ selectline2  = 2'b00
 
 This section verifies the pipelined design through four test scenarios, each targeting a specific aspect of pipeline behavior and hazard handling.
 
+GTKWave was an invaluable tool for visualizing signal transitions and debugging pipeline behavior, allowing us to trace instruction flow and verify hazard handling cycle-by-cycle.
 
 #### 1) Pipelined Overlapping (No Hazards)
 This test demonstrates correct instruction overlapping in the pipeline when no data or control hazards are present, confirming that multiple instructions execute simultaneously across different pipeline stages.
