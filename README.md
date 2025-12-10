@@ -1140,11 +1140,185 @@ Here are the results:
 
 ### 4.2 Assembly Test Programs
 
+This section presents the assembly programs built to verify the out-of-order superscalar processor. Each test targets specific edge cases and hazard scenarios.
+
+Some of the tests are followed by a GTKWave simulation providing evidence of the performance upgrade through the cycle by cycle simulation.
+
+---
+
+#### Test 1: Basic Arithmetic (`2_li_add.s`)
+```asm
+li t1, -9000
+li t2, 10000
+add a0, t1, t2      # a0 = 1000
+```
+This test verifies basic immediate loading and addition operations. The `li` pseudo-instruction expands to `lui` and `addi` , testing the processor's ability to handle multi-instruction sequences. Expected output: **a0 = 1000**.
+
+---
+
+#### Test 2: RAW Dependency Chain (`straight_raw_chain.s`)
+```asm
+addi t0, x0, 5
+addi t1, x0, 7
+add  t2, t0, t1     # t2 = 12
+add  t3, t2, t1     # t3 = 19 (RAW: depends on t2)
+add  a0, t3, t0     # a0 = 24 (RAW: depends on t3)
+```
+This test creates a straight chain of Read-After-Write dependencies where each instruction depends on the result of the previous one. The RUU must correctly wake up waiting instructions as their operands become available via the CDB. Expected output: **a0 = 24**.
+
+---
+
+#### Test 3: WAR Hazard (`war_simple.s`)
+```asm
+addi t0, zero, 5        # t0 = 5 (old value)
+addi a0, t0, 0          # a0 = t0 (must read old value)
+addi t0, zero, 100      # t0 = 100 (new value)
+```
+This test verifies Write-After-Read hazard resolution. The RAT must ensure the second instruction reads the old value of t0 (5), not the new value (100) written by the third instruction. Register renaming eliminates this false dependency. Expected output: **a0 = 5**.
+
+---
+
+#### Test 4: WAW Hazard (`waw_simple.s`)
+```asm
+addi a0, zero, 10       # a0 = 10 (first write)
+addi a0, zero, 99       # a0 = 99 (second write)
+```
+This test verifies Write-After-Write hazard resolution. Despite potential out-of-order execution, the ROB ensures in-order commit so the final architectural value of a0 reflects the program-order last write. Expected output: **a0 = 99**.
+
+---
+
+#### Test 5: Instruction-Level Parallelism (`parrallelism.s`)
+```asm
+addi t0, zero, 10
+addi t1, zero, 20
+addi t2, zero, 30
+addi t3, zero, 40
+addi a0, t3, 0          # a0 = 40
+```
+This test demonstrates the superscalar processor's ability to exploit instruction-level parallelism. The first four instructions are completely independent and can be dispatched, issued, and executed in parallel across the dual ALUs. Expected output: **a0 = 40**.
+
+GTKWave analysis confirms simultaneous execution:
+
+The waveform demonstrates both ALUs executing simultaneously, with ALU1 processing values 0x0A (10) and 0x1E (30) while ALU2 concurrently handles 0x14 (20) and 0x28 (40). This confirms the superscalar processor successfully exploits instruction-level parallelism by dispatching and executing independent instructions in parallel across both ALUs.
+
+
+![diagram](writebacknegedge.jpeg)
+
+---
+
+#### Test 6: Register Reuse (`reg_reuse.s`)
+```asm
+addi t0, zero, 1        # t0 = 1
+addi t1, t0, 1          # t1 = 2
+addi t0, t1, 1          # t0 = 3
+...                     # alternating writes to t0, t1
+addi a0, t1, 90         # a0 = 100
+```
+
+This test verifies the logic implemented in the Decode/Rename stage to address the edge case where the second instruction fetched depends on the value taken by the destination register of the first one. Expected output: **a0 = 100**.
+
+---
+
+#### Test 7: Addition and Subtraction (`sup_sub_add.s`)
+```asm
+li t1, 1
+li t2, 2
+sub a1, t1, t2          # a1 = -1
+add a0, t2, a1          # a0 = 1
+add a3, t1, t2          # a3 = 3 (independent)
+add a0, a0, a3          # a0 = 4
+```
+This test verifies both ALU operations (add and sub) with mixed dependencies. Expected output: **a0 = 4**.
+
+
+---
+
+#### Test 8: Shift Operations (`sup_shifts.s`)
+```asm
+addi t0, zero, 1
+slli t1, t0, 4          # t1 = 16
+slli t2, t1, 2          # t2 = 64
+addi t3, zero, 256
+srli t4, t3, 1          # t4 = 128
+add  a0, t2, t4         # a0 = 192
+srli a0, a0, 1          # a0 = 96
+addi a0, a0, 32         # a0 = 128
+```
+This test verifies shift-immediate operations (slli, srli) with RAW dependencies. The processor must correctly execute logical shifts and forward results through the CDB for dependent instructions. Expected output: **a0 = 128**.
+
+This waveform provides compelling evidence of the performance advantage of out-of-order execution. We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU, bypassing the sequential bottleneck.
+
+![diagram](verifyingshifts.jpg)
+
+**IPC Calculation:**
+
+- In-order scalar processor: 8 instructions ÷ 8 cycles = **IPC = 1.0**
+- In-order superscalar processor: 8 instructions ÷ 6 cycles = **IPC = 1.33**
+- Out-of-order superscalar: 8 instructions ÷ 5 cycles = **IPC = 1.6**
+
+This represents a **60% improvement** over the baseline IPC of 1.
+
+---
+
+#### Test 9: Logical Operations (`logical.s`)
+```asm
+addi t0, zero, 0xF0     # t0 = 240
+addi t1, zero, 0x0F     # t1 = 15
+or   t2, t0, t1         # t2 = 255
+addi t3, zero, 0xAA     # t3 = 170
+and  t4, t2, t3         # t4 = 170
+addi t5, zero, 0xDE     # t5 = 222
+xor  s0, t4, t5         # s0 = 116
+addi a0, s0, -16        # a0 = 100
+```
+
+This test verifies bitwise logical operations (OR, AND, XOR) with RAW dependencies. It ensures the ALU correctly computes bitwise operations and the results propagate through the pipeline. Expected output: **a0 = 100**.
+
+---
+
+#### Test 10: Complex Shifts (`complexshifts.s`)
+```asm
+addi t0, zero, 1
+slli t1, t0, 5          # t1 = 32
+addi t2, zero, 3
+sll  t3, t0, t2         # t3 = 8  (register-based shift)
+add  t4, t1, t3         # t4 = 40
+addi t5, zero, 64
+srli s2, t5, 2          # s2 = 16
+addi s0, zero, 2
+srl  s1, s2, s0         # s1 = 4  (register-based shift)
+add  a0, t4, s1         # a0 = 44
+```
+
+This test combines immediate shifts (slli, srli) with register-based shifts (sll, srl), creating complex dependency graphs. Expected output: **a0 = 44**.
 
 ---
 
 ### 4.3 Results
 
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make script executable:
+   ```bash
+   chmod +x doit.sh
+   chmod +x assemble.sh
+   ```
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify_tb.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verify.jpg)
+
+> **Note:** The performance upgrade results and evidence are included in the [4.2 Assembly Test Programs](#42-assembly-test-programs) under the tests `Test 5 :parrallelism.s` `Test 8 :sup_shifts.s` using GTKWave cycle by cycle analysis.
 
 ---
 
