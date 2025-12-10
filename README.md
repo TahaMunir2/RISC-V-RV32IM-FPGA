@@ -1330,8 +1330,6 @@ The concepts implemented in this out-of-order superscalar processor extend beyon
 - [Out-of-Order Processor Overview from ScienceDirect](https://www.sciencedirect.com/topics/computer-science/out-of-order-processor)
 - [Register Renaming Techniques](https://fiveable.me/advanced-computer-architecture/unit-6/register-renaming-techniques/study-guide/6kjpVCqRFiiGhaTX)
 - [The Reorder Buffer](https://docs.boom-core.org/en/latest/sections/reorder-buffer.html)
-- [Tomasulo's Algorithm and Common Data Bus](http://thebeardsage.com/tomasulos-algorithm-common-data-bus-cdb/)
 - [The Rename Stage](https://docs.boom-core.org/en/latest/sections/rename-stage.html)
-- [The Issue Unit](https://docs.boom-core.org/en/latest/sections/issue-unit.html)
 
 ---
