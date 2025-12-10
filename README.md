@@ -313,9 +313,16 @@ The forwarding logic compares decoded operands rs1E and rs2E with the destinatio
 •	If the instruction in the MEM stage writes a register (regWriteM = 1) and its destination rdM matches the operand in EX, then the operand should be forwarded from MEM.
 •	Else if the instruction in the WB stage writes a register (WriteBack_Regfile = 1) and its destination rdWB matches, then forward from WB.
 •	Register x0 is never forwarded, so matches must ignore rd = 0.
-Select Line Encoding
+
+
+##### Select Line Encoding
 To control operand multiplexers feeding the ALU, the Hazard Unit sets two 2-bit signals:
-(table with encodings)
+| Value | Operand Source          |
+| ----- | ----------------------- |
+| 00    | Register file output    |
+| 01    | Forward from Write-Back |
+| 10    | Forward from Memory     |
+
 
 
 So the circuit schematic for exclusively the hazard unit’s forwarding mechanism is identical to that detailed in the lecture slides as shown below:
