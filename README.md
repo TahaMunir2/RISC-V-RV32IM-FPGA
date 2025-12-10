@@ -610,6 +610,7 @@ selectline2  = 2'b00
 
 This section verifies the pipelined design through four test scenarios, each targeting a specific aspect of pipeline behavior and hazard handling.
 
+
 #### 1) Pipelined Overlapping (No Hazards)
 This test demonstrates correct instruction overlapping in the pipeline when no data or control hazards are present, confirming that multiple instructions execute simultaneously across different pipeline stages.
 
@@ -650,6 +651,33 @@ This test demonstrates the 1-cycle stall required when a load instruction is imm
 Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/Team5/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
 
 **Waveform:**
+
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd testbench
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x assemble.sh
+   chmod +x doit.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verifypipelining.jpg)
+
+All test cases pass.
 
 ---
 
