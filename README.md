@@ -445,6 +445,7 @@ For lab 4 (which covered the first 3 instructions), we made unit tests for every
 With each test bench containing many test cases:
 
 ![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/pc_tb.png)
+> *Example: Testbench for PC block.
 
 For a single cycle, we used the testbenches provided in the project brief for our testing:
 
