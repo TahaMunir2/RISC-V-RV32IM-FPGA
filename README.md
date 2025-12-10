@@ -1,10 +1,10 @@
 # Single Cycle Reduced RV32I CPU:
 
 ## Table of Contents
-- [1. Overview](#overview)
-- [2. Implementation](#implementation)
-
-
+- [1 Overview](#overview)
+- [2 Implementation](#implementation)
+- [3 Schematic](#schematic)
+- [Testing](#testing)
 
 ## 1 Overview
 
