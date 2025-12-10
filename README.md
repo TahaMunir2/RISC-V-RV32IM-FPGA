@@ -11,12 +11,9 @@
   - [2.6 Memory Interface Extensions](#memory-interface-extensions)
 - [3. Final Circuit Schematic](#final-circuit-schematic)
 - [4. Testing](#testing)
-- [4.1 Additional testing added to demonstrate the new features](#assembly-test-programs)
-  - [4.1.1 Test 6: Branch Equal](#test-6-branch-equal-6_beqs)
-  - [4.1.2 Test 7: Store Byte & Load Word](#test-7-store-byte--load-word-7_sb_lws)
-  - [4.1.3 Test 8: Inequality Branching](#test-8-inequality-branching-8_inequality_branchings)
-  - [4.1.4 Test 9: Add Upper Immediate to PC](#test-9-add-upper-immediate-to-pc-9_auipcs)
-  - [4.2 Results](#results)
+  - [4.1 Unit Testbenching](#unit-testbenching)
+  - [4.2 Additional testing added to demonstrate the new features](#assembly-test-programs)
+  - [4.3 Results](#results)
     
 ## Overview
 
@@ -247,6 +244,64 @@ Two new signals were added to support variable-width loads with sign/zero extens
 
 We first verified each individual block, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .Once confident in the core modules, we proceeded to evaluate the full datapath integration using the five reference tests originally provided with the reduced RV32I version. We additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation.
 
+### Unit Testbenching:
+
+Unit testbenching allows us to isolate and verify individual components of the processor, ensuring each module functions correctly before integrating them into the complete system.
+
+#### Control Unit Verification ( ` control_tb.cpp ` ):
+
+This testbench verifies the control unit by feeding raw 32-bit RISC-V instructions and checking that the correct control signals are generated for each instruction type:
+
+- **Upper Immediate:** LUI, AUIPC
+- **Jumps:** JAL, JALR
+- **Branches:** BEQ, BNE, BLT, BGE, BLTU, BGEU (taken and not taken)
+- **Loads:** LB, LH, LW, LBU, LHU
+- **Stores:** SB, SH, SW
+- **I-Type ALU:** ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
+- **R-Type ALU:** ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+
+This testbench is available in ` tb/tests ` and in order to run it we need :
+1. Navigate to the testbench ( `tb` ) folder:
+2. Make script executable:
+   ```bash
+   chmod +x doitcontrol.sh
+   ```
+The initial `doit.sh` file is modified so we can run this test 
+3. Run the test:
+   ```bash
+   ./doit.sh tests/control_tb.cpp
+   ```
+
+Here is what we obtain:
+
+![diagram](control.jpg)
+
+#### ALU Verification ( `alu_tb.cpp` ):
+
+This testbench verifies the ALU by testing all 13 supported operations with various input combinations and edge cases:
+- **Arithmetic:** ADD (with wrap-around), SUB (with negative result)
+- **Bitwise:** AND, OR, XOR
+- **Shifts:** SLL, SRL, SRA
+- **Comparisons:** SLT (signed), SLTU (unsigned)
+- **Special:** LUI passthrough, AUIPC (A + B - 4)
+- **Flags:** EQ, LT, LTU
+
+This testbench is available in `tb/tests` and in order to run it we need:
+1. Navigate to the testbench (`tb`) folder:
+2. Make script executable:
+   ```bash
+   chmod +x doitalu.sh
+   ```
+The initial `doit.sh` file is modified so we can run this test.
+3. Run the test:
+   ```bash
+   ./doit.sh tests/alu_tb.cpp
+   ```
+Here is what we obtain:
+
+![diagram](alu.jpg)
+
+
 ### Assembly Test Programs:
 
 
@@ -349,8 +404,8 @@ mloop:
     bgeu a0, t2, endm       # Unsigned: 0xFFFFFFFB >= 2
 iloop:
     addi a0, a0, 1
-    blt a0, t2, iloop       # Loop while a0 < 2 (signed)
-    bge a0, t2, endi        # Exit when a0 >= 2 (signed)
+    blt a0, t2, iloop       # we loop while a0 < 2 (signed)
+    bge a0, t2, endi        # exit when a0 >= 2 (signed)
 endm:
     li a0, 10
 endi:
@@ -417,4 +472,65 @@ a0 = 0xBFC01000 = 3217035264 (decimal)
 - Correct datapath:ALU input (PC) via `ALUsrc2` multiplexer
 
 ---
+
+#### Test 10: Add Upper Immediate to PC (`10_shifts.s`)
+
+##### Code
+
+```
+.text
+.globl main
+main:
+    li t1, 5    
+    li t2, 3        
+    slli t3, t1, 2   
+    add t4, t3, t2    
+    srli t5, t4, 1  
+    xor a0, t5, t2   
+```
+
+##### Execution Trace
+
+The program begins by loading immediate values 5 into t1 and 3 into t2.
+
+Next, it performs a left shift on t1 by 2 bits, yielding t3 = 20, then adds t2 to get t4 = 23.
+
+The value in t4 is right-shifted by 1 bit, producing t5 = 11, and finally an XOR operation between t5 (11 = 0b1011) and t2 (3 = 0b0011) is performed.
+
+The final result stored in a0 is 8.
+
+##### What It Tests
+- Left Shift: Testing slli for bit manipulation toward MSB
+- Right Shift: Testing srli for unsigned bit shift toward LSB
+  
+---
 ### Results
+
+These files containing the additional assembly code are in the asm folder contained in the testbench folder. The tests with their corresponding expected value are incleded in the `verify.cpp` file. 
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd testbench
+   ```
+   Ensure you're in the correct directory containing the test scripts.
+
+2. Make scripts executable:
+   ```bash
+   chmod +x assemble.sh
+   chmod +x doit.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+Here are the results:
+
+![diagram](verify.jpg)
+
+All test cases pass.
