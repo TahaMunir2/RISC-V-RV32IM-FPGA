@@ -457,7 +457,11 @@ And all the tests passed:
 
 ### F1 Lights
 
-https://github.com/user-attachments/assets/36d3a1a0-e795-473e-b112-f805138e5dc2
+
+
+https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
+
+
 
 
 Here is the assembly code that we used to implement the F1 countdown mechanism:
@@ -465,36 +469,31 @@ Here is the assembly code that we used to implement the F1 countdown mechanism:
 
 .text
 .globl main
+.text
+.globl main
 main:
-    li t1, 0
-    li t2, 1
-    li a0, 0
+    addi a0, zero, 0
+    addi t2, zero, 1
+mloop:
+    bne x8, t2, mloop
     jal t3, iloop
-    jal t3, end
+    addi a0, zero, 0
+    jal t3, mloop
 iloop:
     li a0, 0
-    bne t1, zero, iloop
     addi    a0, a0, 1
-    bne t1, zero, iloop
     addi    a0, a0, 2
-    bne t1, zero, iloop
     addi    a0, a0, 4
-    bne t1, zero, iloop
     addi    a0, a0, 8
-    bne t1, zero, iloop
     addi    a0, a0, 16
-    bne t1, zero, iloop
     addi    a0, a0, 32
-    bne t1, zero, iloop
     addi    a0, a0, 64
-    bne t1, zero, iloop
     addi    a0, a0, 128
-    bne t1, zero, iloop
     jalr t3, t3, 0
 end:
     addi a0, zero, 0
 ```
-
+Our trigger input is mapped to register 8 in our register file. This assembly code program loops at the top of mloop until the value of trigger is set to 1. If `x8` is set, we enter the F1 count-up subroutine by jumping to iloop. Once the subroutine is finished, we return to the main loop, where, if trigger is set again, the subroutine is re-entered.
 
 ```cpp
 TEST_F(CpuTestbench, F1StartLights)
@@ -514,6 +513,7 @@ TEST_F(CpuTestbench, F1StartLights)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         // Advance one clock cycle
         runSimulation(1);
+        top_->trigger = vbdFlag();
 
         // Drive the bargraph with the lower 8 bits of the F1 output signal
         vbdBar(top_->F1_SIGNAL & 0xFF);
@@ -528,7 +528,7 @@ TEST_F(CpuTestbench, F1StartLights)
 ```
 
 
-
+The delay that I introduced at the beginning of each cycle allows us to have the distinguisably slow count-up that you can observe in the video. As mentioned, trigger is set by `vbdFlag()` on the Vbuddy chip.
     
 
 
