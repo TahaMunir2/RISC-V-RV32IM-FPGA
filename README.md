@@ -1,10 +1,32 @@
 # Single Cycle Reduced RV32I CPU:
 
 ## Table of Contents
-- [1 Overview](#overview)
-- [2 Implementation](#implementation)
-- [3 Schematic](#schematic)
-- [4 Testing](#testing)
+- [1. Overview](#overview)
+- [2. Implementation](#implementation)
+  - [2.1 PC](#pc)
+    - [2.1.1 Inputs](#inputs)
+    - [2.1.2 Logic](#logic)
+  - [2.2 Instruction Memory](#instruction-memory)
+  - [2.3 Data Memory](#data-memory)
+    - [2.3.1 Initialisation](#initialisation)
+    - [2.3.2 Read Logic](#read-logic)
+    - [2.3.3 Write Logic](#write-logic)
+  - [2.4 Register File](#register-file)
+    - [2.4.1 Read Logic](#read-logic-1)
+    - [2.4.2 Write Logic](#write-logic-1)
+  - [2.5 Decoder](#decoder)
+    - [2.5.1 Initialisation](#initialisation-1)
+    - [2.5.2 Control Signals](#control-signals)
+    - [2.5.3 Instructions](#instructions)
+  - [2.6 Sign Extender](#sign-extender)
+  - [2.7 ALU](#alu)
+  - [2.8 Top](#top)
+- [3. Schematic](#schematic)
+- [4. Testing](#testing)
+  - [4.1 Test Benches](#test-benches)
+  - [4.2 F1 Lights](#f1-lights)
+
+---
 
 ## Overview
 
