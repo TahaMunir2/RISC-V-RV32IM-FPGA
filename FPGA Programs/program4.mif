@@ -32,7 +32,7 @@ BEGIN
 040 : 342022F3; -- CSRR x5, mcause 
 041 : 00F2F293; -- ANDI x5, x5, 15 (mask bottom 4 bits)
 042 : 00B00313; -- ADDI x6, x0, 11 (Load 11)
-043 : 07028663; -- BEQ x5, x6, Freeze (offset 112, if external interrupt then jump to phase 3)
+043 : 06628663; -- BEQ x5, x6, Freeze (offset 112, if external interrupt then jump to phase 3)
 044 : 04059463; -- BNE x11, x0, Count-up (offset 72, if x11 is high, we are in phase 2)
 045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check if leds all high)
 046 : 020A8063; -- BEQ x21, x0, Transition (offset 32, branch to transition if x21 is 0, phase 1)
@@ -73,5 +73,6 @@ BEGIN
 [061..3FF] : 00000000;
 
 END;
+
 
 
