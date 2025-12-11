@@ -241,6 +241,9 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
    gtkwave
    ```
 
+5. Drag and drop the waveform.vcd into the gtkwave terminal.
+
+
 ### Zicsr Testbench
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr_tb.png)
