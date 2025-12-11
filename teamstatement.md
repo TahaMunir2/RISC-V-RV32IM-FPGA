@@ -40,7 +40,7 @@ We decided to implement both CPU testing and unit testing each time we added a n
 
 https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
 
-
+The delay that I introduced at the beginning of each cycle allows us to have the distinguisably slow count-up that you can observe in the video. To achieve interactivity, we mapped our trigger to one register 8 in our register file. Then, in the testbench, we set trigger via vbdFlag(), which corresponds to pushing the rotary encoder on the Vbuddy chip. To distinguish the change in the LEDs and make them truly similar to F1 lights, a delay was introduced at the beginning of each cycle in the testbench. See the single-cycle-cpu branch for details.
 
 
 
