@@ -650,6 +650,26 @@ Quartus actually provides you with an RTL netlist diagram:
 
 ### Interrupts and Simulation
 
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+
 #### External Interupts
 
 We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave for debugging.
@@ -783,7 +803,6 @@ Next, we wanted to test out the  external interrupt logic and trap handler routi
 - 10-11 reset a0 as if we return from a trap, we will return to this address)
 - 12-13 set the LEDs in the pattern described above
 - C-F is the trap handler; it is only ever accessed when the trap is triggered.
-
 
 
 https://github.com/user-attachments/assets/d3bf95f0-1b92-4ace-abf1-3764e90d6b53
