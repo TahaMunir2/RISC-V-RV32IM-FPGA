@@ -743,7 +743,7 @@ Which matches up with the memory we expected. It is interesting to see that our 
 #### LEDs and 7-Segment Displays Test
 
 Firstly, we just wanted a simple test to check that our outputs and address mapping worked correctly on our FPGA.
-```bash
+```asm
 WIDTH=32;
 DEPTH=2048;
 ADDRESS_RADIX=HEX;
@@ -767,7 +767,7 @@ END;
 
 Next, we wanted to test out the  external interrupt logic and trap handler routine, as well as check if more complex instructions like branch and csrrw would work.
 
-```bash
+```asm
 000 : BFC000B7; -- LUI x1, 0xBFC00 
 001 : 03008093; -- ADDI x1, x1, 0x30 (x1 = 0xBFC00030, trap handler address)
 002 : 30509073; -- CSRW mtvec, x1 
@@ -815,7 +815,7 @@ Note: For some reason, our key[1] wasn't working on the FPGA we were given, so h
 
 Next, we wanted to out our timer interrupt logic for this we needed a test that would alternate the time every 'x' amount of time. 
 
-```bash
+```asm
 000 : 0200006F; JAL x0, 32 (0x008)
 
 -- Trap Handler
