@@ -36,6 +36,7 @@ Copy
   - [8.3 Load Instruction Integration](#83-load-instruction-integration)
 - [9. Mistakes Made](#9-mistakes-made)
 - [10. Reflections](#10-reflections)
+- [11. References](#11-references)
 
 
 ---
@@ -1094,8 +1095,51 @@ All 17 tests pass.
 
 ## 9. Mistakes Made
 
+**Loose Naming Conventions:** Before pipelining, the team agreed on a naming convention, but it wasn't strict enough. We said signals should have stage suffixes like `D`, `E`, `M`, but we didn't define exactly how to name intermediate wires or which signals needed suffixes. When we integrated our modules, half the time was spent figuring out what each other's signals meant. This taught me that agreeing on interfaces before coding individually is just as important as the code itself.
+
+**Cache Stall Not Freezing the Branch Predictor:** When I integrated the cache, I added enable signals to freeze all pipeline registers during a cache miss. But I forgot the branch predictor. The pipeline was frozen, but the predictor kept updating its state based on stale signals. This corrupted the prediction table. I only found this because a loop that ran correctly without cache started mispredicting every branch with cache in the processor. Once I traced through the signals, I realized the predictor was seeing garbage inputs while the pipeline was stalled. Adding `enable_branch_predictor = !(stall_l1i || stall_l1d)` fixed it.
+
+**Instruction 2 Depending on Instruction 1:** In the superscalar design, I fetch two instructions per cycle. When the second instruction depends on the first (for example: `ADD x5, x1, x2` followed by `SUB x6, x5, x3`), the RAT lookup for `x5` returns the old producer and not Instruction 1 because the RAT hasn't been updated yet. I only caught this when a specific test failed. The fix was adding explicit bypass logic to detect when RS3 or RS4 matches RD1.
+
+**Positive-Edge Writeback in the RUU:** In the out-of-order processor, I did everything on the positive clock edge. When I looked at the waveforms in GTKWave, I saw instructions waiting an extra cycle for no reason. Moving writeback to the negative edge fixed it. I wouldn't have found this without tracing signals cycle-by-cycle.
+
+These mistakes taught me more than getting things right the first time would have.
+
 ---
 
 ## 10. Reflections
+
+Looking back at this project, I'm genuinely grateful for the experience. It pushed me far beyond what I expected to learn in a single coursework.
+
+### What I'm Taking Away
+
+The most valuable outcome is the set of skills I'll carry into my career. Debugging with GTKWave taught me how to systematically trace through a complex system, choosing the right signals to watch and reasoning about timing. Early on, the processor felt overwhelming with so many signals. By the end, I could follow a single instruction through the entire pipeline cycle-by-cycle. This kind of methodical analysis applies far beyond processor design.
+
+I also became much more comfortable thinking in hardware rather than software. SystemVerilog looks like code, but it describes circuits. There were moments where I wrote something that made sense sequentially, only to realize it would synthesize into something completely wrong because hardware is concurrent. The mindset shift of understanding what's happening in parallel rather than step-by-step—is something I'll use in any future hardware work.
+
+### Collaboration
+
+But beyond the technical skills, the biggest growth came from collaborating with my teammates to build something real. We started with basic components and ended up with an actual working processor. Coordinating across multiple branches, agreeing on interfaces, integrating each other's modules, debugging together. I learned how to communicate technical decisions clearly, how to divide work without creating gaps or overlaps, and how to adapt when things didn't go as planned. Having the opportunity to work with peers on something this complex was invaluable.
+
+### Research Beyond the Course
+
+The out-of-order superscalar work was also a good learning experience. The lectures gave us pipelining and basic hazard handling, but Tomasulo's algorithm wasn't covered. I spent time reading about the algorithm through different ressources (mentioned below), understanding how register renaming is implemented, and figuring out how the Re-Order Buffer maintains correctness while allowing out-of-order execution. Piecing this together from papers and documentation and then actually building it was incredibly satisfying.
+
+### Looking Forward
+
+I'm proud of what we built however there's more I'd love to explore: extending the superscalar design to handle stores, implementing speculative execution with misprediction recovery and integrating these features requires addressing 2 main challenges:
+
+**Branch and Jump Handling**: The ROB already tracks program order, which is what we need for speculative execution. On misprediction, we would flush younger ROB entries and restore the RAT. The challenge is that misprediction penalties are much worse in Out-of Order superscalar. This is because in a 2-way issue and out-of-order execution, the pipeline fills faster, so each misprediction wastes more work. Our 2-bit predictor helps, but modern wide processors use neural-network-based predictors because the cost is so high.
+
+**Store Instruction Handling**: Stores are tricky because out-of-order execution could write to memory in the wrong order. The solution is to only write to cache at commit time, ensuring stores complete in program order.
+
+This coursework gave me both the foundation and the confidence to keep going, enabling me to tackle increasingly complex projects with clarity and purpose.
+
+## 11. References
+
+- [Out-of-Order Processor Overview from ScienceDirect](https://www.sciencedirect.com/topics/computer-science/out-of-order-processor)
+- [Register Renaming Techniques](https://fiveable.me/advanced-computer-architecture/unit-6/register-renaming-techniques/study-guide/6kjpVCqRFiiGhaTX)
+- [The Reorder Buffer](https://docs.boom-core.org/en/latest/sections/reorder-buffer.html)
+- [The Rename Stage](https://docs.boom-core.org/en/latest/sections/rename-stage.html)
 
 ---
