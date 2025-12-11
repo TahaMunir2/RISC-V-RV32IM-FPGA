@@ -68,11 +68,8 @@ BEGIN
 05E : 30200073; -- MRET
 
 -- Freeze Logic (Phase 3)
-05F : 30405073; -- CSRWI mie, 0  (turn off all interrupts)
+05F : 30005073; -- CSRWI mstatus, 0  (turn off all interrupts)
 060 : FFDFF06F; -- JAL x0, -4, (don't go back to main stay here)
 [061..3FF] : 00000000;
 
 END;
-
-
-
