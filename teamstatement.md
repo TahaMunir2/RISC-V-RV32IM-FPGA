@@ -434,7 +434,94 @@ M instructions are treated as ordinary R-type ALU operations:
 Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 
 
+
+
+### Out-of-Order Superscalar Processor
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_arithmetic/README.md).
+
+A conventional pipelined processor achieves CPI ≥ 1. Our 2-way superscalar processor breaks this barrier by fetching 2 instructions per cycle and executing them on dual ALUs. **Out-of-order execution** allows independent instructions to bypass stalled ones, maximizing ALU utilization.
+
+#### Core Components (Tomasulo's Algorithm)
+
+| Component | Purpose |
+|-----------|---------|
+| **Register Alias Table (RAT)** | Renames registers to eliminate false dependencies (WAR, WAW) |
+| **Re-Order Buffer (ROB)** | Tracks instructions for in-order commit |
+| **Register Update Unit (RUU)** | Reservation stations holding instructions waiting for operands |
+| **Common Data Bus (CDB)** | Broadcasts results to wake up dependent instructions |
+
+#### Instruction Flow
+
+1. **Fetch**: 2 instructions per cycle
+2. **Decode/Rename**: Rename destinations via RAT, allocate ROB entries
+3. **Dispatch/Issue**: Place in RUU; issue to ALUs when operands ready (out of order)
+4. **Execute**: ALUs compute; results broadcast on CDB
+5. **Commit**: Retire in program order from ROB head
+
+#### Key Design Decisions
+
+**6-bit Tags:** Tag width matches ROB depth (64 entries). Each in-flight instruction gets a unique tag encoding program order.
+
+**Negative-Edge Writeback in RUU:** Discovered through GTKWave debugging, writing results on the falling edge enables same-cycle wakeup of dependent instructions, eliminating a 1-cycle delay.
+
+**Dual Commit:** The ROB can commit up to 2 instructions per cycle when both are ready at the head.
+
+| Instructions Ready at Head | Committed |
+|---------------------------|-----------|
+| 0 | 0 |
+| 1 | 1 |
+| 2+ | 2 |
+
+**Instruction 2 Depends on Instruction 1:** When two instructions fetched in the same cycle have a dependency, the RAT isn't yet updated. We added explicit bypass logic to detect this case.
+
+#### Performance
+
+| Processor Type | IPC (shift test, see Results section below) |
+|----------------|------------------|
+| In-order scalar | 1.0 |
+| In-order superscalar | 1.33 |
+| Out-of-order superscalar | **1.6** |
+
+This represents a **60% improvement** over baseline. GTKWave confirmed simultaneous ALU execution of independent instructions. (see Results section below)
+
+
+#### Schematic
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
+
+
 ---
+
+### Out-of-Order Superscalar with Load Instructions
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_full_version/README.md). 
+
+This branch extends the out-of-order superscalar processor to support load instructions (`LW`, `LH`, `LB`, `LHU`, `LBU`). The core Tomasulo infrastructure (RAT, ROB, RUU, CDB) remains unchanged.
+
+#### Key Modifications
+
+**Dual-Port Data Memory:** Two load instructions may execute simultaneously, so the data memory was adapted from single-port to dual-port with independent read interfaces.
+
+**Wider Common Data Bus (2 to 4 ports):** Results now come from both ALUs and memory. The CDB, ROB, and RUU all handle 4 writeback sources per cycle:
+
+| Port | Source |
+|------|--------|
+| `wb1` | ALU 1 |
+| `wb2` | ALU 2 |
+| `wb3` | Memory Port 1 |
+| `wb4` | Memory Port 2 |
+
+**New Execute-Memory Pipeline Register:** The memory is accessed in a subsequent Memory stage. Tags propagate so the Memory stage knows which ROB entry to update.
+
+**Single Source Operand for Loads:** Loads use only RS1 (base address). The offset is calculated in Decode and stored directly in the RUU, eliminating the need for RS2.
+
+
+#### Schematic
+
+![OOO Full Schematic](ooofull_2.png)
+
+---
+
 ## Over-arching Results
 
 ## VBuddy results
