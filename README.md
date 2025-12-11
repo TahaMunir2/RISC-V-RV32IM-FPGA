@@ -432,7 +432,7 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 ## Schematic
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ## Testing
 
