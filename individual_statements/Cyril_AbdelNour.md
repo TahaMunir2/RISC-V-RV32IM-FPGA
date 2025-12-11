@@ -911,7 +911,7 @@ For comparison with a single-cycle arithmetic-only processor:
 
 The most critical part of the integration is determining where each source operand comes from and whether it's available. For each source register, I follow this decision process:
 
-![diagram](oooadecisiontree.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/decisiontree.jpg)
 
 1. **Check RAT**: Does this register have an in-flight producer?
 2. **If no producer**: Fetch from register file (operand valid)
@@ -958,7 +958,7 @@ If there's a dependency, I bypass the normal RAT/ROB lookup and use Instruction 
 
 #### Schematic
 
-![diagram](oooashematic.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
 
 
 ### Testing
@@ -999,7 +999,7 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 GTKWave analysis confirmed simultaneous execution: ALU1 processing one instruction while ALU2 concurrently handles an independent instruction that was fetched later but had no dependencies.
 
-![diagram](oooaverifyingshifts.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
 
 We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
