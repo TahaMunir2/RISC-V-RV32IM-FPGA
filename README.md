@@ -20,12 +20,25 @@ The baseline approach predicts all branches as **not taken**, but this performs 
 
 #### Our Solution: Two-Bit Dynamic Prediction
 
-- A **one-bit predictor** remembers only the last outcome
-- Problem: it **mispredicts twice per loop** (first and last iteration)
+##### Comparing performance between a 1-bit and a 2-bit branch predictor
 
-- A **two-bit predictor** requires two consecutive mispredictions before changing its prediction
-- Four states: *Strongly Taken → Weakly Taken → Weakly Not Taken → Strongly Not Taken*
-- Result: **mispredicts only once per loop** instead of twice
+Consider a simple loop that iterates 100 times:
+
+**One-bit predictor** (remembers only the last outcome):
+- First iteration: Predicted not taken → Actually taken → **Misprediction #1**
+- Iterations 2–99: Predicted taken → Actually taken → Correct
+- Last iteration: Predicted taken → Actually not taken → **Misprediction #2**
+- **Result: 2 mispredictions per loop**
+
+**Two-bit predictor** (requires two consecutive mispredictions to flip):
+- First iteration: Starts at `WEAKLY_NOT_TAKEN`, predicted not taken → Actually taken → **Misprediction #1**, moves to `WEAKLY_TAKEN`
+- Second iteration: Now predicting taken → Actually taken → Correct, moves to `STRONGLY_TAKEN`
+- Iterations 3–99: Predicted taken → Actually taken → Correct, stays at `STRONGLY_TAKEN`
+- Last iteration: Predicted taken → Actually not taken → **Misprediction #2**, moves to `WEAKLY_TAKEN`
+- **Next loop entry**: Still predicting taken → Actually taken → **Correct** (unlike one-bit!)
+- **Result: 1 misprediction per loop** (only the exit)
+
+The key insight is that after exiting a loop, the two-bit predictor stays in `WEAKLY_TAKEN` rather than flipping to "not taken". This means when the loop is re-entered, it still predicts correctly.
 
 #### Branch Target Buffer (BTB)
 
