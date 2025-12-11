@@ -1,0 +1,88 @@
+DEPTH = 1024;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+BEGIN
+
+000 : 00100513; -- ADDI x10, x0, 1
+001 : 80002237; -- LUI x4, 0x80002
+002 : 00A22023; -- SW x10, 0(x4)
+003 : 10000093; -- ADDI x1, x0, 256
+004 : 30509073; -- CSRW mtvec, x1
+005 : 00000513; -- ADDI x10, x0, 0 (Score)
+006 : 00000A13; -- ADDI x20, x0, 0 (Pattern)
+007 : 00000593; -- ADDI x11, x0, 0 (Phase)
+008 : 00100193; -- ADDI x3, x0, 1
+009 : 00719193; -- SLLI x3, x3, 7
+00A : 8001E193; -- ORI x3, x3, 0x800
+00B : 30419073; -- CSRW mie, x3
+00C : 00800113; -- ADDI x2, x0, 8
+00D : 30011073; -- CSRW mstatus, x2
+00E : 800012B7; -- LUI x5, 0x80001
+00F : 0002A223; -- SW x0, 4(x5)
+010 : 02FAF337; -- LUI x6, 0x02FAF
+011 : 08030313; -- ADDI x6, x6, 0x080
+012 : 0062A023; -- SW x6, 0(x5)
+
+-- Main Loop
+013 : 0000006F; -- JAL x0, 0
+[014..03F] : 00000013;
+
+-- Trap Handler
+040 : 342022F3; -- CSRR x5, mcause
+041 : 00F2F293; -- ANDI x5, x5, 15 (Mask bottom 4 bits)
+042 : 00B00313; -- ADDI x6, x0, 11 (Load 11)
+043 : 06628663; -- BEQ x5, x6, FREEZE (Offset 108 / 27 words)
+
+-- Check Phase
+044 : 04059463; -- BNE x11, x0, RACE (Offset 64 / 16 words)
+
+-- Fill Logic
+045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF
+046 : 020A8063; -- BEQ x21, x0, TRANSITION (Offset 32 / 8 words)
+
+-- Shift Logic 
+047 : 001A1A13; -- SLLI x20, x20, 1
+048 : 001A6A13; -- ORI x20, x20, 1
+049 : 80002237; -- LUI x4, 0x80002
+04A : 01422023; -- SW x20, 0(x4)
+-- Reload Slow Timer
+04B : 02FAF337; -- LUI x6, 0x02FAF
+04C : 08030313; -- ADDI x6, x6, 0x080
+04D : 0380006F; -- JAL x0, EXIT (Offset 56 / 14 words)
+
+-- Transition Logic
+04E : 00000A13; -- ADDI x20, x0, 0
+04F : 00100593; -- ADDI x11, x0, 1
+050 : 00000513; -- ADDI x10, x0, 0
+051 : 80002237; -- LUI x4, 0x80002
+052 : 01422023; -- SW x20, 0(x4)
+-- Reload Fast Timer
+053 : 0007A337; -- LUI x6, 0x0007A
+054 : 12030313; -- ADDI x6, x6, 0x120
+055 : 0180006F; -- JAL x0, EXIT (Offset 24 / 6 words)
+
+-- Race Logic
+056 : 00150513; -- ADDI x10, x10, 1
+057 : 80002237; -- LUI x4, 0x80002
+058 : 00A22023; -- SW x10, 0(x4)
+-- Reload Fast Timer
+059 : 0007A337; -- LUI x6, 0x0007A
+05A : 12030313; -- ADDI x6, x6, 0x120
+-- Fall through
+
+-- Exit (Reload Timer & Return)
+05B : 800012B7; -- LUI x5, 0x80001
+05C : 0002A223; -- SW x0, 4(x5)
+05D : 0062A023; -- SW x6, 0(x5)
+05E : 30200073; -- MRET
+
+-- Freeze Logic
+05F : 30405073; -- CSRWI mie, 0 
+060 : FFDFF06F; -- JAL x0, 
+
+[061..3FF] : 00000000;
+
+END;
