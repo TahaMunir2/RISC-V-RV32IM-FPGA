@@ -1,4 +1,4 @@
-How to use our Github:
+# How to use our Github:
 
 ## Team Statement:
 
