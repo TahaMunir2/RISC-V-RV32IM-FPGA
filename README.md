@@ -372,7 +372,7 @@ The ROB performs three sequential operations: **Allocation**, **Writeback**, and
 
 When instructions are dispatched, they are allocated at the `tail` pointer. The `tail` advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](rob-allocation.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-allocation.png)
 
 In this diagram, we clearly observe how the tail pointer advances in the buffer at allocation.
 
@@ -380,7 +380,7 @@ In this diagram, we clearly observe how the tail pointer advances in the buffer 
 
 When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`.
 
-![diagram](rob-writeback.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-writeback.png)
 
 In this diagram, we clearly observe how the common data bus transmits the results of each execution which are allocated to specific tags in the Re-Order Buffer.
 We also note that since execution does not occur in order, the transmission of data in the Re-Order Buffer will not necessarly follow the program order.
