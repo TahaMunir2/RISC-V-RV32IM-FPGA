@@ -643,7 +643,7 @@ To maximize throughput, we divide the processor into **5 pipeline stages**, each
 
 The following table (from Harris and Harris) shows typical propagation delays:
 
-![diagram](component_delays.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/component_delays.png)
 
 ---
 
