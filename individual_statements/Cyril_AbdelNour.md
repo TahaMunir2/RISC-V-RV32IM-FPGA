@@ -639,6 +639,53 @@ All test cases pass.
 
 ---
 
+## 6. Cache Implementation
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/hierarchalcache/README.md).
+
+We implemented a full memory hierarchy: 2-way associative L1 instruction and data caches, and a 4-way associative L2 cache with write-back policy and dirty bit tracking.
+
+| Cache | Size | Sets | Associativity | Block Size |
+|-------|------|------|---------------|------------|
+| L1 Instruction | 4096 B | 128 | 2-way | 4 words |
+| L1 Data | 4096 B | 128 | 2-way | 4 words |
+| L2 | 8192 B | 64 | 4-way | 8 words |
+
+### 6.1 L1 Cache Design
+
+I was heavily involved in the brainstorming sessions where we defined the cache architecture and replacement policies. I wrote the first draft implementation of the L1 cache controller, including the LRU replacement logic for 2-way associativity.
+
+My teammates then rewrote and adapted this logic to fit within the full cache circuit, adding support for different load sizes (byte, half-word, word), signed/unsigned extension, and the store path with dirty bit management. The final L1 data cache handles loads and stores of different sizes, write-back to L2, and stall generation on misses.
+
+### 6.2 Top-Level Integration
+
+I was responsible for integrating the cache hierarchy into the pipelined processor. The challenge was that when an L1 cache misses, the entire pipeline must freeze, because if the instruction cache misses there's nothing to decode and if the data cache misses the memory stage cannot complete.
+
+I created global stall signals that propagate through every pipeline component:
+
+| Component | Enable Signal |
+|-----------|---------------|
+| Fetch-Decode Register | `!(stall_l1i \|\| stall_l1d)` |
+| Decode-Execute Register | `!(stall_l1i \|\| stall_l1d)` |
+| Execute-Memory Register | `!(stall_l1i \|\| stall_l1d)` |
+| Memory-Writeback Register | `!(stall_l1i \|\| stall_l1d)` |
+| PC Block | `!(stall_l1i \|\| stall_l1d)` |
+| Branch Predictor | `!(stall_l1i \|\| stall_l1d)` |
+
+When either stall signal is high, every register holds its value, the PC stops incrementing, and the branch predictor stops updating. Once the miss is resolved, the pipeline resumes exactly where it left off.
+
+One subtlety: in simulation, cache hits still take one cycle, so there's no visible speedup. But in real hardware, a cache hit takes 1-3 nanoseconds while main memory takes 50-100 nanoseconds. The cache hierarchy would provide significant acceleration in a physical implementation.
+
+### 6.3 Testing
+
+I tested the full cache integration using assembly programs that had previously worked correctly on the pipelined processor (with branch prediction) without cache. This approach let me isolate cache-related bugs from other issues.
+
+One bug I caught through GTKWave was particularly subtle. A loop that ran correctly without cache started mispredicting every branch once cache was enabled. Tracing through the signals, I noticed the branch predictor was updating its state during cache stalls but with garbage inputs, since the pipeline was frozen and no valid branch information was flowing. The predictor table got corrupted.
+
+The fix was simple once I understood the problem: I had forgotten to include the branch predictor in the global stall logic. Adding `enable_branch_predictor = !(stall_l1i || stall_l1d)` ensured the predictor freezes alongside everything else during a cache miss.
+
+---
+
 ## 7. Out-of-Order Superscalar (Arithmetic Instructions)
 
 For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/ooo-superscalar/README.md).
