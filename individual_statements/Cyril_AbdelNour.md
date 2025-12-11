@@ -577,7 +577,7 @@ end
 
 Here is the top sheet schematic for reference :
 
-![diagram]([https://github.com/TahaMunir2/Team5/blob/branchprediction/branchprediction.png])
+![diagram]([branchprediction (4).png])
 
 Thus, I achieve the key improvement: when the predictor guesses correctly, I avoid the flush penalty entirely.
 
