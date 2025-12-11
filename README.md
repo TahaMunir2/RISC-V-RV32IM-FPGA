@@ -845,20 +845,130 @@ Next, we wanted to out our timer interrupt logic for this we needed a test that 
 ```
 - 8-E set up the CSRs the same as before, but now for timers instead of trigger
 - F just clears a0 to be safe
-- 10-13 set the timer to be 33,554,432 cycles which at 50MHz should only take about 2/3's of a second
+- 10-13 set the timer to be 33,554,432 cycles, which at 50MHz should only take about 2/3's of a second
 - 14 is an infinite loop
 - 1 (This is now in the trap handler) increments a0 by 1 (for our counter)
 - 2-3 set the LEDs to display a0 (in binary)
 - 4-6 reset the timer with the same value (our time resets if we set it)
 - mret to go back to our infinite loop
 
-This creates a simple binary counter with the value shown in Hex on the left as shown below:
+This creates a simple binary counter with the value shown in Hex on the left, as shown below:
 
 https://github.com/user-attachments/assets/702378ec-2748-4001-a209-32438d559ac6
 
 ## F1 Lights 
 
+Finally, we wanted to recreate the F1 lights reaction test on our FPGA, now using our brand new timer and external interrupts for synchronisation and inputs.
+
+First, I created this FSM model and defined 4 states for the implementation.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/F1FSM.png)
+
+- S0: We increment the amount of LEDs that are on 1 by 1 until they are all on.
+- S1: Once they are all on, we wait 1 second and turn them off.
+- S2: We start incrementing a0 to test reaction time.
+- S3: If the trigger is pressed, then stop everything and display the reaction time.
+
+This can be written in assembly for the .mif file as follows:
+
+### Setup
+```asm
+000 : 00100513; -- ADDI x10, x0, 1
+001 : 80002237; -- LUI x4, 0x80002
+002 : 00A22023; -- SW x10, 0(x4) (turn on first LED)
+003 : 10000093; -- ADDI x1, x0, 256
+004 : 30509073; -- CSRW mtvec, x1 (set trap handler address (040))
+005 : 00000513; -- ADDI x10, x0, 0 (x10 = 0)
+006 : 00000A13; -- ADDI x20, x0, 0 (x20 = 0)
+007 : 00000593; -- ADDI x11, x0, 0 (x11 = 0)
+008 : 00100193; -- ADDI x3, x0, 1 (x3 = 1)
+009 : 00719193; -- SLLI x3, x3, 7 (bit 7 = 1)
+00A : 8001E193; -- ORI x3, x3, 0x800 (bit 11 and bit 7 = 1) 
+00B : 30419073; -- CSRW mie, x3
+00C : 00800113; -- ADDI x2, x0, 8
+00D : 30011073; -- CSRW mstatus, x2 (MIE = 1)
+00E : 800012B7; -- LUI x5, 0x80001
+00F : 0002A223; -- SW x0, 4(x5) (clear upper bits)
+010 : 02FAF337; -- LUI x6, 0x02FAF 
+011 : 08030313; -- ADDI x6, x6, 0x080 (x6 = 50,000,000 or 1s at 50Mhz)
+012 : 0062A023; -- SW x6, 0(x5)
+013 : 0000006F; -- JAL x0, 0 (loop)
+[014..03F] : 00000013;
+```
+
+### Trap Handler Setup
+```asm
+-- Trap Handler
+040 : 342022F3; -- CSRR x5, mcause 
+041 : 00F2F293; -- ANDI x5, x5, 15 (mask bottom 4 bits)
+042 : 00B00313; -- ADDI x6, x0, 11 (Load 11)
+043 : 06628663; -- BEQ x5, x6, Freeze (offset 112, if external interrupt then jump to state 3)
+044 : 04059463; -- BNE x11, x0, Count-up (offset 72, if x11 is high, we are in state 2)
+045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check if leds all high)
+046 : 020A8063; -- BEQ x21, x0, Transition (offset 32, branch to transition if x21 is 0, state 1)
+```
+
+### State 0
+```asm
+-- LEDs light up (state 0):
+047 : 001A1A13; -- SLLI x20, x20, 1  (turn next LED on: state 0)
+048 : 001A6A13; -- ORI x20, x20, 1 (keep the previous LEDs on)
+049 : 80002237; -- LUI x4, 0x80002
+04A : 01422023; -- SW x20, 0(x4) (update LED)
+04B : 02FAF337; -- LUI x6, 0x02FAF
+04C : 08030313; -- ADDI x6, x6, 0x080 (prepare to load timer)
+04D : 0380006F; -- JAL x0, Exit (offset 56)
+```
+
+### State 1
+```asm
+-- Transition (state 1)
+04E : 00000A13; -- ADDI x20, x0, 0 (x20 = 0, turn off LEDs)
+04F : 00100593; -- ADDI x11, x0, 1 (x11 = 1, go to state 2 next time)
+050 : 00000513; -- ADDI x10, x0, 0 (reset x10)
+051 : 80002237; -- LUI x4, 0x80002 
+052 : 01422023; -- SW x20, 0(x4) (store LEDS to turn off)
+053 : 0007A337; -- LUI x6, 0x0007A
+054 : 12030313; -- ADDI x6, x6, 0x120 (prepare timer for 0.1s, 7A120 is 500,000)
+055 : 0180006F; -- JAL x0, Exit (offset 24)
+```
+
+### State 2
+```asm
+-- Count-up (state 2)
+056 : 00150513; -- ADDI x10, x10, 1 (increment a0)
+057 : 80002237; -- LUI x4, 0x80002
+058 : 00A22023; -- SW x10, 0(x4) (update LEDs to show x10)
+059 : 0007A337; -- LUI x6, 0x0007A
+05A : 12030313; -- ADDI x6, x6, 0x120 (reset timer for 0.1s)
+```
+
+### State 3
+```asm
+-- Freeze Logic (state 3)
+05F : 30005073; -- CSRWI mstatus, 0  (turn off all interrupts)
+060 : FFDFF06F; -- JAL x0, -4, (don't go back to main stay here)
+[061..3FF] : 00000000;
+```
+
+### Trap Handler exit for States 0, 1 and 2
+```asm
+-- Exit (part of state 0, 1 and 2)
+05B : 800012B7; -- LUI x5, 0x80001
+05C : 0002A223; -- SW x0, 4(x5)
+05D : 0062A023; -- SW x6, 0(x5) (set timer)
+05E : 30200073; -- MRET
+```
+
+- We have made use of branch instructions to implement the FSM conditions.
+- We have made use of the fact that the timer resets every time we set i,t, but also that we can change what it's set to.
+- To stop the program once we press the trigger, we disable all interrupts after it is pressed.
+- We increment a0 by 1 every 10ms, so to determine your reaction time, you must multiply a0 (in hex) by 0.01.
+
+This leads to the satisfying demonstration below:
+
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
+> Note, we reused the binary counter logic here to show how cool it looks at a faster speed
 
 
 
