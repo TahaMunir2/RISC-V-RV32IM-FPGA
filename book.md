@@ -4,7 +4,7 @@
 
 [1. Single Cycle Reduced RV32I CPU](#Single-cycle-Reduced-RV32I-CPU)
   
-[2. Full RV32I (37 Instruction)](#Full-RV32I-(37-Instruction))
+[2. Full RV32I (37-Instruction)](#Full-RV32I-(37-Instruction))
 
 [3. Pipelined RISC-V Processor](#Pipelined-RISC-V-Processor)
 
@@ -643,7 +643,7 @@ https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
 
 ---
 
-# Full RV32I (37 Instruction):
+# Full RV32I (37-Instruction):
 
 ## Table of Contents
 - [1. Overview](#overview)
