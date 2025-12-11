@@ -3199,6 +3199,26 @@ Here are the results:
 
 # M-type Instructions
 
+**Table of Contents**
+
+* [1. Scope](#1-scope)
+* [2. ALU changes](#2-alu-changes)
+    * [2.1 ALUCtrl widened](#21-aluctrl-widened)
+    * [2.2 Multiplication implementation](#22-multiplication-implementation)
+    * [2.3 Division and remainder with edge cases](#23-division-and-remainder-with-edge-cases)
+* [3. Control-Path Changes for M Instructions](#3-control-path-changes-for-m-instructions)
+    * [3.1 Wider ALUCtrl output](#31-wider-aluctrl-output)
+    * [3.2 Decoding M operations under OPC_OP](#32-decoding-m-operations-under-opc_op)
+* [4. Interaction with the Existing Pipeline and Hazards](#4-interaction-with-the-existing-pipeline-and-hazards)
+* [5. Summary](#5-summary)
+* [5. ALU test cases (selected) — exact format](#5-alu-test-cases-selected--exact-format)
+    * [5.1.11 ALU Test: DIVU (Unsigned Division by Zero)](#5111-alu-test-divu-unsigned-division-by-zero)
+    * [5.1.12 ALU Test: REM (Remainder with Divisor Zero)](#5112-alu-test-rem-remainder-with-divisor-zero)
+    * [5.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)](#5113-alu-test-remu-unsigned-remainder-with-divisor-zero)
+* [6. Trade-offs & notes](#6-trade-offs--notes)
+
+---
+
 This document describes how the RV32M integer multiply/divide extension was integrated into our RV32I core. It focuses only on the added functionality and the changes made to the ALU and control modules. Everything else in the CPU (pipeline, hazard unit, register file, memories, etc.) is unchanged.
 
 ---
@@ -3377,7 +3397,7 @@ and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
 
 
-## 3. Control‑Path Changes for M Instructions
+## 3. Control Path Changes for M Instructions
 
 To support RV32M, the control unit (`control.sv`) was extended in two ways:
 
