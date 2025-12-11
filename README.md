@@ -95,7 +95,7 @@ However, if the read request is a miss, the instruction cache stalls the rest of
 #### Load from L2
 On a miss the instruction cache needs to decide which way to store the fetched data into. For cold misses, our cache defaults to replacing block 0 if both bits are invalid, or block 1 if block0.valid = 1. However, for capacity misses, our cache uses an LRU replacement policy.
 
-![alt text](image.png)
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage.png)
 
 Cold miss eviction:
 - `!cache[set].block0.valid && !cache[set].block1.valid` → both blocks are invalid → replace block 0
