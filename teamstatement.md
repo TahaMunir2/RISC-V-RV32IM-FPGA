@@ -432,6 +432,8 @@ M instructions are treated as ordinary R-type ALU operations:
 
 Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 
+---
+
 ### Z-type Extensions (Zicsr and Zba)
 
 For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
@@ -454,6 +456,14 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 
 #### Schematic
 
+
+---
+### FPGA and Interrupts
+
+
+
+
+---
 
 ### Out-of-Order Superscalar Processor
 
