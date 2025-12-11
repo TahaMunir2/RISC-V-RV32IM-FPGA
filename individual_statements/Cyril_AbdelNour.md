@@ -395,7 +395,7 @@ The baseline approach predicts all branches as not taken, but this performs poor
 
 ### 5.1 Branch Predictor
 
-#### Why Two Bits Instead of One?
+#### Two Bits Instead of One
 
 A one-bit predictor remembers only the last outcome. The problem is it mispredicts twice per loop: once at the first iteration (no history yet) and once at the last iteration (pattern breaks).
 
