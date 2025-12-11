@@ -20,6 +20,89 @@ Our final design is split amongst 3 different models:
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
 
 
+## Over-arching Results
+
+## VBuddy results
+#### F1 test on Vbuddy
+
+
+
+https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
+
+
+
+
+
+#### gaussian.mem
+
+
+
+
+https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
+
+
+
+
+#### triangle.mem
+
+
+
+
+https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
+
+
+
+#### noisy.mem, 1
+
+
+
+
+
+https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
+
+
+
+
+#### noisy.mem, 2
+
+
+
+
+https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
+
+
+### Superscalar arithmetic: Shift Operations (`sup_shifts.s`)
+```asm
+addi t0, zero, 1
+slli t1, t0, 4          # t1 = 16
+slli t2, t1, 2          # t2 = 64
+addi t3, zero, 256
+srli t4, t3, 1          # t4 = 128
+add  a0, t2, t4         # a0 = 192
+srli a0, a0, 1          # a0 = 96
+addi a0, a0, 32         # a0 = 128
+```
+This test verifies shift-immediate operations (slli, srli) with RAW dependencies. The processor must correctly execute logical shifts and forward results through the CDB for dependent instructions. Expected output: **a0 = 128**.
+
+This waveform provides evidence of the performance advantage of out-of-order execution. We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
+
+**IPC Calculation:**
+
+- In-order scalar processor: 8 instructions ÷ 8 cycles = **IPC = 1.0**
+- In-order superscalar processor: 8 instructions ÷ 6 cycles = **IPC = 1.33**
+- Out-of-order superscalar: 8 instructions ÷ 5 cycles = **IPC = 1.6**
+
+This represents a **60% improvement** over the baseline IPC of 1.
+
+---
+
+### FPGA and Interrupts: F1 test on DE-10 Lite
+
+
+https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
+
 ## Future Considerations
 
 Our current implementation represents a solid foundation that is architecturally close to supporting several advanced features. The modular design choices we made throughout the project position us well for future extensions. This section outlines the next steps we would pursue given additional time.
