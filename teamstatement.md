@@ -24,7 +24,7 @@ Our final design is split amongst 3 different models:
 
 Our current implementation represents a solid foundation that is architecturally close to supporting several advanced features. The modular design choices we made throughout the project position us well for future extensions. This section outlines the next steps we would pursue given additional time.
 
-![Project Roadmap](Blank_diagram__2_.png)
+![Project Roadmap](images/futureconsiderations.png)
 
 ### Out-of-Order Superscalar with Branches, Jumps, and Store Instructions
 
