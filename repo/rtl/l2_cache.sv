@@ -388,7 +388,14 @@ module l2_cache #(
             end
         end
 
-        if ((l2write_buffer == 2'b10) && wb_ready) begin
+        if ((l1write_buffer && miss_wb) && wb_ready) begin
+            write_back_en_next = 1;
+            write_back_data_next = l1write_back_data_buffer;
+            write_back_addr = l1write_back_addr_buffer;
+            l1write_buffer_next = l1write_buffer - 1;
+        end
+
+        else if ((l2write_buffer == 2'b10) && wb_ready) begin
             write_back_en_next = 1;
             write_back_data_next = l2write_back_data_buffer[127:0];
             write_back_addr = l2write_back_addr_buffer;
@@ -400,13 +407,6 @@ module l2_cache #(
             write_back_data_next = l2write_back_data_buffer[255:128];
             write_back_addr = {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
             l2write_buffer_next = l2write_buffer - 1;
-        end
-
-        else if ((l1write_buffer && miss_wb) && wb_ready) begin
-            write_back_en_next = 1;
-            write_back_data_next = l1write_back_data_buffer;
-            write_back_addr = l1write_back_addr_buffer;
-            l1write_buffer_next = l1write_buffer - 1;
         end
 
         if (l1write_buffer && !rd_en && !wr_en && !miss_wb) begin

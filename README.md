@@ -388,7 +388,7 @@ However, because the upper triangle contains all the necessary information and t
 
 Furthermore, given that our cache is only 4-way associative, we opted to brute force the solution instead of restructuring the approach above to rely exclusively on the upper triangle of the matrix.This led to the eviction victim block selection logic shown below:
 
-4-way associative LRU replacement policy:
+Eviction logic:  
 ```SystemVerilog
 if (!valid0)      way_rd = 2'b00;
 else if (!valid1) way_rd = 2'b01;
@@ -465,6 +465,13 @@ logic [ADDRESS_WIDTH-1:0] l1write_back_addr_buffer_next;
 
 Upon receiving a write-back request from the data cache, if the L1 write-back buffer is empty, the L2 cache loads the buffer with the provided data and address, asserts l1write_buffer to indicate that the buffer is full, and raises wb_ready_d to confirm to the data cache that the write-back data has been successfully captured.
 
+| l1write_buffer | l1write | action |
+| --- | --- | --- |
+| 0 | 0 | do nothing as no writeback request has been issued |
+| 0 | 1 | fill in the buffer as a writeback request has been issued, and the buffer is empty |
+| 1 | 0 | do nothing as no writeback request has been issued |
+| 1 | 1 | do not fill as the buffer is already full |
+
 l1write_buffer fill logic:
 ```SystemVerilog
 if (l1write && !l1write_buffer) begin
@@ -478,7 +485,7 @@ end
 
 The L1 write buffer also performs its own hit/miss check using the address stored in the buffer.
 
-If the L1 writeback buffer detects a hit, it writes the data to the matching address. However, because the cache has only one internal way selection unit and a single write path, it cannot perform write-back buffer operations concurrently with L1 reads or main memory loads. We have decided to give these operations priority, so the buffer must wait until the cache is idle before issuing a write.
+If the L1 writeback buffer detects a hit, it writes the data to the matching address. However, because the cache has only one internal way selection unit and a single write path, it cannot perform write-back buffer operations concurrently with L1 reads or main memory loads. We have decided to give these operations priority, so the buffer must wait until the cache is idle before issuing a write. When issuing a write from the L1 writeback buffer, we also assert wr_wb to indicate that the write originates from the L1 cache. This ensures that the target block is correctly marked as dirty.
 
 l1write_buffer hit logic:
 ```SystemVerilog
@@ -506,8 +513,69 @@ if (l1write_buffer && !rd_en && !wr_en && !miss_wb) begin
 end
 ```
 
-There is also one edge case that needs to be dealt with to ensure data preservation. This is when the writeback buffer is full and has an address that matches the address being returned by main memory for a load operation. This means that the data from main memory is outdated and the wrong data could be stored into the cache, but the cache would still detect a miss. Since both the write function and the deassertion of l1write_buffer (to signal that the buffer is empty) are synchronous, the L2 cache could simultaneously write in the old data from main memory and pass on the new data to main memory. This would mean that the data passed onto the L1 caches and, subsequently, the processor would be old and inaccurate. To combat this, we implemented an ad-hoc fix specifically for this case.
+However, L1 writeback buffer misses need to be handled differently.
 
+#### Writeback to Main Memory
+
+The L2 cache includes a 4 word writeback data port to main memory. This port handles both L1 writeback misses, which are forwarded directly through the L2 and dirty lines evicted from the L2 cache itself. Since L2 writebacks consist of 8 words instead of 4, they must be issued as two separate 4-word writes to main memory. The l2write_buffer[1:0] signal indicates the number of 4-word segments that are still pending.
+
+We prioritize the L1 writeback buffer over the L2 buffer because it is smaller and easier to drain, and because L1 misses occur far more frequently than combined L1+L2 misses. Giving it priority reduces the likelihood of stalling the processor.
+
+When main memory asserts wb_ready for the L2 cache, indicating it can accept another writeback, the L2 cache asserts write_back_en, outputs the appropriate writeback address and data, and then decrements the number of remaining words in its writeback buffer by one.
+
+| l2write_buffer | l1write_buffer | wb_ready | write_back_data | write_back_addr | write_back_en |
+| --- | --- | --- | --- | --- | --- |
+| 00 | 0 | 0 | X | X | 0 |
+| 00 | 0 | 1 | X | X | 0 |
+| 00 | 1 | 0 | X | X | 0 |
+| 00 | 1 | 1 | l1_write_buffer_data | l1_write_buffer_addr | 1 |
+| 01 | 0 | 0 | X | X | 0 |
+| 01 | 0 | 1 | l2_write_buffer_data[127:0] (bottom 4 words) | l2_write_buffer_addr | 1 |
+| 01 | 1 | 0 | X | X | 0 |
+| 01 | 1 | 1 | l1_write_buffer_data | l1_write_buffer_addr | 1 |
+| 10 | 0 | 0 | X | X | 0 |
+| 10 | 0 | 1 | l2_write_buffer_data[255:128] (top 4 words) | address of the bottom byte of the top 4 words | 1 |
+| 10 | 1 | 0 | X | X | 0 |
+| 10 | 1 | 1 | l1_write_buffer_data | l1_write_buffer_addr | 1 |
+
+L2 writeback logic:
+```SystemVerilog
+if ((l1write_buffer && miss_wb) && wb_ready) begin
+    write_back_en_next = 1;
+    write_back_data_next = l1write_back_data_buffer;
+    write_back_addr = l1write_back_addr_buffer;
+    l1write_buffer_next = l1write_buffer - 1;
+end
+
+else if ((l2write_buffer == 2'b10) && wb_ready) begin
+    write_back_en_next = 1;
+    write_back_data_next = l2write_back_data_buffer[127:0];
+    write_back_addr = l2write_back_addr_buffer;
+    l2write_buffer_next = l2write_buffer - 1;
+end
+
+else if ((l2write_buffer == 2'b01) && wb_ready) begin
+    write_back_en_next = 1;
+    write_back_data_next = l2write_back_data_buffer[255:128];
+    write_back_addr = {l2write_back_addr_buffer[31:5], 1'b1, l2write_back_addr_buffer[3:0]};
+    l2write_buffer_next = l2write_buffer - 1;
+end
+```
+There is also a critical edge case that must be addressed to ensure data integrity. When the writeback buffer is full and its stored address matches the address returned by main memory during a load, the returning data is obsolete and risks being written into the cache, despite the cache still registering a miss. Because the write operation and the deassertion of l1write_buffer occur synchronously, the L2 cache could, in the same cycle, write stale memory data into the cache while simultaneously forwarding the newer data to main memory. This would propagate incorrect values to the L1 caches and eventually to the processor. To mitigate this, we implemented a specific ad-hoc fix for this situation.
+
+Specific patch for edge case:
+```SystemVerilog
+if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) begin
+    wr_wb = 1;
+    l1write_buffer_next = l1write_buffer - 1;
+    if (block_offset_wb == 3'b000) begin
+        write_data[127:0] = l1write_back_data_buffer;
+    end
+    else if (block_offset_wb == 3'b100) begin
+        write_data[255:128] = l1write_back_data_buffer;
+    end
+end
+```
 ---
 
 ## 3. Schematic
