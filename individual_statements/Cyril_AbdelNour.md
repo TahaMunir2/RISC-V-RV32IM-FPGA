@@ -118,7 +118,7 @@ Extending from 9 to 37 instructions required changes to both the datapath and co
 
 **New Multiplexer for AUIPC:** I added a multiplexer (`mux_pcVSreg`) to select between `rs1` and the program counter as the first ALU operand. This was needed for `AUIPC`, which computes `PC + immediate`.
 
-I noticed something useful about RISC-V: the PC is never paired with a register operand—it's always paired with an immediate. This meant I could safely add this mux without affecting other instructions.
+I noticed something useful about RISC-V: the PC is never paired with a register operand, it's always paired with an immediate. This meant I could safely add this mux without affecting other instructions.
 
 ```systemverilog
 mux mux_pcVSreg(
@@ -208,10 +208,181 @@ All 37 instructions pass verification.
 
 ## 4. Pipelined Processor
 
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/PIPELINING/README.md#2-implementation).
+
+Pipelining lets different parts of multiple instructions run at the same time. Instead of finishing one instruction before starting the next, we divide the processor into 5 stages (Fetch, Decode, Execute, Memory, Writeback) with registers between them. This increases throughput significantly.
+
 ### 4.1 Forwarding Logic
+
+Data hazards happen when an instruction needs a result that's still in the pipeline. Instead of stalling, I added forwarding paths to send data directly from where it's available to where it's needed.
+
+The key insight is that a result computed by the ALU is available at the end of the Execute stage, before it gets written back to the register file. I added two 4-to-1 multiplexers at the ALU inputs to select between three sources:
+
+```systemverilog
+mux4 forwardingRS1(
+    .in0(RD1E),           // 00: Normal path from register file
+    .in1(ResultW),        // 01: Forward from Writeback stage
+    .in2(ALUResultM),     // 10: Forward from Memory stage
+    .in3(RD1E),           // 11: Unused (default to register file)
+    .select_line(ForwardAE),
+    .out(SrcAE)    
+);
+
+mux4 forwardingRS2(
+    .in0(RD2E),           // 00: Normal path from register file
+    .in1(ResultW),        // 01: Forward from Writeback stage
+    .in2(ALUResultM),     // 10: Forward from Memory stage
+    .in3(RD2E),           // 11: Unused (default to register file)
+    .select_line(ForwardBE),
+    .out(WriteDataE)    
+);
+```
+
+The Hazard Unit monitors register addresses across pipeline stages and generates `ForwardAE` and `ForwardBE` to control these muxes.
 
 ### 4.2 Top-Level Integration
 
+Integrating the pipeline required careful attention to signal naming and control signal propagation.
+
+**Signal Naming Convention:** With pipeline registers, the same signal exists in multiple stages for different instructions. I used suffixes to distinguish them:
+
+| Suffix | Stage | Example |
+|--------|-------|---------|
+| `F` | Fetch | `PCF`, `InstrF` |
+| `D` | Decode | `PCD`, `RD1D`, `RD2D` |
+| `E` | Execute | `PCE`, `ALUResultE` |
+| `M` | Memory | `PCM`, `ALUResultM` |
+| `W` | Writeback | `ResultW`, `RdW` |
+
+**Control Signal Propagation:** The control unit itself stays the same as the single-cycle version. The difference is that all control signals must travel through the pipeline registers alongside the data. For example, `MemWrite` generated in Decode must arrive at the Memory stage exactly when the corresponding instruction gets there.
+
+**Register File Timing:** A key design strategie, implemented in the Register File, was to write on the falling edge of the clock instead of the rising edge. This lets:
+- First half of cycle: Write to register file (Writeback stage)
+- Second half of cycle: Read from register file (Decode stage)
+
+### 4.3 Testing
+
+#### 1) Pipelined Overlapping (No Hazards)
+This test demonstrates correct instruction overlapping in the pipeline when no data or control hazards are present, confirming that multiple instructions execute simultaneously across different pipeline stages.
+Here is the assembly code run by the processor and the results are shown in the waveform below:
+This assembly code can be found in the `asm` folder and was created for testing the instruction overlapping characteristic introduced by pipelining.
+```
+.text
+.globl main
+main:
+    addi    t0, zero, 10        # t0 = 10 
+    addi    t1, zero, 20        # t1 = 20 
+    addi    t2, zero, 30        # t2 = 30 
+    addi    t3, zero, 40        # t3 = 40
+    addi    a0, t3, 0           # a0 = t3 = 40
+```
+**Waveform:**
+![diagram](images/pipeliningparrallelism.jpg)
+
+---
+
+#### 2) Data Hazards: Read After Write (RAW)
+This test verifies the forwarding unit by demonstrating how RAW hazards are resolved through the forwarding muxes, showing the change in the forward select lines when a dependent instruction requires data from a previous instruction still in the pipeline.
+Here is the assembly code run by the processor and the results are shown in the waveform below:
+I modified the assembly code provided in the `asm` folder `2_li_add` such that `li` is replaced with `addi`.
+`li` is broken down into `lui` and `addi`, thus when `add a0, t1, t2` is in the execute stage of the original program `2_li_add` only one of the operand depends on a previous instruction still in the pipeline.
+With this modification I have both `addi t1, zero, -900` and `addi t2, 10000` still in the pipeline when `add a0, t1, t2` is in the execute stage.
+Note that since `addi` is an I-type instruction -9000 and 10000 are outside the range allowed for the immediate operand. Thus I changed the immediates to 1000 and -900 to adapt to my previous modifications.
+Note that I also removed the branch instructions here because they don't provide any insights in demonstrating how RAW hazards are resolved through the forwarding muxes.
+```
+.text
+.globl main
+main:
+    # li is broken into lui and addi for >12-bit values
+    # don't forget that addi sign-extends
+    addi t1, zero, -9000    # t1 = -900
+    addi t2, zero, 10000    # t2 = 1000
+    add a0, t1, t2  # a0 = t1 + t2      (=1000)
+```
+The `add a0, t1, t2` instruction depends on the values of t1 and t2, which are written by the immediately preceding `addi` instructions still in the pipeline. 
+Since these values have not yet been written back to the register file, the forwarding unit detects the RAW hazard and routes the results directly from the Memory and Writeback pipeline registers to the ALU inputs. 
+This allows the add instruction to execute correctly without stalling, demonstrating the effectiveness of my forwarding mechanism.
+**Waveform:**
+![diagram](images/pipeliningverifyforwarding.jpg)
+
+---
+
+#### 3) Load-Use Hazards
+This test demonstrates the 1-cycle stall required when a load instruction is immediately followed by a dependent instruction. The stall is achieved by:
+- Disabling (freezing) the FD pipeline register for 1 cycle
+- Preventing the program counter from incrementing for 1 cycle
+- Flushing the DE pipeline register
+
+To illustrate these points on GTKWave I use the assembly test: `3_lbu_sb`, where I am only interested in the following part:
+```
+    lbu t3, 0(s0)   # t3 = *(0x00010000)    (=100)
+    lbu t4, 1(s0)   # t4 = *(0x00010001)    (=200)
+    add a0, t3, t4  # a0 = t3 + t4          (=300)
+```
+In the following waveform, I can track the cycle in which the `add a0, t3, t4` reaches the Decode stage through the signal `InstrD` and the cycle in which it reaches the Execute stage through the ALU operands value (0xC8 corresponds to 200 and 0x64 corresponds to 100).
+An important observation is that the Decode stage and the Execute stage are separated by 1 cycle caused by the stall.
+The signals causing the stall are also shown in the waveform.
+**Waveform:**
+![diagram](images/pipeliningverifyload.jpg)
+
+---
+
+#### 4) Control Hazards: Branch Misprediction
+Branches are predicted as not taken by default (see [Branch Prediction Enhancement](https://github.com/TahaMunir2/Team5/tree/branchprediction) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
+I used the assembly code `6_beq` with a small modification consisting of adding 2 instructions after the branch to illustrate how a flush occurs to discard the incorrectly fetched instructions.
+```
+.text
+.globl main
+main:
+    addi t1, zero, 1
+    li a0, 0
+iloop:
+    addi a0, a0, 1
+    beq t1, a0, iloop
+    addi a0, a0, 0
+    addi a0, a0, 0
+```
+In the following waveform, I observe the flush signals high when `beq t1, a0, iloop` is in the Execute stage. 
+We identify that `beq t1, a0, iloop` is in the Execute stage using the `PCE` signal. 
+Crucially, we observe the value of the program counter being redirected correctly to the address of `iloop` corresponding to the value of `(program counter at beq t1, a0, iloop) - 4`:
+
+Value of PCE for `beq t1, a0, iloop` in the Execute stage: **0xBFC0000C**
+
+At the next cycle the value of PCF is: **0xBFC00008** (`PCE - 4`)
+
+**Waveform:**
+![diagram](images/pipeliningverifybranches.jpg)
+
+All test cases pass.
+
+**Performance Analysis:**
+
+I calculated the performance improvement from pipelining using the formula:
+
+```
+Execution Time = (# Instructions) × CPI × Tc
+```
+
+For a single-cycle processor, the clock period must accommodate the entire critical path:
+```
+Tc_single = 750 ps
+```
+
+For the pipelined processor, the clock period is determined by the slowest stage (Execute):
+```
+Tc_pipelined = 350 ps
+```
+
+Even accounting for stalls (CPI ≈ 1.23 instead of ideal 1.0), the pipelined processor achieves a **1.74× speedup** over the single-cycle design for a 300 billion instruction program:
+
+| Processor | Clock Period | CPI | Execution Time |
+|-----------|--------------|-----|----------------|
+| Single-cycle | 750 ps | 1.0 | 225 s |
+| Pipelined | 350 ps | 1.23 | 129 s |
+
+This demonstrates the fundamental advantage of pipelining: higher throughput through instruction-level parallelism, even at the cost of slightly reduced efficiency per instruction.
+
+---
 ### 4.3 Testing
 
 ---
