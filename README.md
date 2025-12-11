@@ -217,6 +217,30 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ## 4 Testing and Verification
 
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+4. Open gtkWave in a new terminal:
+   ```bash
+   gtkwave
+   ```
+
 ### Zicsr Testbench
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr_tb.png)
