@@ -5,7 +5,7 @@
 
 unsigned int ticks = 0;
 
-class DcacheTestbench : public Testbench
+class IcacheTestbench : public Testbench
 {
 protected:
     void initializeInputs() override
@@ -15,7 +15,7 @@ protected:
 };
 
 
-TEST_F(DcacheTestbench, DcacheTest0)
+TEST_F(IcacheTestbench, IcacheTest0)
 {
     top->clk          = 0;
     top->fetch        = 0;
