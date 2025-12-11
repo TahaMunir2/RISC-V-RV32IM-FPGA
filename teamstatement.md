@@ -519,7 +519,7 @@ This branch extends the out-of-order superscalar processor to support load instr
 
 #### Schematic
 
-![OOO Full Schematic](ooofull_2.png)
+![OOO Full Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
 
 ---
 
