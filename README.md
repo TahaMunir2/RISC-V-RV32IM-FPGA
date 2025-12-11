@@ -518,16 +518,6 @@ Note that:
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingcorrectpred.jpg)
 
 
-##### Performance Comparison
-Comparison of pipeline behavior with and without branch prediction, showing reduced flush cycles for predictable branch patterns.
-
-**Without Branch Prediction:**
-
-
-**With Branch Prediction:**
-
-
-
 #### Running the code
 
 1. Navigate to the testbench ( `tb` ) folder:
@@ -551,6 +541,8 @@ Comparison of pipeline behavior with and without branch prediction, showing redu
 Here are the results:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverify.jpg)
+
+All test cases pass
 
 
 
