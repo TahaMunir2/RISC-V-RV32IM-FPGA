@@ -167,8 +167,6 @@ Instead of nested `if`/`else` blocks, the new controller uses a `case(op)` struc
 
 ![Full RV32I Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/schematicfullriscv.png)
 
-
-
 ---
 
 ### Pipelined Processor 
@@ -434,7 +432,27 @@ M instructions are treated as ordinary R-type ALU operations:
 
 Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 
+### Z-type Extensions (Zicsr and Zba)
 
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
+
+We decided to implement 2 new extensions, the Zicsr extension, which entailed adding a Control Shift Register module and 6 new instructions, as well as the Zba extension, which introduced 3 new instructions used for Bit-Manipulation.
+
+For our CSR module, which we implemented in the execute stage, we first initialised a register array of size 4096 and set up combinational logic for 6 new instructions. They were all atomic read-modify-write instructions, as in they read the old value of the control status register into rd and modify rd all in 1 instruction. The I at the end of the instructions determines if we use a register or an immediate for the operations.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg)
+
+For Zba, we had to implement these instructions by modifying the ALU and Control modules:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+
+#### Key Design Decisions
+
+- We added a new type of stall called the **`csrStall`** for data dependencies with CSRs that had the same effect on the pipeline registers as our load word stall.
+- The CSR registers are supposed to be special, with each register serving a unique purpose; however, for now, we did not add any special logic for any of the registers. This, however, was added in the next section for Interrupts.
+- We chose to implement the Zba instructions due to their efficiency; they condensed adding and shifting into 1 instruction, which could be useful given how common those instructions are.
+
+#### Schematic
 
 
 ### Out-of-Order Superscalar Processor
