@@ -688,4 +688,13 @@ We also created a c++ testbench (l2_cache_tb.cpp) to isolate the data cache modu
    ./doit.sh tests/l2_cache_tb.cpp
    ```
 Here are the results:
+
+
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-1.png)
+
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-2.png)
+
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-3.png)
+
+
 ---
