@@ -577,7 +577,7 @@ end
 
 Here is the top sheet schematic for reference :
 
-![diagram](schembranchpredict.png)
+![diagram](../images/schembranchpredict.png)
 
 Thus, I achieve the key improvement: when the predictor guesses correctly, I avoid the flush penalty entirely.
 
