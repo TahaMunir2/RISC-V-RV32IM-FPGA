@@ -6,16 +6,16 @@ module control #(
     input logic LT,
     input logic LTU,
     output logic RegWrite,
-    output logic [3:0] ALUCtrl, //!!!!!!!!!!!!!!!Size of the signal changed from 3 bits to 4 bits !!!!!!!!!!!!!!!!!!!!!!!!!
+    output logic [3:0] ALUCtrl, 
     output logic ALUSrc,
     output logic [2:0] ImmSrc,
     output logic [1:0] PCSrc,
-    output logic [1:0] ResultSrc, //adding the aditional output representing the select line of the additional multiplexer in the regaludmem block
+    output logic [1:0] ResultSrc, 
     output logic MemWrite,
-    output logic [1:0]SizeWrite, //!!!!!!!!!!!!!!!CHANGE from ByteWrite to SizeWrite (size of that signal changed) !!!!!!!!!!!!!!!!!!!!!!!!!
-    output logic ALUsrc2, //additional output signal
-    output logic [1:0]LoadSize, //additional output signal
-    output logic LoadUnsigned //additional output signal
+    output logic [1:0]SizeWrite, 
+    output logic ALUsrc2,
+    output logic [1:0]LoadSize, 
+    output logic LoadUnsigned 
 
 );
 
@@ -81,7 +81,7 @@ assign imm_11_5 = instr[31:25];
                         ResultSrc = 0;
                         MemWrite  = 0;
                         SizeWrite = 0;
-                        ALUsrc2 = 1; //WE WANT THE VALUE OF PC AS OPERAND INTO THE ALU (AND NOT THE RS1) (but it is not the same value of pc because we need the value of pc of the current cycle and not the one corresponding to the next cycle)
+                        ALUsrc2 = 1; 
             end
             //Jump And Link
             OPC_JAL:begin    RegWrite = 1; // as we are saving the old value in the destination register specified when calling this instruction
@@ -97,7 +97,7 @@ assign imm_11_5 = instr[31:25];
             OPC_JALR:begin   RegWrite = 1; // as we are saving the old value
                         ALUCtrl = 4'b0; // we need to add r1 and imm
                         ALUSrc = 1; // to add imm
-                        ImmSrc = 3'b000; // not j type -> we need 12 bit immediate (I-type)
+                        ImmSrc = 3'b000; 
                         PCSrc = 2'b10; // for adding an offset to PC and register
                         ResultSrc = 2'b10; // don't care
                         MemWrite = 0; // don't care
