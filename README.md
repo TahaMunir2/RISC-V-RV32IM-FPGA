@@ -1325,7 +1325,6 @@ Here are the results:
 
 The concepts implemented in this out-of-order superscalar processor extend beyond the scope of the lecture material, requiring extensive independent research into advanced computer architecture techniques pioneered in the 1960s and refined through decades of processor development.
 
-- [Superscalar Processor](https://en.wikipedia.org/wiki/Superscalar_processor)
 - [Out-of-Order Processor Overview from ScienceDirect](https://www.sciencedirect.com/topics/computer-science/out-of-order-processor)
 - [Register Renaming Techniques](https://fiveable.me/advanced-computer-architecture/unit-6/register-renaming-techniques/study-guide/6kjpVCqRFiiGhaTX)
 - [The Reorder Buffer](https://docs.boom-core.org/en/latest/sections/reorder-buffer.html)
