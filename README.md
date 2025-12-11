@@ -1,4 +1,4 @@
-# RV32M (“M-type”) Instructions — Design & Implementation
+# M-type Instructions
 
 This document describes how the RV32M integer multiply/divide extension was integrated into our RV32I core. It focuses only on the added functionality and the changes made to the ALU and control modules. Everything else in the CPU (pipeline, hazard unit, register file, memories, etc.) is unchanged.
 
