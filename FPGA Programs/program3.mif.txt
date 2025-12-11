@@ -1,0 +1,37 @@
+DEPTH = 1024;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+BEGIN
+
+
+000 : 0200006F; JAL x0, 32 (0x008)
+
+-- Trap Handler
+001 : 00150513; -- ADDI x10, x10, 1 (increment a0 by 1)
+002 : 80002237; -- LUI x4, 0x80002 
+003 : 00A22023; -- SW x10, 0(x4) (store a0 into the LEDs)
+004 : 800012B7; -- LUI x5, 0x80001  
+005 : 02000337; -- LUI x6, 0x02000 (set timer to 0x2000000 = 0.67 seconds at 50 MHz)
+006 : 0062A023; -- SW x6, 0(x5)     
+007 : 30200073; -- mret 
+
+-- main
+008 : 00400093; -- ADDI x1, x0, 4   
+009 : 30509073; -- CSRW mtvec, x1 (trap handler address = 001)
+00A : 00100193; -- ADDI x3, x0, 1
+00B : 00719193; -- SLLI x3, x3, 7   
+00C : 30419073; -- CSRW mie, x3 (enable bit 11 for timer interrupts)
+00D : 00800113; -- ADDI x2, x0, 8 
+00E : 30011073; -- CSRW mstatus, x2 (enable global interrupts) 
+00F : 00000513; -- ADDI x10, x0, 0 
+010 : 800012B7; -- LUI x5, 0x80001 
+011 : 0002A223; -- SW x0, 4(x5) (clear upper 32 bits)
+012 : 02000337; -- LUI x6, 0x02000 
+013 : 0062A023; -- SW x6, 0(x5) (set lower bits)
+014 : 0000006F; -- JAL x0, 0 (loop)
+[015..3FF] : 00000000;
+
+END;
