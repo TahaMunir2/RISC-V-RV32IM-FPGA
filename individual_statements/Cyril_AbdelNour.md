@@ -429,7 +429,7 @@ This is a Moore machine: the output depends only on the current state, not the i
 
 The FSM diagram is taken from Harris and Harris book :
 
-![diagram](../images/branchpfsm.jpg)
+![diagram](../images/branchpfsm.png)
 
 
 #### Initialization Choice
