@@ -25,31 +25,26 @@ BEGIN
 010 : 02FAF337; -- LUI x6, 0x02FAF 
 011 : 08030313; -- ADDI x6, x6, 0x080 (x6 = 50,000,000 or 1s at 50Mhz)
 012 : 0062A023; -- SW x6, 0(x5)
-013 : 0000006F; -- JAL x0, 0 (loop_
+013 : 0000006F; -- JAL x0, 0 (loop)
 [014..03F] : 00000013;
 
 -- Trap Handler
 040 : 342022F3; -- CSRR x5, mcause 
 041 : 00F2F293; -- ANDI x5, x5, 15 (mask bottom 4 bits)
 042 : 00B00313; -- ADDI x6, x0, 11 (Load 11)
-043 : 06628663; -- BEQ x5, x6, FREEZE (Offset 108 / 27 words, if external interrupt then jump to 27 words infront)
-044 : 04059463; -- BNE x11, x0, RACE (Offset 64 / 16 words, check x11)
-
--- Fill Logic
-045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check LED pattern against x21)
-046 : 020A8063; -- BEQ x21, x0, TRANSITION (Offset 32 / 8 words) (if x21 is 0)
-
--- Shift Logic 
-047 : 001A1A13; -- SLLI x20, x20, 1 
-048 : 001A6A13; -- ORI x20, x20, 1
+043 : 07028663; -- BEQ x5, x6, Freeze (offset 112, if external interrupt then jump to 5F)
+044 : 04059463; -- BNE x11, x0, Count-up (offset 72, if x11 is high then jump to 56)
+045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check if leds all high)
+046 : 020A8063; -- BEQ x21, x0, Transition (offset 32, branch to transition if x21 is 0 aka LEDs all on)
+047 : 001A1A13; -- SLLI x20, x20, 1  (turn next LED on)
+048 : 001A6A13; -- ORI x20, x20, 1 (keep the previous LEDs on)
 049 : 80002237; -- LUI x4, 0x80002
-04A : 01422023; -- SW x20, 0(x4)
--- Reload Slow Timer
+04A : 01422023; -- SW x20, 0(x4) (update LED)
 04B : 02FAF337; -- LUI x6, 0x02FAF
-04C : 08030313; -- ADDI x6, x6, 0x080
-04D : 0380006F; -- JAL x0, EXIT (Offset 56 / 14 words)
+04C : 08030313; -- ADDI x6, x6, 0x080 (prepare to load timer)
+04D : 0380006F; -- JAL x0, EXIT (offset 56)
 
--- Transition Logic
+-- Transition
 04E : 00000A13; -- ADDI x20, x0, 0
 04F : 00100593; -- ADDI x11, x0, 1
 050 : 00000513; -- ADDI x10, x0, 0
@@ -58,9 +53,9 @@ BEGIN
 -- Reload Fast Timer
 053 : 0007A337; -- LUI x6, 0x0007A
 054 : 12030313; -- ADDI x6, x6, 0x120
-055 : 0180006F; -- JAL x0, EXIT (Offset 24 / 6 words)
+055 : 0180006F; -- JAL x0, EXIT (offset 24)
 
--- Race Logic
+-- Count-up
 056 : 00150513; -- ADDI x10, x10, 1
 057 : 80002237; -- LUI x4, 0x80002
 058 : 00A22023; -- SW x10, 0(x4)
@@ -69,7 +64,7 @@ BEGIN
 05A : 12030313; -- ADDI x6, x6, 0x120
 -- Fall through
 
--- Exit (Reload Timer & Return)
+-- Exit
 05B : 800012B7; -- LUI x5, 0x80001
 05C : 0002A223; -- SW x0, 4(x5)
 05D : 0062A023; -- SW x6, 0(x5)
@@ -77,7 +72,8 @@ BEGIN
 
 -- Freeze Logic
 05F : 30405073; -- CSRWI mie, 0 
-060 : FFDFF06F; -- JAL x0, 
+060 : FFDFF06F; -- JAL x0, -4, 
 [061..3FF] : 00000000;
 
 END;
+
