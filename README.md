@@ -6,7 +6,7 @@ Link to [team statement](https://github.com/TahaMunir2/Team5/blob/main/teamstate
 ## Individual Statements:
 
 | CID | Name | Individual Statement |
-|------------|----------------------|
+|------|-----|----------------------|
 | 02574254 | Leo Yin | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Leo_Yin.md) |
 | 02591789 | Yusuf Kerem Teker | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Kerem_Teker.md) |
 | 02609612 | Cyril Abdelnour | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Cyril_AbdelNour.md) |
