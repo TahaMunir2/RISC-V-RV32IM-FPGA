@@ -21,13 +21,14 @@ Our final design is split amongst 3 different models:
 
 ## Methodology
 
-### Shift in Design Approach
-We initially approached each branch by breaking it into sections as suggested by the project brief (i.e. 1 person does testing, 1 does data path, etc.), and we continued this approach until everyone had testbenched 1 branch each to make sure everyone was comfortable with both hardware and software. However, after that we realised integrating code between different people can be tricky so we decided to focus on the theoretical implementation to each branch as a group but assigning the actual coding to 1 person, this is reflected in our contribution table where initially each section is split up evenly between each person and then later on 1 person does the whole section, although everyone was still involved in the theoretical appraoch. Due to this, and also for complexity and time issues, we forked our implementation at branch prediction and ended up with 3 different CPU's as our final implementations, as they were developed in parallel, as shown in the diagram below:
 ### Collaboration
 We decided that having a strong collaborative approach was key to having success in this project. We had almost daily meetings where everyone would recap the work they've done in the past day, and then we would all plan together on how to approach the next extension we want to add. We often developed the theory as a group, which allowed us to bounce ideas off each other and make sure everyone understood what was going on in the CPU. This also helped keep motivation high as we found we are much more productive when working together than alone, and allowed us to keep pushing each other to add more and more extensions.
 
 ### Testing Philosophy
 We decided to implement both CPU testing and unit testing each time we added a new component. This not only meant we were able to thoroughly test each case for each new component, but also check that it works in the overall circuit. We also heavily relied on gtkWave for debugging and traced instructions through our CPU to work out exactly where our bugs were coming from, which we found to be the most effective testing approach. 
+
+### Shift in Design Approach
+We initially approached each branch by breaking it into sections as suggested by the project brief (i.e. 1 person does testing, 1 does data path, etc.), and we continued this approach until everyone had testbenched 1 branch each to make sure everyone was comfortable with both hardware and software. However, after that we realised integrating code between different people can be tricky so we decided to focus on the theoretical implementation to each branch as a group but assigning the actual coding to 1 person, this is reflected in our contribution table where initially each section is split up evenly between each person and then later on 1 person does the whole section, although everyone was still involved in the theoretical appraoch. Due to this, and also for complexity and time issues, we forked our implementation at branch prediction and ended up with 3 different CPU's as our final implementations, as they were developed in parallel, as shown in the diagram below:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
 
@@ -237,8 +238,6 @@ In the pipelined design, branch resolution requires a dedicated module in the Ex
 #### Schematic
 
 ![Pipelined Processor Schematic](schematicpipelining.png)
-
-
 
 
 ---
@@ -512,7 +511,7 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 ---
 
-### FPGA and Interrupts: F1 test on DE-10 Lite
+### FPGA: F1 test with external and timer interrupts on DE-10 Lite
 
 
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
