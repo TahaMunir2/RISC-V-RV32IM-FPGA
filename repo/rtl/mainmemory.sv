@@ -1,7 +1,7 @@
 module mainmemory #(
     parameter ADDRESS_WIDTH = 32,
     parameter DATA_WIDTH = 32,
-    parameter RAM_SIZE = 131072,
+    parameter RAM_SIZE = 33554432,
     parameter ROM_SIZE = 4096
 )(
     input   logic                          clk,
