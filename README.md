@@ -2,7 +2,8 @@
 
 ## Team Statement:
 
-### Link to [team statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+### Link to team statement:
+### [Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
 
 ## Individual Statements:
 
@@ -15,7 +16,7 @@
 
 ## Compilation of readmes
 
-[Book]()
+[Book](https://github.com/TahaMunir2/Team5/blob/main/book.md)
 
 ## Intro to our GitHub
 
