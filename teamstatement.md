@@ -17,9 +17,6 @@ Our final design is split amongst 3 different models:
 - **5-stage pipelined Out-of-Order Superscalar Processor**
 - **5-stage FPGA ported CPU with 2 types of interrupts**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
-
-
 ## Methodology
 
 ### Shift in Design Approach
