@@ -688,4 +688,9 @@ The architectural decisions we made, such as tag-based register renaming, negati
 
 ## References
 
-1.  Harris, S.L. and Harris, D.M. (2022) Digital Design and computer architecture: RISC-V edition. Cambridge, MA: Morgan Kaufmann.
+Harris, S.L. and Harris, D.M. (2022) Digital Design and computer architecture: RISC-V edition. Cambridge, MA: Morgan Kaufmann.
+[Out-of-Order Processor Overview from ScienceDirect](https://www.sciencedirect.com/topics/computer-science/out-of-order-processor)
+[Register Renaming Techniques](https://fiveable.me/advanced-computer-architecture/unit-6/register-renaming-techniques/study-guide/6kjpVCqRFiiGhaTX)
+[The Reorder Buffer](https://docs.boom-core.org/en/latest/sections/reorder-buffer.html)
+[The Rename Stage](https://docs.boom-core.org/en/latest/sections/rename-stage.html)
+
