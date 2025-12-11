@@ -641,7 +641,7 @@ All test cases pass.
 
 ## 6. Cache Implementation
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/hierarchalcache/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Hierarchical-cache/README.md).
 
 We implemented a full memory hierarchy: 2-way associative L1 instruction and data caches, and a 4-way associative L2 cache with write-back policy and dirty bit tracking.
 
