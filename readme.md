@@ -738,9 +738,53 @@ END;
 
 Next, we wanted to test out the  external interrupt logic and trap handler routine, as well as check if more complex instructions like branch and csrrw would work.
 
+```
+000 : BFC000B7; -- LUI x1, 0xBFC00 
+001 : 03008093; -- ADDI x1, x1, 0x30 (x1 = 0xBFC00030, trap handler address)
+002 : 30509073; -- CSRW mtvec, x1 
+003 : 00800113; -- ADDI x2, x0, 8
+004 : 30011073; -- CSRW mstatus, x2 (set MIE to 1)
+005 : 00100193; -- ADDI x3, x0, 1
+006 : 00B19193; -- SLLI x3, x3, 11
+007 : 30419073; -- CSRW mie, x3 (enable external interrupts)
+008 : 80002237; -- LUI x4, 0x80002 
+009 : 00004537; -- LUI x10, 4      
+00A : 44450513; -- ADDI x10, x10, 0x444 (x10 = 0x4444)
+00B : 0140006F; -- JAL x0, 0x14 (d20 so 20 / 4 = 5 so 00B + 5 = 010 aka main)
+
+-- Trap Handler 
+00C : 00007537; -- LUI x10, 7
+00D : 77750513; -- ADDI x10, x10, 0x777 (x10 = 0x7777)
+00E : 00A22023; -- SW x10, 0(x4) (leds = 00 0100 0100 bottom 10 bits of 0x4444)
+00F : 30200073; -- mret 
+
+-- Main
+010 : 00004537; -- LUI x10, 4
+011 : 44450513; -- ADDI x10, x10, 0x444
+012 : 00A22023; -- SW x10, 0(x4) (leds = 11 0111 0111 bottom 10 bits of 0x7777)
+013 : FF4FF06F; -- JAL x0, -12 (address 010)
+[014..3FF] : 00000000;
+```
+
+- The instructions 0-2 are used for setting up the trap handler address (BFC00030 when accounting for 4 bytes per instruction, goes to 010)
+- 3-4 set MIE (global interrupts en) which is the third bit of mstatus
+- 5-7 set mie for external interrupts
+- 8-A set a0 to 4444
+- B skips over the handler straight to 010 (this is to show the handler can be anywhere in the memory and that our jump instructions work)
+- 10-11 reset a0 as if we return from a trap, we will return to this address)
+- 12-13 set the LEDs in the pattern described above
+- C-F is the trap handler; it is only ever accessed when the trap is triggered.
+
 https://github.com/user-attachments/assets/71920d99-a521-49b0-a02c-273b732a5d86
 
+> We removed the pulse logic, as our CPU was not detecting it for some reason.
+
+We can clearly see that external interrupts work on our FPGA.
+Note: For some reason, our key[1] wasn't working on the FPGA we were given, so here we are using key[0] as trigger.
+
 #### Timer Interrupt Test
+
+Next, we wanted to out our timer interrupt logic for this we needed a test that would alternate the time every 'x' amount of time. 
 
 https://github.com/user-attachments/assets/edc8a9ae-ee9c-4136-b426-ed5accccc272
 
