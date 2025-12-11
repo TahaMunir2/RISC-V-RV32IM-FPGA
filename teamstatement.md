@@ -14,10 +14,12 @@ For this project, in accordance with the guidance provided in the Project Brief,
 
 We then further complemented our design by implementing a 2-bit branch predictor, the RISCV M, Zicsr and Zba extensions, and an out-of-order Superscalar architecture for arithmetic and load instructions. Finally, we added external and timer interrupts and specific control status registers for trap handling, which we then used to port our CPU onto a DE-10 Lite with external inputs, an internal timer and external outputs.
 
+For a complete breakdown of every design decision, please look at the [book](https://github.com/TahaMunir2/Team5/blob/main/book.md).
+
 Our final design is split amongst 3 different models:
-- **5-stage pipelined, Hierarchical Cache, 2-bit branch predictor RV32IM_Zicsr_Zba Processor**
+- **5-stage pipelined, with hierarchical cache and a 2-bit branch predictor RV32IM_Zicsr_Zba Processor**
 - **5-stage pipelined Out-of-Order Superscalar Processor**
-- **5-stage FPGA ported CPU with 2 types of interrupts**
+- **5-stage FPGA-ported Processor with 2 types of interrupts and a trap handler**
 
 ## Methodology
 
