@@ -476,8 +476,6 @@ The main challenge with branch prediction is that two stages compete to control 
 
 I created the `PCSrcF_assertion` module to arbitrate between them using a priority-based approach.
 
-![diagram](../images/branchppcsrcf.jpg)
-
 #### Priority Logic
 
 **Priority 1 (Highest): Jump Instructions**
