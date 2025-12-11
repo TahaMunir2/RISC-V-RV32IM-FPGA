@@ -58,7 +58,7 @@ This section covers the baseline foundation of our RV32I CPU from Lab 4. The sin
 
 **Memory Map Compliance:** Our ROM starts at address `0xBFC00000` and spans 4KB, while RAM occupies 128KB starting at `0x00000000`, following the project specification.
 
-![Memory Map](memory.jpg)
+![Memory Map](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
 
 **Little-Endian Byte Ordering:** All memory accesses use little-endian format, with the least significant byte at the lowest address.
 
@@ -81,7 +81,7 @@ This section covers the baseline foundation of our RV32I CPU from Lab 4. The sin
 
 #### Schematic
 
-![Single Cycle CPU Schematic](Modified%20Single%20Cycle%20CPU%20diagram.jpg)
+![Single Cycle CPU Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ---
 
@@ -163,7 +163,7 @@ Instead of nested `if`/`else` blocks, the new controller uses a `case(op)` struc
 
 #### Schematic
 
-![Full RV32I Schematic](schematicfullriscv.png)
+![Full RV32I Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/schematicfullriscv.png)
 
 
 
@@ -237,7 +237,7 @@ In the pipelined design, branch resolution requires a dedicated module in the Ex
 
 #### Schematic
 
-![Pipelined Processor Schematic](schematicpipelining.png)
+![Pipelined Processor Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/schematicpipelining.png)
 
 
 ---
@@ -262,7 +262,7 @@ The key insight is that after exiting a loop, the two-bit predictor stays in `WE
 
 The two-bit predictor uses a four-state finite state machines:
 
-![FSM Diagram](branchp.png)
+![FSM Diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
 
 #### State Encoding
 
@@ -315,7 +315,7 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 #### Schematic
 
-![Branch Prediction Schematic](branchpredictio.png)
+![Branch Prediction Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/branchpredictio.png)
 
 
 ---
