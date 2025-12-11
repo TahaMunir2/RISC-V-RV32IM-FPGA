@@ -200,7 +200,7 @@ One test I'm particularly happy with is the signed vs unsigned branch test. It u
 
 This catches bugs where signed and unsigned comparisons are mixed up.
 
-![diagram](images/verifyfullriscv.jpg)
+![diagram](../images/verifyfullriscv.jpg)
 
 All 37 instructions pass verification.
 
@@ -277,7 +277,7 @@ main:
     addi    a0, t3, 0           # a0 = t3 = 40
 ```
 **Waveform:**
-![diagram](images/pipeliningparrallelism.jpg)
+![diagram](../images/pipeliningparrallelism.jpg)
 
 ---
 
@@ -303,7 +303,7 @@ The `add a0, t1, t2` instruction depends on the values of t1 and t2, which are w
 Since these values have not yet been written back to the register file, the forwarding unit detects the RAW hazard and routes the results directly from the Memory and Writeback pipeline registers to the ALU inputs. 
 This allows the add instruction to execute correctly without stalling, demonstrating the effectiveness of my forwarding mechanism.
 **Waveform:**
-![diagram](images/pipeliningverifyforwarding.jpg)
+![diagram](../images/pipeliningverifyforwarding.jpg)
 
 ---
 
@@ -323,7 +323,7 @@ In the following waveform, I can track the cycle in which the `add a0, t3, t4` r
 An important observation is that the Decode stage and the Execute stage are separated by 1 cycle caused by the stall.
 The signals causing the stall are also shown in the waveform.
 **Waveform:**
-![diagram](images/pipeliningverifyload.jpg)
+![diagram](../images/pipeliningverifyload.jpg)
 
 ---
 
@@ -351,7 +351,7 @@ Value of PCE for `beq t1, a0, iloop` in the Execute stage: **0xBFC0000C**
 At the next cycle the value of PCF is: **0xBFC00008** (`PCE - 4`)
 
 **Waveform:**
-![diagram](images/pipeliningverifybranches.jpg)
+![diagram](../images/pipeliningverifybranches.jpg)
 
 All test cases pass.
 
@@ -381,9 +381,6 @@ Even accounting for stalls (CPI ≈ 1.23 instead of ideal 1.0), the pipelined pr
 | Pipelined | 350 ps | 1.23 | 129 s |
 
 This demonstrates the fundamental advantage of pipelining: higher throughput through instruction-level parallelism, even at the cost of slightly reduced efficiency per instruction.
-
----
-### 4.3 Testing
 
 ---
 
