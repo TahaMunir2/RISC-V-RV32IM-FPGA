@@ -2,8 +2,7 @@
 
 ## Team Statement:
 
-### Link to team statement:
-### [Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+### [Team Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
 
 ## Individual Statements:
 
