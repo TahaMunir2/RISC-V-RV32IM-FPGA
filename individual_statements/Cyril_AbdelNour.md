@@ -640,15 +640,320 @@ All test cases pass.
 
 ## 7. Out-of-Order Superscalar (Arithmetic Instructions)
 
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/ooo-superscalar/README.md).
+
+This section represents the most substantial part of my contribution to the project. The concepts implemented here extend beyond the scope of the lecture material, requiring extensive independent research into advanced computer architecture techniques pioneered in the 1960s and refined through decades of processor development.
+
+### Background and Motivation
+
+A conventional pipelined processor achieves a CPI (Cycles Per Instruction) of 1 or above, limited by hazards and dependencies. A superscalar processor breaks this barrier by duplicating execution hardware, enabling multiple instructions to complete per cycle.
+
+I implemented a 2-way superscalar processor featuring:
+- 2 instructions fetched per cycle
+- 2 ALUs operating in parallel
+- Dual-ported register file to support simultaneous reads and writes
+- Duplication of the necessary logic like control unit and sign extension block to support these changes
+
+The problem with superscalar execution is that data hazards are amplified. When two instructions are fetched together, they may depend on each other or on recently issued instructions. In an in-order superscalar processor, a dependent instruction blocks all subsequent instructions from executing, even if they are independent.
+
+Consider this example:
+```asm
+ADD  x1, x2, x3    # Produces x1
+SUB  x4, x1, x5    # Depends on x1, must wait
+AND  x6, x7, x8    # Independent, could execute, but is blocked
+```
+
+In an in-order design, `AND` cannot be issued until `SUB` is issued, even though `AND` has no dependency.
+
+Out-of-order execution solves this by allowing independent instructions to bypass stalled ones. The processor fetches instructions into a buffer, analyzes their dependencies, and issues them not in program order, but in an order that maximizes ALU utilization while respecting true data dependencies. Instructions execute out of order (when operands are ready) but commit in order (preserving program correctness).
+
+### The Tomasulo Algorithm
+
+My implementation is based on Tomasulo's algorithm, originally developed for the IBM System/360 Model 91. After researching this algorithm extensively, I identified four key components:
+
+| Component | Purpose |
+|-----------|---------|
+| **Register Alias Table (RAT)** | Renames registers to eliminate false dependencies (WAR and WAW) |
+| **Re-Order Buffer (ROB)** | Tracks instructions for in-order commit |
+| **Register Update Unit (RUU)** | Holds instructions waiting for operands (reservation stations) |
+| **Common Data Bus (CDB)** | Broadcasts results to wake up dependent instructions |
+
 ### 7.1 Register Alias Table (RAT)
+
+The RAT eliminates false dependencies (WAR and WAW hazards) through register renaming. Instead of tracking architectural register names (x0–x31), the RAT maps each register to a producer tag.
+
+The producer tag is a unique identifier for the instruction that will produce the register's value.
+
+#### Tag Width Selection
+
+```systemverilog
+parameter NREGS     = 32,   // Number of architectural registers (x0–x31)
+parameter PROD_BITS = 6     // Tag width (supports up to 64 in-flight instructions)
+```
+
+I chose 6-bit tags to match the ROB depth of 64 entries. Since each in-flight instruction occupies one ROB entry, 6 bits (`2^6 = 64`) provides enough unique tags to identify all possible instructions in the pipeline. This keeps the tag field compact to minimize access delays while supporting sufficient instruction-level parallelism for the 2-way superscalar design.
+
+#### Tag Assignment Strategy
+
+Each cycle, two new instructions receive consecutive tags:
+
+```systemverilog
+assign inst1_prod_id = producer_counter - 6'b000001;  // Tag N-1
+assign inst2_prod_id = producer_counter;               // Tag N
+```
+
+Instruction 1 (older) gets `producer_counter - 1`, instruction 2 (younger) gets `producer_counter`. This ensures program order is encoded in the tag values, which is critical for the ROB to maintain correct commit order.
 
 ### 7.2 Re-Order Buffer (ROB)
 
+The ROB is the central module in the implementation. It interacts in three different stages:
+1. **Decode/Rename**: Keeps track of all instructions fetched because it retains program order
+2. **Execution**: Stores results after execution
+3. **Commit**: Commits results in program order to the register file
+
+#### Circular Buffer Implementation
+
+The ROB is implemented as a circular buffer with 64 entries. Each entry contains:
+
+| Field | Width | Description |
+|-------|-------|-------------|
+| `dest_reg` | 5 bits | Destination architectural register |
+| `value` | 32 bits | Computed result (filled on writeback) |
+| `ready` | 1 bit | Set when execution completes |
+
+I use head and tail pointers to track the oldest instruction (ready to commit) and the next free slot (ready for allocation) without searching through the entire buffer.
+
+#### Sequential Operations
+
+The ROB performs three operations: Allocation, Writeback, and Commit.
+
+**Allocation:** When instructions are dispatched, they are allocated at the `tail` pointer. The tail advances by 1 or 2 depending on how many instructions are allocated.
+
+![diagram](oooaroballocation.png)
+
+**Writeback:** When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`. Since execution does not occur in order, results arrive at the ROB out of program order.
+
+![diagram](oooarobwriteback.png)
+
+
+**Commit:** Instructions commit from the `head` in program order. Only entries with `ready=1` that haven't been committed yet can retire. The ROB commits up to 2 instructions per cycle:
+
+| Instructions Ready | Instructions Committed |
+|--------------------|------------------------|
+| 0 | 0 |
+| 1 | 1 |
+| 2+ | 2 |
+
+
+#### Dual Commit Logic
+
+For single commit, the logic is straightforward:
+```systemverilog
+assign commit1_valid = !rob_empty && ready[head];
+```
+
+For the second commit slot, I had to handle a tricky condition:
+
+```systemverilog
+assign commit2_valid =
+    commit1_valid &&                  // First must be valid
+    (head_next != tail) &&            // Second entry exists
+    ready[head_next];                 // Second is ready
+```
+
+The key insight is that `tail` marks the first empty slot. If `head_next == tail`, I've reached the empty region, meaning only one instruction can potentially be committed.
+
 ### 7.3 Register Update Unit (RUU)
+
+The RUU (also known as Reservation Stations in Tomasulo's algorithm) holds instructions waiting for their operands. It enables out-of-order execution by:
+1. Buffering instructions until source operands become available
+2. Waking up instructions when results are broadcast on the CDB
+3. Issuing ready instructions to the ALUs for execution
+
+#### Entry Structure
+
+Each entry is a packed struct:
+
+```systemverilog
+typedef struct packed {
+    logic                     valid;      // Slot in use
+    logic                     issued;     // Already sent to ALU?
+    logic [TAG_BITS-1:0]      dest_tag;   // ROB tag for this instruction
+    logic                     src1_valid; // Is source 1 ready?
+    logic [TAG_BITS-1:0]      src1_tag;   // Producer tag for source 1
+    logic [31:0]              src1_value; // Value of source 1
+    logic                     src2_valid; // Is source 2 ready?
+    logic [TAG_BITS-1:0]      src2_tag;   // Producer tag for source 2
+    logic [31:0]              src2_value; // Value of source 2
+    logic [CONTROL_WIDTH-1:0] ctrl;       // ALU control signals
+} ruu_entry_t;
+```
+
+The `issued` flag prevents an instruction from being sent to an ALU multiple times.
+
+#### Timing Strategy: Negative Edge for Writeback
+
+This was one of the most important optimizations I discovered through debugging with GTKWave:
+
+```systemverilog
+always_ff @(negedge clk) begin
+    // Writeback (wake-up) logic
+end
+```
+
+The writeback logic runs on the negative edge of the clock while dispatch, issue, and free run on the positive edge. 
+
+When an ALU produces a result, dependent instructions can wake up and potentially issue in the same cycle.
+
+Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue. I discovered this delay by examining ALU operand signals in GTKWave, where I observed instructions waiting unnecessarily. After implementing negative-edge writeback, the delay was eliminated and throughput increased.
+
+Below is what I observed before writing back at the negative edge of the clock: (all the work was done in the positive edge)
+
+![diagram](writebackposedge.jpeg)
+
+Below is what I observed before writing back at the negative edge of the clock:
+
+![diagram](writebacknegedge.jpeg)
+
 
 ### 7.4 Pipelined Design
 
+To maximize throughput, I divided the processor into 5 pipeline stages, each designed to complete within a similar time budget.
+
+#### Pipeline Stages
+
+| Stage | Name | Operations | Critical Path |
+|-------|------|------------|---------------|
+| **F** | Fetch | Read 2 instructions from memory | 290 ps |
+| **D** | Rename/Decode | Decode, read registers, RAT/ROB lookup | 245 ps |
+| **Iss** | Dispatch/Issue | Insert to RUU, select ready instructions | 240 ps |
+| **E** | Execute | ALU computation, write to ROB | 210 ps |
+| **C** | Commit | Write to register file, free RUU | 130 ps |
+
+**Clock Period = 290 ps** (limited by Fetch stage)
+
+#### Implicit Pipelining Between Execute and Commit
+
+There is no explicit pipeline register between Execute and Commit stages. However, pipelining is maintained because:
+- Execute stage writes results to ROB on the positive edge
+- Commit stage reads from ROB head and writes to the register file on the positive edge
+
+Since the ROB has separate head and tail pointers, these operations target different entries. While one pair of instructions is being written to the ROB, another pair is being committed to the register file.
+
+#### Performance Analysis
+
+For comparison with a single-cycle arithmetic-only processor:
+
+| Metric | Single-Cycle | 5-Stage OoO Superscalar |
+|--------|--------------|-------------------------|
+| Clock Period | 550 ps | 290 ps |
+| CPI | 1.0 | < 1.0 (superscalar) |
+| Instructions/Cycle | 1 | Close to 2 |
+
+**Theoretical Speedup:**
+- Clock speedup: 550 / 290 = **1.9×**
+- Superscalar factor: up to **2×**
+- Combined potential: up to **3.8×** throughput improvement
+
 ### 7.5 Overall Integration
+
+#### Source Operand Validity Logic
+
+The most critical part of the integration is determining where each source operand comes from and whether it's available. For each source register, I follow this decision process:
+
+![diagram](oooadecisiontree.jpg)
+
+1. **Check RAT**: Does this register have an in-flight producer?
+2. **If no producer**: Fetch from register file (operand valid)
+3. **If has producer, check ROB**: Is the producer's result ready?
+4. **If ROB ready**: Fetch from ROB (operand valid)
+5. **If ROB not ready**: Wait for CDB (operand not valid, store tag)
+
+
+```systemverilog
+always_comb begin
+    if (!rat_has_producer) begin
+        operand_valid      = 1'b1;
+        fetch_from_regfile = 1'b1;
+    end
+    else if (rob_entry_ready) begin
+        operand_valid      = 1'b1;
+        fetch_from_regfile = 1'b0;
+    end
+    else begin
+        operand_valid      = 1'b0;
+        fetch_from_regfile = 1'b0;
+    end
+end
+```
+
+#### Special Case: Instruction 2 Depends on Instruction 1
+
+The logic above works for Instruction 1, but Instruction 2 has a complication: the RAT and ROB haven't been updated yet with Instruction 1's destination.
+
+Consider:
+```asm
+ADD  x5, x1, x2    # Instr1: produces x5
+SUB  x6, x5, x3    # Instr2: needs x5 — but RAT doesn't know about Instr1 yet!
+```
+
+When I look up `x5` in the RAT for Instruction 2, it returns the old producer, not Instruction 1. I added extra dependency checking:
+
+```systemverilog
+assign is_rs3_dependent_on_RD1 = (RD1 == RS3);
+assign is_rs4_dependent_on_RD1 = (RD1 == RS4);
+```
+
+If there's a dependency, I bypass the normal RAT/ROB lookup and use Instruction 1's tag (`latest_tag - 1`) so that when Instruction 1 executes, it will correctly fill the operand value in the RUU via the CDB.
+
+#### Schematic
+
+![diagram](oooashematic.jpg)
+
+
+### Testing
+
+I created unit testbenches for each component (RAT, ROB, RUU) and 10 assembly test programs targeting specific hazard scenarios:
+
+1. **Basic arithmetic** : verifies immediate loading and addition
+2. **RAW dependency chain** : instructions depending on previous results
+3. **WAR hazard** : ensures old values are read before new values are written
+4. **WAW hazard** : ensures in-order commit preserves final values
+5. **Instruction-level parallelism** : independent instructions execute in parallel
+6. **Register reuse** : alternating writes to the same register
+7. **Addition and subtraction** : mixed operations with dependencies
+8. **Shift operations** : shift-immediate with RAW dependencies
+9. **Logical operations**  : OR, AND, XOR with dependencies
+10. **Complex shifts** : immediate and register-based shifts combined
+
+#### Performance Evidence
+
+```asm
+addi t0, zero, 1
+slli t1, t0, 4          # t1 = 16
+slli t2, t1, 2          # t2 = 64
+addi t3, zero, 256
+srli t4, t3, 1          # t4 = 128
+add  a0, t2, t4         # a0 = 192
+srli a0, a0, 1          # a0 = 96
+addi a0, a0, 32         # a0 = 128
+```
+
+
+In the shift operations test, I measured:
+- In-order scalar: 8 instructions ÷ 8 cycles = **IPC = 1.0**
+- In-order superscalar: 8 instructions ÷ 6 cycles = **IPC = 1.33**
+- Out-of-order superscalar: 8 instructions ÷ 5 cycles = **IPC = 1.6**
+
+This represents a **60% improvement** over the baseline IPC of 1.
+
+GTKWave analysis confirmed simultaneous execution: ALU1 processing one instruction while ALU2 concurrently handles an independent instruction that was fetched later but had no dependencies.
+
+![diagram](oooaverifyingshifts.jpg)
+
+We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
+
+All test cases pass.
 
 ---
 
