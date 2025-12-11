@@ -375,6 +375,7 @@ When either stall is high, all pipeline registers, the PC, and the branch predic
 
 In our cycle-by-cycle simulation, the cache does not appear faster—a hit still takes one cycle. However, in real hardware, cache hits complete in 0.1–3 ns while main memory takes 50–100 ns. Our simulation abstracts this latency difference, but a physical implementation would show significant acceleration.
 
+---
 
 ### M-Type Instructions (RV32M Extension)
 
