@@ -1,5 +1,15 @@
 # How to use our GitHub:
 
+Welcome to the Group 5 Instruction Architectures & Compiler RISC-V RV32I Processor Team Project.
+
+This README is a simple guide on how to use our GitHub repository. **THIS IS NOT THE TEAM STATEMENT** (that can be found below). Our repo has a total of 10 branches (not including main and lab4), 1 for each extension, which are all linked below in our contribution table. We have made extremely comprehensive READMEs for each branch, breaking down everything we implemented in that branch, so please take the time to read those.
+
+On this page, you can find links to the: 
+- Team Statement
+- Individual Statements
+- A compilation of all our README files into 1 master book
+- The Contribution Table (with links to the respective branch)
+
 ## Team Statement:
 
 ### [Team Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
