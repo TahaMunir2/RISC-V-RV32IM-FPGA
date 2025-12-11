@@ -28,8 +28,13 @@
         - [4.2.1 LEDs and 7-Segment Displays Test](#leds-and-7-segment-displays-test)
         - [4.2.2 External Interrupt Test](#external-interrupt-test)
         - [4.2.3 Timer Interrupt Test](#timer-interrupt-test)
+        - [4.2.4 F1 Lights](#f1-lights)
 
 ## Overview
+
+### Intro to Branch
+
+This branch contains both the code for making external and timer interrupts work in simulation and on an FPGA. You can skip ahead to see the video of F1 Lights working on an FPGA with external interrupts and a trap handler [here](#f1-lights). There are 3 files, 1 for the tb and rtl for simulation, 1 for the FPGA hardware files and 1 for the FPGA .mif files to initialise the ROM.
 
 ### Interrupts
 
@@ -828,7 +833,9 @@ This creates a simple binary counter with the value shown in Hex on the left as 
 
 https://github.com/user-attachments/assets/702378ec-2748-4001-a209-32438d559ac6
 
-## F1 Lights demonsation
+## F1 Lights 
+
+https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
 
 
 
