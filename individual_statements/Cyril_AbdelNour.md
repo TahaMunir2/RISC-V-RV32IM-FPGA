@@ -263,6 +263,7 @@ Integrating the pipeline required careful attention to signal naming and control
 - First half of cycle: Write to register file (Writeback stage)
 - Second half of cycle: Read from register file (Decode stage)
 
+
 ![diagram](../images/schematicpipelining.png)
 
 ### 4.3 Testing
