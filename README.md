@@ -36,6 +36,8 @@ As shown in the diagram above, the processor reads and writes from the L1 caches
 
 We have also decided to implement the cache controller and cache array in the same SystemVerilog sheet for all of the caches due to simplicity when integrating all of the submodules into the CPU.
 
+---
+
 ### 2.2 L1 Instruction Cache
 The instruction cache is reponsible for temporarily storing instructions so that they can be quickly accessed by the processor (control path).
 
@@ -50,6 +52,7 @@ The specifications for our instruction cache are as follows:
 
 The instruction cache supports read requests from the processer and writing from the L2 cache, but does not support writing from the processor, as we are not expecting the processor to change and write over an instruction.
 
+
 #### Valid and Used bit
 Each block contains one valid bit and each set has one used bit. The valid bit indicates whether the data in that cache block is meaningful or not, thus the valid bit is initialised to 0. The used bit indicates the most recently block, which is helpful in determining which block to evict when the set is full (LRU logic).
 
@@ -63,6 +66,7 @@ initial begin
     end
 end
 ```
+
 
 #### Instruction cache reading
 When a read request is sent to the instruction cache, it determines whether there is a hit or miss on the request using the following logic:
@@ -86,6 +90,7 @@ way = hit1;   // if hit1 = 1 then way = 1 if hit1 = 0 then way = 0 as hit0 = 1
 rd_en = 1'b1;
 ```
 However, if the read request is a miss, the instruction cache stalls the rest of the circuit (other than the memory modules) and sends a fetch request to the L2 cache.
+
 
 #### Load from L2
 On a miss the instruction cache needs to decide which way to store the fetched data into. For cold misses, our cache defaults to replacing block 0 if both bits are invalid, or block 1 if block0.valid = 1. However, for capacity misses, our cache uses an LRU replacement policy.
@@ -149,6 +154,7 @@ The specifications for our data cache are as follows:
 
 The data cache performs all the same core functions as the instruction cache—reading, LRU-based eviction, stalling, and loading lines from the L2 cache, while also supporting several additional operations specific to data handling.
 
+
 #### Additional Load Options
 Our data cache supports different load sizes, with the cache being able to load only a single byte, 2 bytes (or half a word), and a full word (4 bytes). Additionally, the data cache supports loading both unsigned and signed integers, implementing sign extension when required. The cache uses the byte offset of the requested address to determine which byte lane to read from.
 
@@ -187,6 +193,7 @@ case (LoadSize)
 endcase
 ```
 
+
 #### Writeback from Processor
 
 When the processor wants to write data back, it sends a write request to the data cache. This uses the same hit detection logic as used in a read request.
@@ -204,6 +211,7 @@ if (MemWrite_m) begin // sb logic, determine size
     write_data = {4{wd_aligned}};
 ```
 It then sets the block’s dirty bit to high. This bit indicates whether the processor has modified the data in that block.
+
 
 #### Additional Write Options
 Alongside its extended load options, the data cache also supports multiple write sizes. Using the Size_Write_m input, the cache can store 1 byte, 2 bytes (half-word), or a full 4-byte word from the processor. This operation uses a write mask to determine which bytes should be overwritten. The cache uses the byte offset of the requested address to determine which byte lane to write to.
@@ -240,6 +248,7 @@ logic [DATA_WIDTH-1:0] wd_aligned;
 assign wd_aligned = wd << (byte_offset * 8);
 ```
 
+
 #### Writeback to L2
 Before evicting a block, the data cache must first determine if the data has been changed since it was originally fetched. This allows the processor to write back only to the cache, updating the L2 cache and main memory only when the data is evicted. This avoids unnecessary writes to main memory and improves efficiency. The cache achieves this using the dirty bit described earlier.
 
@@ -268,6 +277,7 @@ The specifications for our L2 cache are as follows:
 | Block Size | 8 words |
 
 The L2 cache supports reading, handling write-backs, and fetching data from main memory.
+
 
 #### Arbiter Logic
 
@@ -310,6 +320,7 @@ else if (fetch_i && fetch_d) begin
     req_d = 1;
 end
 ```
+
 
 #### Read Logic
 
@@ -359,6 +370,7 @@ end
 ```
 
 However, as with the L1 caches, an L2 miss requires issuing a fetch request to main memory and storing the returned data before forwarding it to the requesting L1 cache.
+
 
 #### Load from Main Memory
 
@@ -449,6 +461,7 @@ if (way_rd == 2'b00) begin
 end
 ```
 
+
 #### L1 Writeback
 
 As discussed earlier, the L2 cache includes a write-back buffer to handle write-back requests from the L1 data cache. This buffer uses next-state logic to store and output the required information.
@@ -465,12 +478,14 @@ logic [ADDRESS_WIDTH-1:0] l1write_back_addr_buffer_next;
 
 Upon receiving a write-back request from the data cache, if the L1 write-back buffer is empty, the L2 cache loads the buffer with the provided data and address, asserts l1write_buffer to indicate that the buffer is full, and raises wb_ready_d to confirm to the data cache that the write-back data has been successfully captured.
 
+
 | l1write_buffer | l1write | action |
 | --- | --- | --- |
 | 0 | 0 | do nothing as no writeback request has been issued |
 | 0 | 1 | fill in the buffer as a writeback request has been issued, and the buffer is empty |
 | 1 | 0 | do nothing as no writeback request has been issued |
 | 1 | 1 | do not fill as the buffer is already full |
+
 
 l1write_buffer fill logic:
 ```SystemVerilog
@@ -483,9 +498,11 @@ if (l1write && !l1write_buffer) begin
 end
 ```
 
+
 The L1 write buffer also performs its own hit/miss check using the address stored in the buffer.
 
 If the L1 writeback buffer detects a hit, it writes the data to the matching address. However, because the cache has only one internal way selection unit and a single write path, it cannot perform write-back buffer operations concurrently with L1 reads or main memory loads. We have decided to give these operations priority, so the buffer must wait until the cache is idle before issuing a write. When issuing a write from the L1 writeback buffer, we also assert wr_wb to indicate that the write originates from the L1 cache. This ensures that the target block is correctly marked as dirty.
+
 
 l1write_buffer hit logic:
 ```SystemVerilog
@@ -515,6 +532,7 @@ end
 
 However, L1 writeback buffer misses need to be handled differently.
 
+
 #### Writeback to Main Memory
 
 The L2 cache includes a 4 word writeback data port to main memory. This port handles both L1 writeback misses, which are forwarded directly through the L2 and dirty lines evicted from the L2 cache itself. Since L2 writebacks consist of 8 words instead of 4, they must be issued as two separate 4-word writes to main memory. The l2write_buffer[1:0] signal indicates the number of 4-word segments that are still pending.
@@ -522,6 +540,7 @@ The L2 cache includes a 4 word writeback data port to main memory. This port han
 We prioritize the L1 writeback buffer over the L2 buffer because it is smaller and easier to drain, and because L1 misses occur far more frequently than combined L1+L2 misses. Giving it priority reduces the likelihood of stalling the processor.
 
 When main memory asserts wb_ready for the L2 cache, indicating it can accept another writeback, the L2 cache asserts write_back_en, outputs the appropriate writeback address and data, and then decrements the number of remaining words in its writeback buffer by one.
+
 
 | l2write_buffer | l1write_buffer | wb_ready | write_back_data | write_back_addr | write_back_en |
 | --- | --- | --- | --- | --- | --- |
@@ -537,6 +556,7 @@ When main memory asserts wb_ready for the L2 cache, indicating it can accept ano
 | 10 | 0 | 1 | l2_write_buffer_data[255:128] (top 4 words) | address of the bottom byte of the top 4 words | 1 |
 | 10 | 1 | 0 | X | X | 0 |
 | 10 | 1 | 1 | l1_write_buffer_data | l1_write_buffer_addr | 1 |
+
 
 L2 writeback logic:
 ```SystemVerilog
@@ -561,7 +581,9 @@ else if ((l2write_buffer == 2'b01) && wb_ready) begin
     l2write_buffer_next = l2write_buffer - 1;
 end
 ```
+
 There is also a critical edge case that must be addressed to ensure data integrity. When the writeback buffer is full and its stored address matches the address returned by main memory during a load, the returning data is obsolete and risks being written into the cache, despite the cache still registering a miss. Because the write operation and the deassertion of l1write_buffer occur synchronously, the L2 cache could, in the same cycle, write stale memory data into the cache while simultaneously forwarding the newer data to main memory. This would propagate incorrect values to the L1 caches and eventually to the processor. To mitigate this, we implemented a specific ad-hoc fix for this situation.
+
 
 Specific patch for edge case:
 ```SystemVerilog
@@ -576,6 +598,7 @@ if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) b
     end
 end
 ```
+
 ---
 
 ## 3. Schematic
