@@ -1281,7 +1281,7 @@ Where:
 
 The table (from Harris and Harris book) below shows typical propagation delays for processor components:
 
-![](https://github.com/TahaMunir2/Team5/blob/main/images/p_component_delays.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_component_delays.png)
 
 ##### Single-Cycle Processor Performance
 
@@ -1939,8 +1939,6 @@ At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
    Execute the testbench with the verification file to validate the program.
 
 Here are the results:
-
-![diagram](verifypipelining.jpg)
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifypipelining.jpg)
 
