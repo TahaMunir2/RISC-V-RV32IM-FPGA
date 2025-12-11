@@ -8,7 +8,7 @@ On this page, you can find links to the:
 - Team Statement
 - Individual Statements
 - A compilation of all our README files into 1 master book
-- The Contribution Table (with links to the respective branch)
+- The Contribution Table (with links to the respective branches)
 
 ## Team Statement:
 
