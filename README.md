@@ -599,6 +599,43 @@ if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) b
 end
 ```
 
+
+---
+
+### 2.5 Pipeline Integration
+
+Integrating the cache hierarchy into the pipelined processor required a mechanism to freeze the entire pipeline when either L1 cache is fetching data from higher levels in the memory hierarchy.
+
+#### The Problem
+
+When an L1 cache miss occurs, the cache must fetch data from the L2 cache (and potentially from main memory). This takes multiple cycles. During this time, the pipeline cannot proceed, because if instruction cache misses we have no instruction to decode; if the data cache misses, we cannot complete the memory stage.
+
+#### The Solution: Global Stall Signals
+
+Each L1 cache outputs a `stall` signal indicating it is waiting for data:
+
+| Signal | Source | Asserted When |
+|--------|--------|---------------|
+| `stall_l1i` | L1 Instruction Cache | Fetching instruction line from L2 |
+| `stall_l1d` | L1 Data Cache | Fetching data line from L2 or waiting for writeback |
+
+We combine these into enable signals for every pipeline component:
+
+| Component | Enable Signal |
+|-----------|---------------|
+| Fetch-Decode Register | `enable_fd = !(stall_l1i \|\| stall_l1d)` |
+| Decode-Execute Register | `enable_de = !(stall_l1i \|\| stall_l1d)` |
+| Execute-Memory Register | `enable_em = !(stall_l1i \|\| stall_l1d)` |
+| Memory-Writeback Register | `enable_mw = !(stall_l1i \|\| stall_l1d)` |
+| PC Block | `enable_pc_block = !(stall_l1i \|\| stall_l1d)` |
+| Branch Predictor | `enable_branch_predictor = !(stall_l1i \|\| stall_l1d)` |
+
+When either stall signal is high, all enable signals go low, freezing the entire pipeline in place. The pipeline registers hold their current values, the PC stops incrementing, and the branch predictor stops updating. Once the cache miss is resolved and both stall signals are low, the pipeline resumes from exactly where it stopped.
+
+#### A Note on Performance
+
+In our cycle-by-cycle simulation, the cache does not appear to improve performance. A cache hit still takes one cycle, just like a direct memory access would in our earlier designs. However, in real hardware, the benefit is substantial. A cache hit completes in 0.2-3 nanoseconds, while a main memory access takes 10-50 nanoseconds. Our simulation abstracts away this latency difference, but in a physical implementation, the cache hierarchy would provide significant acceleration by avoiding the slow path to main memory on most accesses.
+
 ---
 
 ## 3. Schematic
