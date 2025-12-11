@@ -31,8 +31,409 @@ We decided to implement both CPU testing and unit testing each time we added a n
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
 
+## Implementation and Design Decisions:
+
+### Single-Cycle Reduced RV32I CPU
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/README.md).
+
+This section covers the baseline foundation of our RV32I CPU from Lab 4. The single-cycle design gave our team an introduction to working together and designing a CPU using SystemVerilog.
+
+#### Supported Instructions
+
+| # | Mnemonic | Type | Opcode | Brief Description |
+|---|----------|------|--------|-------------------|
+| 1 | `ADDI` | I | `0010011` | Add sign-extended immediate to rs1 |
+| 2 | `BNE` | B | `1100011` | Branch if rs1 ≠ rs2 |
+| 3 | `ADD` | R | `0110011` | Register-register add |
+| 4 | `LW` | I | `0000011` | Load 32-bit word from memory |
+| 5 | `LBU` | I | `0000011` | Load zero-extended byte |
+| 6 | `JALR` | I | `1100111` | Jump to rs1 + imm, save return address |
+| 7 | `SB` | S | `0100011` | Store byte to memory |
+| 8 | `JAL` | J | `1101111` | PC-relative jump, save return address |
+| 9 | `LUI` | U | `0110111` | Load 20-bit upper immediate |
+
+#### Key Design Decisions
+
+**Memory Map Compliance:** Our ROM starts at address `0xBFC00000` and spans 4KB, while RAM occupies 128KB starting at `0x00000000`, following the project specification.
+
+![Memory Map](memory.jpg)
+
+**Little-Endian Byte Ordering:** All memory accesses use little-endian format, with the least significant byte at the lowest address.
+
+**Separated Read/Write Timing:** Reads are combinational (asynchronous) while writes are sequential (clocked). This ensures memory state only changes when we are absolutely ready.
+
+**Single Equality Flag:** The ALU outputs a single `EQ` flag derived from subtraction, which the control unit uses for branch decisions.
+
+#### Control Signals
+
+| Signal | Purpose |
+|--------|---------|
+| `RegWrite` | Enable writing to register file |
+| `ALUCtrl` | Selects ALU operation |
+| `ALUSrc` | Selects between register or immediate for ALU input |
+| `ImmSrc` | Selects immediate format (I, S, B, U, J) |
+| `PCSrc` | Selects next PC source (PC+4, branch, jump) |
+| `ResultSrc` | Selects write-back source (ALU, memory, PC+4) |
+| `MemWrite` | Enable writing to data memory |
+| `ByteWrite` | Selects byte vs word operation |
+
+#### Schematic
+
+![Single Cycle CPU Schematic](Modified%20Single%20Cycle%20CPU%20diagram.jpg)
+
+---
+
+### Full RV32I (37-Instruction)
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/FULL-RV32I/README.md).
+
+This section extends the reduced RV32I core from 9 instructions to the complete 37-instruction base integer ISA. The key idea is to move from a special-case control unit to a fully decoded, opcode-driven controller while keeping the same overall datapath structure.
+
+#### Instruction Set Coverage
+
+The extended control unit now covers all 37 base RV32I instructions:
+
+| Category | Instructions |
+|----------|--------------|
+| Upper Immediate | `LUI`, `AUIPC` |
+| Jumps | `JAL`, `JALR` |
+| Branches | `BEQ`, `BNE`, `BLT`, `BGE`, `BLTU`, `BGEU` |
+| Loads | `LB`, `LH`, `LW`, `LBU`, `LHU` |
+| Stores | `SB`, `SH`, `SW` |
+| I-Type ALU | `ADDI`, `SLTI`, `SLTIU`, `XORI`, `ORI`, `ANDI`, `SLLI`, `SRLI`, `SRAI` |
+| R-Type ALU | `ADD`, `SUB`, `SLL`, `SLT`, `SLTU`, `XOR`, `SRL`, `SRA`, `OR`, `AND` |
+
+#### Key Design Changes
+
+**Extended ALU Control (3-bit to 4-bit):**
+
+| ALUCtrl | Operation |
+|---------|-----------|
+| `0000` | ADD |
+| `0001` | SUB |
+| `0010` | AND |
+| `0011` | OR |
+| `0100` | XOR |
+| `0101` | SLL (Shift Left Logical) |
+| `0110` | SRL (Shift Right Logical) |
+| `0111` | SRA (Shift Right Arithmetic) |
+| `1000` | SLT (Set Less Than, signed) |
+| `1001` | SLTU (Set Less Than, unsigned) |
+| `1010` | LUI passthrough |
+| `1011` | AUIPC |
+
+**Extended Branch Comparison Signals:**
+
+The 9-instruction version only supported `BNE` with a single equality flag. The full implementation adds signed and unsigned comparison outputs.
+
+| Branch | Condition |
+|--------|-----------|
+| `BEQ` | `EQ == 1` |
+| `BNE` | `EQ == 0` |
+| `BLT` | `LT == 1` |
+| `BGE` | `LT == 0` |
+| `BLTU` | `LTU == 1` |
+| `BGEU` | `LTU == 0` |
+
+**New Multiplexer for AUIPC:**
+
+A key observation about RISC-V: the PC is never paired with a register operand—it is always paired with an immediate. This allows us to add a simple multiplexer (`ALUsrc2`) selecting between `rs1` and PC for ALU operand 1, enabling `AUIPC` without disrupting other instructions.
+
+**Memory Interface Extensions:**
+
+| SizeWrite | Store Operation | Bytes Written |
+|-----------|-----------------|---------------|
+| `2'b00` | `SB` | 1 |
+| `2'b01` | `SH` | 2 |
+| `2'b10` | `SW` | 4 |
+
+| LoadSize | LoadUnsigned | Load Operation |
+|----------|--------------|----------------|
+| `2'b00` | `0` | `LB` (sign-extend) |
+| `2'b00` | `1` | `LBU`  |
+| `2'b01` | `0` | `LH` (sign-extend) |
+| `2'b01` | `1` | `LHU`  |
+| `2'b10` | `X` | `LW` |
+
+**Systematic Opcode-Based Decoding:**
+
+Instead of nested `if`/`else` blocks, the new controller uses a `case(op)` structure with named opcode constants (`OPC_LUI`, `OPC_AUIPC`, `OPC_JAL`, etc.). Within each opcode, `funct3` and `funct7` are decoded to select the exact instruction.
+
+#### Schematic
+
+![Full RV32I Schematic](schematicfullriscv.png)
 
 
+
+---
+
+### Pipelined Processor 
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Pipelining/README.md).
+
+Pipelining improves processor performance by letting different parts of multiple instructions run simultaneously. We extended the single-cycle design into a 5-stage pipeline with forwarding, stalling, and flushing mechanisms to handle hazards.
+
+#### The Five Pipeline Stages
+
+| Stage | Name | Description |
+|-------|------|-------------|
+| **F** | Fetch | Retrieve instruction from instruction memory using PC |
+| **D** | Decode | Read registers and decode instruction; generate control signals |
+| **E** | Execute | Perform ALU operation or calculate memory address |
+| **M** | Memory | Access data memory for loads and stores |
+| **W** | Writeback | Write result back to register file |
+
+#### Signal Naming Convention
+
+Pipeline registers create multiple instances of the same signal, each belonging to a different instruction. We append a suffix indicating the stage:
+
+| Suffix | Stage | Example |
+|--------|-------|---------|
+| `F` | Fetch | `PCF`, `InstrF` |
+| `D` | Decode | `PCD`, `RD1D`, `RD2D` |
+| `E` | Execute | `PCE`, `ALUResultE` |
+| `M` | Memory | `ALUResultM`, `WriteDataM` |
+| `W` | Writeback | `ResultW`, `RdW` |
+
+#### Key Design Decision
+
+**Register File Timing:** Writeback occurs on the falling edge of the clock rather than the rising edge. This allows a subsequent instruction to read a value written by a preceding instruction within the same clock cycle, reducing certain data hazards.
+
+#### Hazard Handling
+
+**Data Hazards (RAW):** Resolved through forwarding. Two 4-to-1 multiplexers at the ALU inputs select between three sources:
+
+| ForwardAE/BE | Operand Source |
+|--------------|----------------|
+| `00` | Register file output (normal path) |
+| `01` | Forward from Writeback stage |
+| `10` | Forward from Memory stage |
+
+**Load Hazards:** Forwarding cannot resolve dependencies on load instructions since data is only available after the Memory stage. The hazard unit inserts a 1-cycle stall by freezing the FD register and flushing the DE register.
+
+**Control Hazards:** Branches are predicted as not taken. When a branch is determined to be taken in the Execute stage, the pipeline flushes incorrectly fetched instructions from the Fetch and Decode stages.
+
+#### PCSrc Assertion Logic
+
+In the pipelined design, branch resolution requires a dedicated module in the Execute stage that combines pipelined control signals with ALU comparison flags:
+
+| PCSrcE | Next PC Source | Condition |
+|--------|----------------|-----------|
+| `2'b00` | `PC + 4` | Sequential execution |
+| `2'b01` | `PCTargetE` | Branch taken or JAL |
+| `2'b10` | `ALUResultE` | JALR (register-based jump) |
+
+#### Performance Analysis
+
+| Metric | Single-Cycle | Pipelined |
+|--------|--------------|-----------|
+| Clock Period | 750 ps | 350 ps |
+| CPI | 1.0 | ~1.23 (due to stalls) |
+| Execution Time (300B instr) | 225 s | 129 s |
+| **Speedup** | — | **1.74×** |
+
+
+#### Schematic
+
+![Pipelined Processor Schematic](schematicpipelining.png)
+
+
+
+
+---
+
+### Branch Prediction
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/branchprediction/README.md).
+
+In our pipelined processor, branches are only resolved in the Execute stage, meaning incorrect instructions may already be in the pipeline. The baseline approach predicts all branches as not taken, but this performs poorly for loops where backward branches are typically taken repeatedly.
+
+#### Two-Bit Dynamic Prediction
+
+Consider a simple loop that iterates 100 times:
+
+| Predictor | Mispredictions per Loop | Problem |
+|-----------|-------------------------|---------|
+| One-bit   | 2 (first and last iteration) | Remembers only the last outcome |
+| Two-bit   | 1 (last iteration only)     | Requires two consecutive mispredictions to change prediction |
+
+
+The key insight is that after exiting a loop, the two-bit predictor stays in `WEAKLY_TAKEN` rather than flipping to "not taken". This means when the loop is re-entered, it still predicts correctly.
+
+The two-bit predictor uses a four-state finite state machines:
+
+![FSM Diagram](branchp.png)
+
+#### State Encoding
+
+| State | Encoding | Prediction |
+|-------|----------|------------|
+| `STRONGLY_NOT_TAKEN` | `2'b00` | Not Taken |
+| `WEAKLY_NOT_TAKEN` | `2'b01` | Not Taken |
+| `WEAKLY_TAKEN` | `2'b10` | Taken |
+| `STRONGLY_TAKEN` | `2'b11` | Taken |
+
+The states are intentionally encoded so that the **MSB directly gives the prediction**.
+
+The predictor a Moore machine where output depends only on current state.
+
+#### Key Design Decisions
+
+**Initialization:** All entries initialize to `WEAKLY_NOT_TAKEN` on reset. We intentionally avoid `STRONGLY_TAKEN` or `STRONGLY_NOT_TAKEN` because these extreme states would bias the predictor before any branch history is available.
+
+**Negative-Edge Update:** State updates occur on the falling edge of the clock. This ensures the prediction is read during the first half of the cycle (Fetch stage) while the state update from Execute happens during the second half, avoiding read-write conflicts.
+
+**Branch Target Buffer (BTB):** We maintain a 64-entry table indexed by `PC[7:2]` (skipping the 2 LSBs since instructions are word-aligned), containing the 2-bit prediction state.
+
+#### PCSrcF Assertion: Fetch vs Execute Arbitration
+
+Two stages compete to control the PC. The module uses priority-based arbitration:
+
+| Priority | Condition | Action |
+|----------|-----------|--------|
+| 1 (Highest) | Jump instruction in Execute | Use resolved target from Execute |
+| 2 | Misprediction detected | Correct PC  |
+| 3 (Lowest) | New branch in Fetch | Follow prediction |
+
+**Misprediction Recovery:**
+
+| Prediction | Actual | Recovery |
+|------------|--------|----------|
+| Taken | Not Taken | Resume at `PC + 4` from Execute stage |
+| Not Taken | Taken | Jump to branch target |
+
+#### Hazard Unit Modifications
+
+| Condition | Old Behavior | New Behavior |
+|-----------|--------------|--------------|
+| Branch taken, correctly predicted | Flush | **No flush** |
+| Branch taken, mispredicted | Flush | Flush |
+| Branch not taken, correctly predicted | No flush | No flush |
+| Branch not taken, mispredicted | No flush | **Flush** |
+
+This reduces unnecessary flushes when the branch predictor guesses correctly, improving pipeline efficiency.
+
+#### Schematic
+
+![Branch Prediction Schematic](branchpredictio.png)
+
+
+---
+
+### Hierarchical Cache
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/hierarchical-cache/README.md).
+
+Caches exploit spatial and temporal locality to improve processor performance. We implemented a two-level cache hierarchy: separate 2-way associative set L1 instruction and data caches, and a unified 4-way associative L2 cache.
+
+#### Memory Hierarchy
+
+The processor reads instructions from the L1 instruction cache and reads/writes data through the L1 data cache. Both L1 caches communicate with the unified L2 cache, which in turn accesses main memory.
+
+#### Cache Specifications
+
+| Parameter | L1 Instruction | L1 Data | L2 |
+|-----------|----------------|---------|-----|
+| Size | 4 KB | 4 KB | 32 KB |
+| Sets | 128 | 128 | 256 |
+| Associativity | 2-way | 2-way | 4-way |
+| Block Size | 4 words | 4 words | 8 words |
+
+#### Key Design Decisions
+
+**Write-Back Policy with Dirty Bits:** The data cache writes only to the cache on store instructions, setting a dirty bit. Data is written back to L2 (and eventually main memory) only when the block is evicted. This reduces memory traffic compared to write-through.
+
+**LRU Replacement:**
+- L1 caches (2-way): Single `used` bit per set tracks the most recently accessed way
+- L2 cache (4-way): **LEOOOO TO WRITE HERE**
+
+**L2 Arbiter Logic:** The L2 cache has a single read port serving both L1 caches. When both request simultaneously, data cache requests take priority.
+
+| fetch_i | fetch_d | Serviced |
+|---------|---------|----------|
+| 0 | 0 | None |
+| 1 | 0 | Instruction |
+| 0 | 1 | Data |
+| 1 | 1 | Data (instruction waits) |
+
+**Variable Load/Store Sizes:** The data cache supports byte, half-word, and word operations with proper sign extension for loads and byte masking for stores.
+
+#### Pipeline Integration
+
+Each L1 cache outputs a `stall` signal when waiting for data from higher levels. We combine these into enable signals that freeze the entire pipeline:
+
+| Signal | Asserted When |
+|--------|---------------|
+| `stall_l1i` | Instruction cache fetching from L2 |
+| `stall_l1d` | Data cache fetching from L2 or waiting for writeback |
+
+When either stall is high, all pipeline registers, the PC, and the branch predictor are disabled. The pipeline resumes exactly where it stopped once the miss is resolved.
+
+#### A Note on Performance
+
+In our cycle-by-cycle simulation, the cache does not appear faster—a hit still takes one cycle. However, in real hardware, cache hits complete in 0.1–3 ns while main memory takes 50–100 ns. Our simulation abstracts this latency difference, but a physical implementation would show significant acceleration.
+
+
+### M-Type Instructions (RV32M Extension)
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/m-extension/README.md).
+
+We implemented the full RV32M integer multiply/divide extension, adding eight instructions to our processor. From the pipeline's perspective, M instructions behave like ordinary R-type ALU operations, only the ALU and control unit required changes.
+
+#### Supported Instructions
+
+| Instruction | Operation | Result |
+|-------------|-----------|--------|
+| `MUL` | signed × signed | Low 32 bits |
+| `MULH` | signed × signed | High 32 bits |
+| `MULHSU` | signed × unsigned | High 32 bits |
+| `MULHU` | unsigned × unsigned | High 32 bits |
+| `DIV` | signed ÷ signed | Quotient |
+| `DIVU` | unsigned ÷ unsigned | Quotient |
+| `REM` | signed % signed | Remainder |
+| `REMU` | unsigned % unsigned | Remainder |
+
+#### Key Design Decisions
+
+**ALUCtrl Widened (4-bit to 5-bit):** The eight new M instructions required additional encodings. All existing RV32I codes remain unchanged in the lower range.
+
+| ALUCtrl | Operation |
+|---------|-----------|
+| `5'b01100` | MUL |
+| `5'b01101` | MULH |
+| `5'b01110` | MULHU |
+| `5'b01111` | MULHSU |
+| `5'b10000` | DIV |
+| `5'b10001` | DIVU |
+| `5'b10010` | REM |
+| `5'b10011` | REMU |
+
+**64-bit Product for Multiplication:** We extend operands to 64 bits before multiplying, then select either the low or high 32 bits. This is necessary because SystemVerilog's `a * b` produces a result with width equal to the wider operand—if we multiplied 32-bit values, the upper bits would be lost.
+
+
+**KEREM TO WRITE IN THE SECTION ABOVE**
+
+**RISC-V Division Edge Cases:** The spec defines specific behaviour for corner cases:
+
+| Condition | DIV/DIVU Result | REM/REMU Result |
+|-----------|-----------------|-----------------|
+| Divisor = 0 | `0xFFFFFFFF` (-1) | Dividend (rs1) |
+| −2³¹ ÷ −1 (signed overflow) | `0x80000000` | 0 |
+
+#### Minimal Integration
+
+M instructions are treated as ordinary R-type ALU operations:
+- `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`
+- Forwarding and hazard logic unchanged, the hazard unit only inspects register numbers, not the operation type
+- Pipeline registers, branch logic, and memories see no difference
+
+#### Note
+
+Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+
+
+---
 ## Over-arching Results
 
 ## VBuddy results
@@ -115,6 +516,8 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
+
+
 
 ## Future Considerations
 
