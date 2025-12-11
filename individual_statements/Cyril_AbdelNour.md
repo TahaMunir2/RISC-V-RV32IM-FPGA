@@ -688,7 +688,7 @@ The fix was simple once I understood the problem: I had forgotten to include the
 
 ## 7. Out-of-Order Superscalar (Arithmetic Instructions)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/ooo-superscalar/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_arithmetic/README.md).
 
 This section represents the most substantial part of my contribution to the project. The concepts implemented here extend beyond the scope of the lecture material, requiring extensive independent research into advanced computer architecture techniques pioneered in the 1960s and refined through decades of processor development.
 
