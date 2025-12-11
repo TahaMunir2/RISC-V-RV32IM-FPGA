@@ -112,6 +112,48 @@ The four division/remainder operations share the existing 32-bit ALUout result a
 •	DIVU (ALUCtrl = 5'b10001)
 •	REM (ALUCtrl = 5'b10010)
 •	REMU (ALUCtrl = 5'b10011)
+
+```Systemverilog
+        5'b10000: begin //DIV
+            if (ALUop2 == 0) begin
+                ALUout = -1;
+            end
+            else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
+                ALUout = 32'h80000000;
+            end
+            else begin
+                ALUout = $signed(ALUop1)/$signed(ALUop2);
+            end
+        end
+        5'b10001: begin //DIVU
+            if (ALUop2 == 0) begin
+                ALUout = -1;
+            end
+            else begin
+                ALUout = $unsigned(ALUop1)/$unsigned(ALUop2);
+            end
+        end
+        5'b10010: begin //REM
+            if (ALUop2 == 0) begin
+                ALUout = ALUop1;
+            end
+            else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
+                ALUout = 32'h00000000;
+            end
+            else begin
+                ALUout = $signed(ALUop1) % $signed(ALUop2);
+            end
+        end
+        5'b10011: begin //REMU
+            if (ALUop2 == 0) begin
+                ALUout = ALUop1;
+            end
+            else begin
+                ALUout = $unsigned(ALUop1) % $unsigned(ALUop2);
+            end
+        end
+```
+		
 They follow the RISC-V spec’s special cases:
 1.	Division by zero
 DIV / DIVU: result is −1 (all ones), i.e. 0xFFFFFFFF.
