@@ -1,4 +1,4 @@
-https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg# Out-of-Order Superscalar Processor with Load Instructions
+# Out-of-Order Superscalar Processor with Load Instructions
 
 ## Table of Contents
 - [1. Overview](#1-overview)
