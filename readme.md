@@ -822,7 +822,7 @@ Next, we wanted to out our timer interrupt logic for this we needed a test that 
 ```
 - 8-E set up the CSRs the same as before, but now for timers instead of trigger
 - F just clears a0 to be safe
-- 10=13 set the timer to be 33,554,432 cycles which at 50MHz should only take about 2/3's of a second
+- 10-13 set the timer to be 33,554,432 cycles which at 50MHz should only take about 2/3's of a second
 - 14 is an infinite loop
 - 1 (This is now in the trap handler) increments a0 by 1 (for our counter)
 - 2-3 set the LEDs to display a0 (in binary)
