@@ -30,15 +30,15 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
 - Read `rs1` and `rs2` from the register file
 - Produce a 32-bit result and write to `rd` in WB
 - `RegWrite = 1`, `ALUSrc = 0`, `ResultSrc = ALU`
-- Forwarding and hazard logic identical to other R-type ops
+- Forwarding and hazard logic is identical to other R-type ops.
 
 ---
 
 ## 2. ALU changes
 
 ### 2.1 ALUCtrl widened
-- `ALUCtrl` was widened from 4 bits to **5 bits** so M operations have distinct encodings and do not reuse existing codes.
-- New mapping (examples — chosen contiguous codes to avoid conflicts):
+- `ALUCtrl` was widened from 4 bits to **5 bits** to accomodate for the 8 new M instructions.
+- Here are the encodings in the new mapping:
 
   - `5'b01100` — MUL  (low 32 bits)
   - `5'b01101` — MULH (high 32 bits signed×signed)
@@ -49,7 +49,7 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
   - `5'b10010` — REM  (signed remainder)
   - `5'b10011` — REMU (unsigned remainder)
 
-All previous RV32I ALU codes remain unchanged in the lower range.
+All previous RV32I ALU codes remain unchanged in the lower range. The new encodings were chosen to be contiguous, incrementing ALUCtrl for every new encoding.
 
 ### 2.2 Multiplication implementation
 
