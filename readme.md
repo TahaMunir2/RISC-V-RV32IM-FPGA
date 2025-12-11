@@ -81,7 +81,7 @@ An FPGA (Field Programmable Gate Array) is a programmable integrated circuit whi
 
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
-We were able to get a variety of instructions running on our FPGA, including arithmetic, store, load, jump and branch instructions, all running on our FPGA and partially get interrupts working as shown in the videos in the testing section however, it proved to be quite challenging as Quartus had quite a steep learning curve, we were limited for time and we couldn't simply pull out GTKWave everytime something went wrong which made debugging very challenging.
+We were able to get everything from the full RV32I instruction set, along with pipelining, as well as external interrupts and timer interrupts, with a trap handler in machine mode working on our FPGA and then make our own version of F1 lights in assembly to run on the FPGA.
 
 ## Implementation:
 
