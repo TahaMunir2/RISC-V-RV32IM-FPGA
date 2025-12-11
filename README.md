@@ -236,7 +236,7 @@ Two new signals were added to support variable-width loads with sign/zero extens
 ---
 ## Final Circuit Schematic:
 
-![diagram](schematic.png)
+![diagram]((https://github.com/TahaMunir2/Team5/blob/main/images/schematic.png))
 
 
 ---
@@ -274,7 +274,7 @@ The initial `doit.sh` file is modified so we can run this test
 
 Here is what we obtain:
 
-![diagram](control.jpg)
+![diagram]((https://github.com/TahaMunir2/Team5/blob/main/images/control.jpg))
 
 #### ALU Verification ( `alu_tb.cpp` ):
 
@@ -299,7 +299,7 @@ The initial `doit.sh` file is modified so we can run this test.
    ```
 Here is what we obtain:
 
-![diagram](alu.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/alu.jpg)
 
 
 ### Assembly Test Programs:
@@ -530,6 +530,6 @@ These files containing the additional assembly code are in the asm folder contai
 
 Here are the results:
 
-![diagram](verify.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verify_full.jpg)
 
 All test cases pass.
