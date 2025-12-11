@@ -615,6 +615,12 @@ TEST_F(CpuTestbench, noisy)
 }
 ```
 
+#### gaussian.mem
+
+https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
+
+
+
 #### triangle.mem
 
 
