@@ -1,8 +1,27 @@
-# Team 5 CPU Project team statement
+How to use our Github:
 
+## Team Statement:
+Link to [team statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+
+## Individual Statements:
+
+| CID | Name | Individual Statement |
+|------------|----------------------|
+| 02574254 | Leo Yin | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Leo_Yin.md) |
+| 02591789 | Yusuf Kerem Teker | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Kerem_Teker.md) |
+| 02609612 | Cyril Abdelnour | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Cyril_AbdelNour.md) |
+| 02562044 | Taha Munir | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Taha_Munir.md) |
+
+## Compilation of readmes
+
+[Book]()
+
+## Intro to our GitHub
+
+
+## Contributions table
 Names link to the branches of the implementation:
 >  *indicates it's one of our 3 final CPUs.
-## Contributions table
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (Cyllocoding)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
