@@ -436,6 +436,27 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 ## Testing
 
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+   > For unit test benches, replace verify.cpp with the appropriately named _tb.cpp file
+
+
 ### Test Benches:
 
 For lab 4 (which covered the first 3 instructions), we made unit tests for every block:
@@ -457,12 +478,7 @@ And all the tests passed:
 
 ### F1 Lights
 
-
-
 https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
-
-
-
 
 Here is the assembly code that we used to implement the F1 countdown mechanism:
 ```asm
