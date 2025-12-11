@@ -961,8 +961,8 @@ This can be written in assembly for the .mif file as follows:
 ```
 
 - We have made use of branch instructions to implement the FSM conditions.
-- We have made use of the fact that the timer resets every time we set i,t, but also that we can change what it's set to.
-- To stop the program once we press the trigger, we disable all interrupts after it is pressed.
+- We have made use of the fact that the timer resets every time we set it, but also that we can change what it's set to.
+- To stop the program once we press the trigger, we disable all interrupts after it is pressed and don't leave the trap handler.
 - We increment a0 by 1 every 10ms, so to determine your reaction time, you must multiply a0 (in hex) by 0.01.
 
 This leads to the satisfying demonstration below:
