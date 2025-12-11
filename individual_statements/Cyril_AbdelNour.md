@@ -1007,9 +1007,6 @@ All test cases pass.
 
 ---
 
-Section8 personal statement · MD
-Copy
-
 ## 8. Out-of-Order Superscalar (Full Version with Loads)
 
 For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_full_version/README.md).
@@ -1120,7 +1117,7 @@ The tags propagate so the Memory stage knows which ROB entry to update when the 
 
 #### Schematic
 
-![diagram](ooofull_2.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
 
 ### 8.4 Testing
 
@@ -1138,7 +1135,7 @@ I created 7 new tests specifically for load functionality, in addition to reusin
 
 All 17 tests pass.
 
-![diagram](ooofverify.jpg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
 
 ---
 
