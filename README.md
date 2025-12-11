@@ -33,7 +33,7 @@ We maintain a table indexed by the branch PC containing:
 - The **2-bit prediction state**
 - The **target address** for fast redirection when predicting "taken"
 
-[![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
 
 Finite State Machine diagram taken from Harris and Harris book
 
