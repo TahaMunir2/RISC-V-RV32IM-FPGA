@@ -713,10 +713,30 @@ Which matches up with the memory we expected. It is interesting to see that our 
 
 #### LEDs and 7-Segment Displays Test
 
+Firstly, we just wanted a simple test to check that our outputs and address mapping worked correctly on our FPGA.
+```
+WIDTH=32;
+DEPTH=2048;
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+    00 : 800024B7; -- lui s1, 0x80002
+    01 : 15500913;  -- addi s2, zero, 0x155 (10'b0101010101)
+    02 : 0124A023;  -- sw s2, 0(s1)
+    03 : 0000006F; -- jal x0, 0
+    [04..7FF] : 00000000;
+END;
+```
+- This program would first load an alternating pattern of 1's and 0's (Hex 255) into the address 8000200, which is the address we reserved for the LEDs's
+- Then it would store that same value into a0, so the 7-segment displays should show 255.
+
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/leds_7.jpeg)
+> That is exactly what we observed
 
 #### External Interrupt Test
 
+Next, we wanted to test out the  external interrupt logic and trap handler routine, as well as check if more complex instructions like branch and csrrw would work.
 https://github.com/user-attachments/assets/71920d99-a521-49b0-a02c-273b732a5d86
 
 #### Timer Interrupt Test
