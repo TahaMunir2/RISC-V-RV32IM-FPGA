@@ -15,15 +15,15 @@ Copy
   - [4.1 Forwarding Logic](#41-forwarding-logic)
   - [4.2 Top-Level Integration](#42-top-level-integration)
   - [4.3 Testing](#43-testing)
-- [5. Cache Implementation](#5-cache-implementation)
-  - [5.1 L1 Cache Design](#51-l1-cache-design)
-  - [5.2 Top-Level Integration](#52-top-level-integration)
-  - [5.3 Testing](#53-testing)
-- [6. Branch Prediction](#6-branch-prediction)
-  - [6.1 Branch Predictor](#61-branch-predictor)
-  - [6.2 PCSrcF Assertion Logic](#62-pcsrcf-assertion-logic)
-  - [6.3 Top-Level Integration](#63-top-level-integration)
-  - [6.4 Testing](#64-testing)
+- [5. Branch Prediction](#5-branch-prediction)
+  - [5.1 Branch Predictor](#51-branch-predictor)
+  - [5.2 PCSrcF Assertion Logic](#52-pcsrcf-assertion-logic)
+  - [5.3 Top-Level Integration](#53-top-level-integration)
+  - [5.4 Testing](#54-testing)
+- [6. Cache Implementation](#6-cache-implementation)
+  - [6.1 L1 Cache Design](#61-l1-cache-design)
+  - [6.2 Top-Level Integration](#62-top-level-integration)
+  - [6.3 Testing](#63-testing)
 - [7. Out-of-Order Superscalar (Arithmetic Instructions)](#7-out-of-order-superscalar-arithmetic-instructions)
   - [7.1 Register Alias Table (RAT)](#71-register-alias-table-rat)
   - [7.2 Re-Order Buffer (ROB)](#72-re-order-buffer-rob)
@@ -36,6 +36,7 @@ Copy
   - [8.3 Load Instruction Integration](#83-load-instruction-integration)
 - [9. Mistakes Made](#9-mistakes-made)
 - [10. Reflections](#10-reflections)
+
 
 ---
 
@@ -384,25 +385,249 @@ This demonstrates the fundamental advantage of pipelining: higher throughput thr
 
 ---
 
-## 5. Cache Implementation
+## 5. Branch Prediction
 
-### 5.1 L1 Cache Design
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/branchprediction/README.md).
 
-### 5.2 Top-Level Integration
+In the pipelined processor, instructions are fetched assuming `PC + 4`. Branch decisions are only resolved in the Execute stage, meaning incorrect instructions may already be in the pipeline. This causes control hazards that require flushes, wasting cycles.
 
-### 5.3 Testing
+The baseline approach predicts all branches as not taken, but this performs poorly for loops where backward branches are typically taken repeatedly. I implemented a two-bit dynamic branch predictor to reduce these penalties and integrated in the 5 stage pipelined processor.
 
----
+### 5.1 Branch Predictor
 
-## 6. Branch Prediction
+#### Why Two Bits Instead of One?
 
-### 6.1 Branch Predictor
+A one-bit predictor remembers only the last outcome. The problem is it mispredicts twice per loop: once at the first iteration (no history yet) and once at the last iteration (pattern breaks).
 
-### 6.2 PCSrcF Assertion Logic
+A two-bit predictor requires two consecutive mispredictions before changing its prediction. This means it only mispredicts once per loop instead of twice. 
 
-### 6.3 Top-Level Integration
+The four states are: Strongly Taken, Weakly Taken, Weakly Not Taken, and Strongly Not Taken.
 
-### 6.4 Testing
+#### State Encoding
+
+I intentionally encoded the states so that the MSB directly gives the prediction:
+
+```systemverilog
+typedef enum logic [1:0] {
+    STRONGLY_NOT_TAKEN = 2'b00,
+    WEAKLY_NOT_TAKEN   = 2'b01,
+    WEAKLY_TAKEN       = 2'b10,
+    STRONGLY_TAKEN     = 2'b11
+} my_state;
+```
+
+- `0x` → Predict not taken
+- `1x` → Predict taken
+
+This means extracting the prediction is just reading a single bit:
+
+```systemverilog
+pred_taken = array[predict_index][1];
+```
+
+This is a Moore machine: the output depends only on the current state, not the inputs.
+
+The FSM diagram is taken from Harris and Harris book :
+
+![diagram](../images/branchpfsm.jpg)
+
+
+#### Initialization Choice
+
+```systemverilog
+if (rst) begin
+    for (int i = 0; i < TARGET_BUFFER_SIZE; i++)
+        array[i] <= WEAKLY_NOT_TAKEN;
+end
+```
+
+On reset, all entries initialize to `WEAKLY_NOT_TAKEN`. I could have also picked `WEAKLY_TAKEN`. However, I intentionally avoided `STRONGLY_TAKEN` or `STRONGLY_NOT_TAKEN` because these extreme states would bias the predictor before any branch history is available.
+
+#### State Transitions
+
+The FSM implements a saturating counter: the state moves toward "strongly taken" when branches are taken, and toward "strongly not taken" when they aren't, but never wraps around.
+
+```systemverilog
+case (array[update_index])
+    STRONGLY_NOT_TAKEN: next = actual_taken ? WEAKLY_NOT_TAKEN : STRONGLY_NOT_TAKEN;
+    WEAKLY_NOT_TAKEN:   next = actual_taken ? WEAKLY_TAKEN     : STRONGLY_NOT_TAKEN;
+    WEAKLY_TAKEN:       next = actual_taken ? STRONGLY_TAKEN   : WEAKLY_NOT_TAKEN;
+    STRONGLY_TAKEN:     next = actual_taken ? STRONGLY_TAKEN   : WEAKLY_TAKEN;
+endcase
+```
+
+#### Timing: Negative Edge
+
+```systemverilog
+always_ff @(negedge clk)
+```
+
+The state update occurs on the falling edge of the clock. This ensures that:
+1. The prediction is read during the first half of the cycle (Fetch stage)
+2. The state update from Execute happens during the second half, avoiding read-write conflicts
+
+This follows the same strategy used for the register file in the pipelined processor.
+
+### 5.2 PCSrcF Assertion Logic
+
+The main challenge with branch prediction is that two stages compete to control the PC:
+- **Fetch stage**: Makes speculative predictions for newly fetched branches
+- **Execute stage**: Resolves actual branch outcomes and may need to correct mispredictions
+
+I created the `PCSrcF_assertion` module to arbitrate between them using a priority-based approach.
+
+![diagram](../images/branchppcsrcf.jpg)
+
+#### Priority Logic
+
+**Priority 1 (Highest): Jump Instructions**
+```systemverilog
+if (JumpE) begin
+    PCSrcF = PCSrcE;
+    FinalTarget = targetE;
+end
+```
+Jumps (`JAL`/`JALR`) in Execute always take precedence since they are unconditional.
+
+**Priority 2: Misprediction Recovery**
+```systemverilog
+else if (BranchE && false_prediction) begin
+    if (predictionE) begin
+        PCSrcF = 2'b11;  // Predicted taken, actually not taken
+    end
+    else begin
+        PCSrcF = 2'b01;  // Predicted not taken, actually taken
+        FinalTarget = targetE;
+    end
+end
+```
+
+When Execute detects a misprediction, I correct the PC:
+
+| Prediction | Actual | Recovery Action |
+|------------|--------|-----------------|
+| Taken | Not Taken | `PCSrcF = 2'b11` : Resume at `PC + 4` (wrong path taken) |
+| Not Taken | Taken | `PCSrcF = 2'b01` : Jump to `targetE` (should have branched) |
+
+**Priority 3 (Lowest): New Branch Prediction**
+```systemverilog
+else begin
+    if (BranchF) begin
+        if (predictionF) begin
+            PCSrcF = 2'b01;
+            FinalTarget = targetF;
+        end
+        else begin
+            PCSrcF = 2'b00;
+        end
+    end
+end
+```
+
+If no Execute-stage corrections are needed and Fetch contains a branch, I follow the prediction.
+
+#### Output Encoding
+
+| PCSrcF | Next PC Source | Condition |
+|--------|----------------|-----------|
+| `2'b00` | `PC + 4` (Fetch) | Sequential execution |
+| `2'b01` | `FinalTarget` | Branch predicted/confirmed taken |
+| `2'b11` | `PCPlus4E` (Execute) | Misprediction recovery |
+
+Note that `2'b00` and `2'b11` both select a `PC + 4` value, but from different stages. When recovering from a "predicted taken, actually not taken" misprediction, I must return to the `PC + 4` of the mispredicted branch, which has propagated to Execute as `PCPlus4E`.
+
+### 5.3 Top-Level Integration
+
+#### Misprediction Detection
+
+I created the `evalprediction` module to compare what I predicted against what actually happened:
+
+```systemverilog
+always_comb begin
+    false_prediction = 0;
+    if (BranchE == 1) begin
+        case (PCSrcE)
+            2'b00: if (pred_taken)  false_prediction = 1;
+            2'b01: if (!pred_taken) false_prediction = 1;
+            default: false_prediction = 0;
+        endcase
+    end
+end
+```
+
+Defaulting to `0` prevents unnecessary pipeline flushes when no branch is in Execute.
+
+#### Prediction Propagation
+
+The prediction made in Fetch must travel with the instruction to Execute for comparison. I added `predictionE` to the pipeline registers so that when a branch reaches Execute, I still know what prediction was made for it.
+
+#### Hazard Unit Modifications
+
+I modified the hazard unit to only flush on mispredictions or jumps, not on every taken branch:
+
+```systemverilog
+if (false_prediction || JumpE) begin
+    flush_f_d    = 1;
+    flush_d_exec = 1;
+end
+```
+
+Thus, I achieve the key improvement: when the predictor guesses correctly, I avoid the flush penalty entirely.
+
+
+### 5.4 Testing
+
+#### Branch Predictor Unit Testing
+
+I created a C++ testbench (`predictor_tb.cpp`) that isolates the branch predictor module and verifies:
+- **Initial State**: All entries initialize to `WEAKLY_NOT_TAKEN` after reset
+- **State Transitions**: Correct transitions on taken/not-taken outcomes
+- **Saturation**: Counter stays at `STRONGLY_TAKEN` or `STRONGLY_NOT_TAKEN` when saturated
+- **Misprediction Tolerance**: Two consecutive mispredictions required to flip prediction
+
+#### Full Circuit Testing
+
+I tested using a loop program (`1_addi_bne`) that counts from 0 to 255.
+
+```assembly
+.text
+.globl main
+# this is a modified version of the Lab4 test program
+# which doesn't run in an infinite loop
+main:
+    addi    t1, zero, 0xff      # t1 = 255
+    addi    a0, zero, 0x0       # output = 0
+mloop:
+    addi    a1, zero, 0x0       # i = 0
+iloop:
+    addi    a0, a1, 0           # output = i
+    addi    a1, a1, 1           # i++
+    bne     a1, t1, iloop       # if i != 255, goto iloop
+    bne     a0, zero, finish    # enter finish state
+
+finish:      # expected result is 254
+    bne     a0, zero, finish     # loop forever
+```
+
+When the branch predictor correctly predicts the branch outcome, no pipeline flush occurs and execution continues without penalty.
+
+Since the branch predictor's initial state is `WEAKLY_NOT_TAKEN`, it will start prediciting correctly at the second iteration of the loop. 
+
+In the following waveform, we observe that the value of `PCF` ( PC at the fetch stage) decreases by 8 (jumps back by 2 to `iloop`) automaticaly when the branch instruction is fetched.
+
+Thus, we avoid the penalty of waiting 2 extra cycles (until the branch instruction reaches the Execute stage) to jump back to the correct address. 
+
+Note that:
+- `0xFE659CE3` corresponds to the instruction : ` bne     a1, t1, iloop `
+- `0x00058513` corresponds to the instruction : ` bne     a0, a1, 0 `
+
+
+**Waveform:**
+
+![diagram](../images/branchpverifyingcorrectpred.jpg)
+
+
+All test cases pass.
 
 ---
 
