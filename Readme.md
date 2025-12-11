@@ -417,7 +417,7 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ## 3. Schematic
 
-![diagram](branchprediction.png)
+![diagram](branchpredictio.png)
 
 ---
 
