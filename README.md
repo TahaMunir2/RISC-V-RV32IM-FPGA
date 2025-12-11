@@ -755,8 +755,6 @@ At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
 
 Here are the results:
 
-![diagram](verifypipelining.jpg)
-
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifypipelining.jpg)
 
 
