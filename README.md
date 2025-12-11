@@ -7,7 +7,7 @@
     * [2.1 ALUCtrl widened](#21-aluctrl-widened)
     * [2.2 Multiplication implementation](#22-multiplication-implementation)
     * [2.3 Division and remainder with edge cases](#23-division-and-remainder-with-edge-cases)
-* [3. Control‑Path Changes for M Instructions](#3.-Control‑Path-Changes-for-M-Instructions)
+* [3. Control‑Path Changes for M Instructions](#3-Control‑Path-Changes-for-M-Instructions)
     * [3.1 Wider ALUCtrl output](#31-wider-aluctrl-output)
     * [3.2 Decoding M operations under OPC_OP](#32-decoding-m-operations-under-opc_op)
 * [4. Interaction with the Existing Pipeline and Hazards](#4-interaction-with-the-existing-pipeline-and-hazards)
