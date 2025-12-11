@@ -1,7 +1,7 @@
 # Team 5 CPU Project team statement
 
 Names link to the branches of the implementation:
-
+> * indicates it's one of our 3 final CPUs.
 ## Contributions table
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (Cyllocoding)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
@@ -35,10 +35,10 @@ Names link to the branches of the implementation:
 | [M-extension](https://github.com/TahaMunir2/Team5/tree/M-Extension)              |              Control Path          |                           |                      |   **              |                      |
 |               |             ALU         |                           |                      |        **          |                      |
 |               |              Testing          |                           |                      |          **        |                      |
-| [Z-extension](https://github.com/TahaMunir2/Team5/tree/Z-extensions)              |          Zicsr            |          **                |                      |                   |                      |
+| [Z-extension*](https://github.com/TahaMunir2/Team5/tree/Z-extensions)              |          Zicsr            |          **                |                      |                   |                      |
 |                           |         Zba              |            **              |                      |                   |                      |
 |                           |         Testing               |         **                 |                      |                   |                      |
-| [Interrupts & FPGA](https://github.com/TahaMunir2/Team5/tree/Interrupts-and-FPGA)       |              Interrupts           |       **                   |                      |                   |                      |
+| [Interrupts & FPGA*](https://github.com/TahaMunir2/Team5/tree/Interrupts-and-FPGA)       |              Interrupts           |       **                   |                      |                   |                      |
 |                           |            Timer            |             **             |                      |                   |                      |
 |                           |             Memory           |                          |                      |    **               |                      |
 |                           |          MMIO        |              **            |                      |                   |                      |
@@ -50,7 +50,7 @@ Names link to the branches of the implementation:
 |             |     Re-Order Buffer                   |                           |           **           |                  |                      |
 |             |     Integration and Pipeline Division                   |                           |             **         |                   |                      |
 |             |     Testing and Verification                   |                           |                  **    |                   |                      |
-| [Out of Order Superscalar full version](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_full_version)           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
+| [Out of Order Superscalar full version*](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_full_version)           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
 |             |     Common Data Bus Adaptation                   |                           |          **            |                   |                      |
 |             |     Load Instruction Integratioon                  |                           |       **               |                   |                      |
 |             |     Testing and Verification                   |                           |         **             |                   |                      |
