@@ -42,9 +42,9 @@ https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
 
 The delay that I introduced at the beginning of each cycle allows us to have the distinguisably slow count-up that you can observe in the video. To achieve interactivity, we mapped our trigger to one register 8 in our register file. Then, in the testbench, we set trigger via vbdFlag(), which corresponds to pushing the rotary encoder on the Vbuddy chip. To distinguish the change in the LEDs and make them truly similar to F1 lights, a delay was introduced at the beginning of each cycle in the testbench. See the single-cycle-cpu branch for details.
 
+#### PDF tests
 
-
-#### gaussian.mem
+##### gaussian.mem
 
 
 
@@ -54,7 +54,7 @@ https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
 
 
 
-#### triangle.mem
+##### triangle.mem
 
 
 
@@ -63,7 +63,7 @@ https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
 
 
 
-#### noisy.mem, 1
+##### noisy.mem, 1
 
 
 
@@ -74,7 +74,7 @@ https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
 
 
 
-#### noisy.mem, 2
+##### noisy.mem, 2
 
 The reason for the second video showing noisy.mem being ddislayed on Vbuddy is to emphasize the custom displaying frequency capability that I achieved by choosing to display the value of our output register a0 every N counter cycles. This allows us to fit the shapes on the Vbuddy display as we wish.
 
