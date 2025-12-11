@@ -853,6 +853,8 @@ The writeback logic runs on the negative edge of the clock while dispatch, issue
 
 When an ALU produces a result, dependent instructions can wake up and potentially issue in the same cycle.
 
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ruuwritebacktrick.png)
+
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue. I discovered this delay by examining ALU operand signals in GTKWave, where I observed instructions waiting unnecessarily. After implementing negative-edge writeback, the delay was eliminated and throughput increased.
 
 Below is what I observed before writing back at the negative edge of the clock: (all the sequential work was done in the positive edge)
