@@ -957,13 +957,138 @@ All test cases pass.
 
 ---
 
+Section8 personal statement · MD
+Copy
+
 ## 8. Out-of-Order Superscalar (Full Version with Loads)
+
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_full_version/README.md).
+
+Building on the arithmetic out-of-order processor, I extended the design to support load instructions (`LW`, `LH`, `LB`, `LHU`, `LBU`). The core Tomasulo infrastructure (RAT, ROB, RUU, CDB) remained unchanged, my goal was to integrate loads with minimal disruption to the existing architecture.
 
 ### 8.1 Adapting Data Memory for Superscalar
 
+The original data memory supported one read per cycle. In a 2-way superscalar processor, two load instructions may execute simultaneously, so I adapted the memory to provide two independent read ports:
+
+```systemverilog
+module sup_datamem (
+    // Port 1
+    input  logic [ADDRESS_WIDTH-1:0] A1, 
+    input  logic [1:0]               LoadSize1,
+    input  logic                     LoadUnsigned1,
+    output logic [DATA_WIDTH-1:0]    dout1,
+    
+    // Port 2
+    input  logic [ADDRESS_WIDTH-1:0] A2,
+    input  logic [1:0]               LoadSize2,
+    input  logic                     LoadUnsigned2,
+    output logic [DATA_WIDTH-1:0]    dout2
+);
+```
+
+Both ports access the same underlying memory array simultaneously. Since I only support load instructions (not stores) in this version, there's no write interface—this simplification avoids the complexity of memory disambiguation that stores would require.
+
 ### 8.2 Doubling the Common Data Bus Width
 
+The key challenge was that results now come from two sources: ALUs and memory. Since both can produce results in the same cycle, the CDB must handle 4 writebacks simultaneously.
+
+#### ROB and RUU Modifications
+
+I extended both modules from 2 writeback ports to 4:
+
+| Port | Source | Description |
+|------|--------|-------------|
+| `wb1` | ALU 1 | First ALU result |
+| `wb2` | ALU 2 | Second ALU result |
+| `wb3` | Memory Port 1 | First load result |
+| `wb4` | Memory Port 2 | Second load result |
+
+The writeback logic is straightforward, each port writes to a different ROB entry (identified by its unique tag), so there are no conflicts:
+
+```systemverilog
+always_ff @(posedge clk) begin
+    // ALU writebacks
+    if (wb1_en) begin
+        value[wb1_tag] <= wb1_value;
+        ready[wb1_tag] <= 1'b1;
+    end
+    if (wb2_en) begin
+        value[wb2_tag] <= wb2_value;
+        ready[wb2_tag] <= 1'b1;
+    end
+    // Memory writebacks
+    if (wb3_en) begin
+        value[wb3_tag] <= wb3_value;
+        ready[wb3_tag] <= 1'b1;
+    end
+    if (wb4_en) begin
+        value[wb4_tag] <= wb4_value;
+        ready[wb4_tag] <= 1'b1;
+    end
+end
+```
+
+The RUU wakeup logic required the same extension, any instruction waiting on any of these four tags must wake up in the same cycle.
+
 ### 8.3 Load Instruction Integration
+
+#### Single Source Operand Strategy
+
+Loads use only RS1 (base address), unlike arithmetic instructions that use both RS1 and RS2. Rather than creating separate logic paths, I reused the existing dual-operand infrastructure:
+
+- RS1 provides the base address (processed normally through RAT/ROB lookup)
+- RS2 is ignored; instead, I calculate `RS1 + immediate` in the Decode stage
+- The computed address is stored directly in the RUU as the "operand"
+
+This means by the time a load reaches the Issue stage, its effective address is already computed and ready.
+
+#### New Execute-Memory Pipeline Register
+
+Loads require an additional pipeline stage for memory access. I added a new pipeline register between Execute and Memory:
+
+```systemverilog
+em_sup_pipeline em_pipeline(
+    .clk(clk),
+    .rst(rst),
+    // Control signals propagate
+    .ResultSrc1_e(ResultSrc1E),
+    .LoadSize1_e(LoadSize1E), 
+    .LoadUnsigned1_e(LoadUnsigned1E),
+    .ResultSrc1_m(ResultSrc1M),
+    .LoadSize1_m(LoadSize1M), 
+    .LoadUnsigned1_m(LoadUnsigned1M),
+    // Address (computed in Execute, used in Memory)
+    .address1_e(ALU1_op1E),
+    .address1_m(A1),
+    // ROB tags propagate for writeback identification
+    .ALU1_tagE(ALU1_tagE),
+    .ALU1_tagM(mem1_tag)
+);
+```
+
+The tags propagate so the Memory stage knows which ROB entry to update when the load completes.
+
+#### Schematic
+
+![diagram](ooofull_2.png)
+
+### 8.4 Testing
+
+I created 7 new tests specifically for load functionality, in addition to reusing the 10 arithmetic tests to ensure backward compatibility:
+
+| Test | Purpose | Key Verification |
+|------|---------|------------------|
+| Basic word load | `LW` functionality | Correct little-endian assembly |
+| Load with RAW dependency | CDB wakeup for loads | `add` waits for both `lw` results |
+| Load WAW hazard | In-order commit with loads | Younger load overwrites older |
+| Independent load chains | Parallel execution | Two chains execute simultaneously |
+| Signed vs unsigned byte | `LB` vs `LBU` | Sign extension correctness |
+| Signed vs unsigned halfword | `LH` vs `LHU` | Sign extension correctness |
+| Mixed load operations | All load types combined | Multiple in-flight loads |
+
+All 17 tests pass.
+
+![diagram](ooofverify.jpg)
 
 ---
 
