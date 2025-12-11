@@ -855,13 +855,13 @@ When an ALU produces a result, dependent instructions can wake up and potentiall
 
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue. I discovered this delay by examining ALU operand signals in GTKWave, where I observed instructions waiting unnecessarily. After implementing negative-edge writeback, the delay was eliminated and throughput increased.
 
-Below is what I observed before writing back at the negative edge of the clock: (all the work was done in the positive edge)
+Below is what I observed before writing back at the negative edge of the clock: (all the sequential work was done in the positive edge)
 
-![diagram](writebackposedge.jpeg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebackposedge.jpeg)
 
 Below is what I observed before writing back at the negative edge of the clock:
 
-![diagram](writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
 
 
 ### 7.4 Pipelined Design
