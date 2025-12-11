@@ -1,25 +1,26 @@
 # Compilation of READMEs from all the Branches
 
 ## Table of READMEs
-- [1. Single Cycle Reduced RV32I CPU](#Single-cycle-Reduced-RV32I-CPU)
+
+[1. Single Cycle Reduced RV32I CPU](#Single-cycle-Reduced-RV32I-CPU)
   
--[2. Full RV32I (37-Instruction)](#Full-RV32I-(37-Instruction))
+[2. Full RV32I (37-Instruction)](#Full-RV32I-(37-Instruction))
 
--[3. Pipelined RISC-V Processor](#Pipelined-RISC-V-Processor)
+[3. Pipelined RISC-V Processor](#Pipelined-RISC-V-Processor)
 
--[4. Branch Prediction](#Branch-Prediction)
+[4. Branch Prediction](#Branch-Prediction)
 
--[5. Hierarchical Cache](#Hierarchical-Cache)
+[5. Hierarchical Cache](#Hierarchical-Cache)
 
--[6. M-type Instructions](#M-type-Instructions)
+[6. M-type Instructions](#M-type-Instructions)
 
--[7. Zicsr and Zba Extensions](#Zicsr-and-Zba-Extensions)
+[7. Zicsr and Zba Extensions](#Zicsr-and-Zba-Extensions)
 
--[8. Interrupts and FPGA](#Interrupts-and-FPGA)
+[8. Interrupts and FPGA](#Interrupts-and-FPGA)
 
--[9. Out-of-Order Superscalar Processor](#Out-of-Order=Superscalar-Processor)
+[9. Out-of-Order Superscalar Processor](#Out-of-Order=Superscalar-Processor)
 
--[10. Out-of-Order Superscalar Processor with Load Instructions](#Out-of-Order-Superscalar-Processor-with-Load-Instructions)
+[10. Out-of-Order Superscalar Processor with Load Instructions](#Out-of-Order-Superscalar-Processor-with-Load-Instructions)
 
 # Single Cycle Reduced RV32I CPU:
 
