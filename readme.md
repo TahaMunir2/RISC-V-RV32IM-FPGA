@@ -85,6 +85,7 @@ always_comb begin
 - **`2'b10: temp = temp | wd`**: **CSRRS stands for Control Status Register Read and Set**, and you do the same **read** as before but for writing, you go through all the bits in wd and if they are high than the corresponding bit in temp will also be **set** (the rest of the bits are untouched), this can be simplified into an OR operation.
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
 
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr.png)
 
 #### Decoder
 
