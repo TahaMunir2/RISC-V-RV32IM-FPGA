@@ -36,6 +36,8 @@ BEGIN
 044 : 04059463; -- BNE x11, x0, Count-up (offset 72, if x11 is high, we are in state 2)
 045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check if leds all high)
 046 : 020A8063; -- BEQ x21, x0, Transition (offset 32, branch to transition if x21 is 0, state 1)
+
+-- LEDs light up (state 0):
 047 : 001A1A13; -- SLLI x20, x20, 1  (turn next LED on: state 0)
 048 : 001A6A13; -- ORI x20, x20, 1 (keep the previous LEDs on)
 049 : 80002237; -- LUI x4, 0x80002
@@ -61,7 +63,7 @@ BEGIN
 059 : 0007A337; -- LUI x6, 0x0007A
 05A : 12030313; -- ADDI x6, x6, 0x120 (reset timer for 0.1s)
 
--- Exit
+-- Exit (part of state 0, 1 and 2)
 05B : 800012B7; -- LUI x5, 0x80001
 05C : 0002A223; -- SW x0, 4(x5)
 05D : 0062A023; -- SW x6, 0(x5) (set timer)
@@ -73,4 +75,5 @@ BEGIN
 [061..3FF] : 00000000;
 
 END;
+
 
