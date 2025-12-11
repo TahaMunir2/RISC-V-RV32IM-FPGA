@@ -271,7 +271,7 @@ The specifications for our L2 cache are as follows:
 
 | Parameter | Selected Value |
 | --------- | -------------- |
-| Total Cache Size | 32 MB |
+| Total Cache Size | 32 KB |
 | Number of Sets | 256 |
 | Associativity | 4-way |
 | Block Size | 8 words |
@@ -665,9 +665,7 @@ We created a c++ testbench (l1i_cache_tb.cpp) that isolates the instruction cach
    ```bash
    ./doit.sh tests/l1i_cache_tb.cpp
    ```
-
-Here are the results:
-
+   
 ---
 
 ### 4.2 L1 Data Cache Testing
@@ -697,9 +695,6 @@ We also created a c++ testbench (l1d_cache_tb.cpp) to isolate the data cache mod
    ```bash
    ./doit.sh tests/l1d_cache_tb.cpp
    ```
-
-Here are the results:
-
 
 ---
 
