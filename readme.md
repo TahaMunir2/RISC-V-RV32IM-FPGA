@@ -737,6 +737,7 @@ END;
 #### External Interrupt Test
 
 Next, we wanted to test out the  external interrupt logic and trap handler routine, as well as check if more complex instructions like branch and csrrw would work.
+
 https://github.com/user-attachments/assets/71920d99-a521-49b0-a02c-273b732a5d86
 
 #### Timer Interrupt Test
