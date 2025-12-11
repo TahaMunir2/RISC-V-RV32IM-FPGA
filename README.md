@@ -1,7 +1,7 @@
 # Team 5 CPU Project team statement
 
 Names link to the branches of the implementation:
-> * indicates it's one of our 3 final CPUs.
+>  *indicates it's one of our 3 final CPUs.
 ## Contributions table
 
 |               |                               | Taha Munir (TahaMunir2)  | Cyril Abdelnour (Cyllocoding)  | Yusuf Kerem Teker (Ke1911)  | Leo Yin (Cathugger8)   |
