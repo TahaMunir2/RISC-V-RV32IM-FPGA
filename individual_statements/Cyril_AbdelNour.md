@@ -178,6 +178,8 @@ The key signals and their roles:
 
 I kept all the original module interfaces intact. The register file, sign-extension unit, PC logic, and data memory only needed small changes to accept the new control signals. This made integration straightforward and I could test each change in isolation before connecting everything.
 
+![diagram](../images/schematicfullriscv.png)
+
 ### 3.4 Testing
 
 I first verified individual blocks, such as the control unit and ALU, writing c++ testbenches: `alu_tb.cpp` and `control_tb.cpp` .
@@ -260,6 +262,8 @@ Integrating the pipeline required careful attention to signal naming and control
 **Register File Timing:** A key design strategie, implemented in the Register File, was to write on the falling edge of the clock instead of the rising edge. This lets:
 - First half of cycle: Write to register file (Writeback stage)
 - Second half of cycle: Read from register file (Decode stage)
+
+![diagram](../images/schematicpipelining.png)
 
 ### 4.3 Testing
 
@@ -569,6 +573,10 @@ if (false_prediction || JumpE) begin
     flush_d_exec = 1;
 end
 ```
+
+Here is the top sheet schematic for reference :
+
+![diagram](../images/schematicbranchp.png)
 
 Thus, I achieve the key improvement: when the predictor guesses correctly, I avoid the flush penalty entirely.
 
