@@ -609,12 +609,83 @@ end
 
 ### 4.1 L1 Instruction Cache Testing
 
+We created a c++ testbench (l1i_cache_tb.cpp) that isolates the instruction cache module and verifies all of the intended logic, including loading to the processor and storing from the L2 cache. All tests were combined into a single test case to eliminate the need to reinitialise the cache with appropriate values, particularly those required to avoid cold misses before each individual test.
+**Tests performed:**
+- **Stall Assertion on Cold Miss:** Cache should assert stall when valid = 0
+- **Stall Assertion on Capacity Miss:** Cache should assert stall when set capacity is full
+- **Load logic:** Loading a whole word from the instruction cache
+- **Store logic:** Storing a whole block from the L2 cache into the data cache
+- **Correct LRU Replacement Policy:** Ensuring that the instruction cache picks the correct victim based on our LRU replacement policy
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Run the test:
+   ```bash
+   ./doit.sh tests/l1i_cache_tb.cpp
+   ```
+
+Here are the results:
+
 ---
 
 ### 4.2 L1 Data Cache Testing
+We also created a c++ testbench (l1d_cache_tb.cpp) to isolate the data cache module and verify all of the intended logic, including loading to the processor, writebacks from the processor, writebacks to the L2 cache and storing from the L2 cache. Given the increased length and complexity of the code, we chose not to place all tests in a single test case, even though this required reinitializing all values for each individual test.
+**Tests performed:**
+- **Stall Assertion on Cold Miss:** Cache should assert stall when valid = 0
+- **Stall Assertion on Capacity Miss:** Cache should assert stall when set capacity is full
+- **Load full word logic:** Loading a whole word from the data cache
+- **Load half word logic:** Loading half a word from the data cache
+- **Load byte logic:** Loading a single byte from the data cache
+- **Load signed/unsigned logic:** Loading a signed/unsigned integer from the data cache
+- **Store logic:** Storing a whole block from the L2 cache into the data cache
+- **Store half word logic:** Storing a whole block from the L2 cache
+- **Correct LRU Replacement Policy:** Ensuring that the instruction cache picks the correct victim based on our LRU replacement policy
+- **Write full word** Writing a full word from the processor
+- **Write half word** Writing a half word from the processor
+- **Write byte** Writing a single byte from the processor
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Run the test:
+   ```bash
+   ./doit.sh tests/l1d_cache_tb.cpp
+   ```
+
+Here are the results:
+
 
 ---
 
 ### 4.3 L2 Cache Testing
+We also created a c++ testbench (l2_cache_tb.cpp) to isolate the data cache module and verify all of the intended logic, including loading to the l1d and i cache, writebacks from the data cache, writebacks to main memory and storing from main memory. This time, since the code was slightly more long and complicated, we decided to not include everything in the same test case despite having to reinitialise all of the values for each case.
+**Tests performed:**
+- **Fetch request from data cache:** Ensuring that the L2 cache successfully fulfills fetch requests from the data cache
+- **Fetch request from instruction cache:** Ensuring that the L2 cache successfully fulfills fetch requests from the instruction cache
+- **Fetch request from both data and instruction cache:** Ensuring that the L2 cache gives priority to the data cache fetch request, but ultimately fulfills both requests
+- **Correct LRU Replacement Policy:** Ensuring that the instruction cache picks the correct victim based on our LRU replacement policy
+- **L1 writeback** Ensuring that a writeback from L1 is written into L2 on a hit, or passed onto main memory on a miss
+- **L2 writeback** Ensuring that dirty L2 writebacks are successful (2 4 word writebacks as described earlier)
 
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Run the test:
+   ```bash
+   ./doit.sh tests/l2_cache_tb.cpp
+   ```
+Here are the results:
 ---
