@@ -775,8 +775,9 @@ Next, we wanted to test out the  external interrupt logic and trap handler routi
 - 12-13 set the LEDs in the pattern described above
 - C-F is the trap handler; it is only ever accessed when the trap is triggered.
 
-https://github.com/user-attachments/assets/71920d99-a521-49b0-a02c-273b732a5d86
 
+
+https://github.com/user-attachments/assets/d3bf95f0-1b92-4ace-abf1-3764e90d6b53
 > We removed the pulse logic, as our CPU was not detecting it for some reason.
 
 We can clearly see that external interrupts work on our FPGA.
@@ -786,7 +787,49 @@ Note: For some reason, our key[1] wasn't working on the FPGA we were given, so h
 
 Next, we wanted to out our timer interrupt logic for this we needed a test that would alternate the time every 'x' amount of time. 
 
-https://github.com/user-attachments/assets/edc8a9ae-ee9c-4136-b426-ed5accccc272
+```
+000 : 0200006F; JAL x0, 32 (0x008)
+
+-- Trap Handler
+001 : 00150513; -- ADDI x10, x10, 1 (increment a0 by 1)
+002 : 80002237; -- LUI x4, 0x80002 
+003 : 00A22023; -- SW x10, 0(x4) (store a0 into the LEDs)
+004 : 800012B7; -- LUI x5, 0x80001  
+005 : 02000337; -- LUI x6, 0x02000 (set timer to 0x2000000 = 0.67 seconds at 50 MHz)
+006 : 0062A023; -- SW x6, 0(x5)     
+007 : 30200073; -- mret 
+
+-- main
+008 : 00400093; -- ADDI x1, x0, 4   
+009 : 30509073; -- CSRW mtvec, x1 (trap handler address = 001)
+00A : 00100193; -- ADDI x3, x0, 1
+00B : 00719193; -- SLLI x3, x3, 7   
+00C : 30419073; -- CSRW mie, x3 (enable bit 11 for timer interrupts)
+00D : 00800113; -- ADDI x2, x0, 8 
+00E : 30011073; -- CSRW mstatus, x2 (enable global interrupts) 
+00F : 00000513; -- ADDI x10, x0, 0 
+010 : 800012B7; -- LUI x5, 0x80001 
+011 : 0002A223; -- SW x0, 4(x5) (clear upper 32 bits)
+012 : 02000337; -- LUI x6, 0x02000 
+013 : 0062A023; -- SW x6, 0(x5) (set lower bits)
+014 : 0000006F; -- JAL x0, 0 (loop)
+[015..3FF] : 00000000;
+```
+- 8-E set up the CSRs the same as before, but now for timers instead of trigger
+- F just clears a0 to be safe
+- 10=13 set the timer to be 33,554,432 cycles which at 50MHz should only take about 2/3's of a second
+- 14 is an infinite loop
+- 1 (This is now in the trap handler) increments a0 by 1 (for our counter)
+- 2-3 set the LEDs to display a0 (in binary)
+- 4-6 reset the timer with the same value (our time resets if we set it)
+- mret to go back to our infinite loop
+
+This creates a simple binary counter with the value shown in Hex on the left as shown below:
+
+https://github.com/user-attachments/assets/702378ec-2748-4001-a209-32438d559ac6
+
+## F1 Lights demonsation
+
 
 
 
