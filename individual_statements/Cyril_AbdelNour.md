@@ -777,11 +777,11 @@ The ROB performs three operations: Allocation, Writeback, and Commit.
 
 **Allocation:** When instructions are dispatched, they are allocated at the `tail` pointer. The tail advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](oooaroballocation.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-allocation.png)
 
 **Writeback:** When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`. Since execution does not occur in order, results arrive at the ROB out of program order.
 
-![diagram](oooarobwriteback.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-writeback.png)
 
 
 **Commit:** Instructions commit from the `head` in program order. Only entries with `ready=1` that haven't been committed yet can retire. The ROB commits up to 2 instructions per cycle:
