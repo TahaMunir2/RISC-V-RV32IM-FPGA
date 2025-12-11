@@ -162,6 +162,10 @@ The path forward involves:
 
 **Further MMIO and Outputs:** We currently only use them for LED's the 7-segment display, and the timer; however, there are many more implementations that we can have with these concepts, for example, we can make use of the switches on the DE-10 lite.
 
-The architectural decisions we made such as tag-based register renaming, negative-edge timing for same-cycle wakeup and others are all techniques used in commercial processors. Our design demonstrates that the gap between educational implementations and real-world processor design is smaller than it appears. We are grateful that this course provided us with the foundational tools and knowledge to pursue these ambitious goals. We are excited to continue exploring advanced computer architecture and look forward to building on this foundation in future work.
+The architectural decisions we made, such as tag-based register renaming, negative-edge timing for same-cycle wakeup, and others, are all techniques used in commercial processors. Our design demonstrates that the gap between educational implementations and real-world processor design is smaller than it appears. We are grateful that this course provided us with the foundational tools and knowledge to pursue these ambitious goals. We are excited to continue exploring advanced computer architecture and look forward to building on this foundation in future work.
 
 ---
+
+## References
+
+1.  Harris, S.L. and Harris, D.M. (2022) Digital Design and computer architecture: RISC-V edition. Cambridge, MA: Morgan Kaufmann.
