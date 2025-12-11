@@ -18,7 +18,7 @@
 
 [8. Interrupts and FPGA](#Interrupts-and-FPGA)
 
-[9. Out-of-Order Superscalar Processor](#Out-of-Order=Superscalar-Processor)
+[9. Out-of-Order Superscalar Processor](#Out-of-Order-Superscalar-Processor)
 
 [10. Out-of-Order Superscalar Processor with Load Instructions](#Out-of-Order-Superscalar-Processor-with-Load-Instructions)
 
