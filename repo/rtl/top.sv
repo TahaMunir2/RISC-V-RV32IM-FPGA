@@ -223,10 +223,10 @@ assign tag_source2 = q2_tag;
         //destination registers and allocation of their specific order in the re-order buffer
         .alloc1_en(instr1_alloc_rob),
         .alloc1_rd(Instr1D[11:7]),
-        .alloc1_tag(Instr1_tagD), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
+        .alloc1_tag(Instr1_tagD),
         .alloc2_en(instr2_alloc_rob),
         .alloc2_rd(Instr2D[11:7]),
-        .alloc2_tag(Instr2_tagD), //SEE WHAT TO CONNECT TO THIS OUTPUT LATER DEPENDING ON THE NEEDS OF THE CIRCUIT OR JUST USE IT FOR DEBUG OR REMOVE IT 
+        .alloc2_tag(Instr2_tagD), 
 
         //write back from the common data bus at the execute stage:
         
@@ -305,7 +305,7 @@ logic [PROD_BITS-1 : 0] latest_tag;
         .dispatch1_LoadSize(LoadSize1I),
         .dispatch1_LoadUnsigned(LoadUnsigned1I),
 
-//DEPENDING ON THE CIRCUIT FILL OUT THESE TWO OUTPUTS
+
         //.dispatch1_ok,
         //.dispatch1_idx,
 
@@ -326,7 +326,7 @@ logic [PROD_BITS-1 : 0] latest_tag;
         .dispatch2_LoadSize(LoadSize2I),
         .dispatch2_LoadUnsigned(LoadUnsigned2I),
 
-//DEPENDING ON THE CIRCUIT FILL OUT THESE TWO OUTPUTS
+
         //.dispatch1_ok,
         //.dispatch1_idx,
 
@@ -409,8 +409,7 @@ logic [PROD_BITS-1 : 0] latest_tag;
     logic [DATA_WIDTH-1:0] ALU2_op1I;
     logic [DATA_WIDTH-1:0] ALU2_op2I;
 
-//SET UP THE LOGIC HERE ACCORDING TO THE INPUTS OF THE RUU (don't propagate signals that are not inputs to the RUU, be aware that PCPlus8 is both an input to the RUU and passes directly through the pipeline)
-//ADD THE DUPLICATED LOGIC TO THE PIPELINE AND GO TO THE PIPELINE SHEET , COPY AND PASTE IT INTO ANOTHER SHEET AND REMOVE THE UNNECESSARY LOGIC FOR INSTRUCTIONS OTHER THEN ARITHMETIC AND ADD THE DUPLICATED LOGIC INSIDE THE SHEET
+
     di_pipeline di_pip(
     .clk(clk),
     .rst(rst),
@@ -501,7 +500,7 @@ logic [PROD_BITS-1 : 0] latest_tag;
 //2 control blocks:
     sup_control control1 (
         .instr(Instr1D),
-        .ALUCtrl(ALUCtrl1D), //THIS IS THE ONLY THING THAT IS STORED FROM CONTROL IN THE RUU (SET THE CONTROL LOGIC SEGMENT OF EACH ENTRY TO BE 4BITS)
+        .ALUCtrl(ALUCtrl1D), 
         .ALUSrc(ALU1Src1),
         .ImmSrc(ImmSrc1D),
         .ALUsrc2(ALU1Src2),
@@ -512,7 +511,7 @@ logic [PROD_BITS-1 : 0] latest_tag;
 
     sup_control control2 (
         .instr(Instr2D),
-        .ALUCtrl(ALUCtrl2D), //THIS IS THE ONLY THING THAT IS STORED FROM CONTROL IN THE RUU (SET THE CONTROL LOGIC SEGMENT OF EACH ENTRY TO BE 4BITS)
+        .ALUCtrl(ALUCtrl2D), 
         .ALUSrc(ALU2Src1),
         .ImmSrc(ImmSrc2D),
         .ALUsrc2(ALU2Src2),
