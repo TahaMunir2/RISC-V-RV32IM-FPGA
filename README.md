@@ -465,7 +465,7 @@ https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
 
 
 Here is the assembly code that we used to implement the F1 countdown mechanism:
-```
+```bash
 
 .text
 .globl main
