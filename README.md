@@ -1,7 +1,8 @@
 How to use our Github:
 
 ## Team Statement:
-Link to [team statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+
+### Link to [team statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
 
 ## Individual Statements:
 
