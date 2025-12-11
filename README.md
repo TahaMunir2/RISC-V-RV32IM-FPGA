@@ -1,4 +1,4 @@
-# Out-of-Order Superscalar Processor with Load Instructions
+https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg# Out-of-Order Superscalar Processor with Load Instructions
 
 ## Table of Contents
 - [1. Overview](#1-overview)
@@ -630,7 +630,7 @@ The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ## 3. Schematic
 
-![diagram](ooofull_2.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
 
 ---
 
@@ -830,7 +830,6 @@ main:
 
 Here are the results:
 
-![diagram](verify.jpg)
-
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
 
 ---
