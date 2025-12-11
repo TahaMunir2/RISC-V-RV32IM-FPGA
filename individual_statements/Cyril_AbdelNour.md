@@ -1,7 +1,5 @@
-Personal statement · MD
-Copy
-
 # Personal Statement: Contributions to RISC-V Processor Project
+
 
 ## Table of Contents
 - [1. Overview](#1-overview)
