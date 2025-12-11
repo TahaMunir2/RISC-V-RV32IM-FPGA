@@ -23,7 +23,7 @@ On this page, you can find links to the:
 | 02609612 | Cyril Abdelnour | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Cyril_AbdelNour.md) |
 | 02562044 | Taha Munir | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Taha_Munir.md) |
 
-## Compilation of readmes
+## Compilation of READMEs
 
 ## [Book](https://github.com/TahaMunir2/Team5/blob/main/book.md)
 
