@@ -16,7 +16,9 @@
 
 ## 1. Overview
 
-Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be.
+Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be. However, caches are significantly more expensive than main memory and cannot occupy too much area, which is why they are designed to be only a fraction of main memory’s size.
+
+![alt text](image.png)
 
 Caches exploit spatial and temporal locality in order to improve fetch and writeback speed. Spatial locality is the principle that accessing one memory location increases the likelihood that adjacent memory locations (in the virtual memory space) will be accessed shortly afterward. On the other hand, the concept of temporal locality is that recently accessed data is also highly likely to be re-accessed due to the inherently cyclic nature of programming.
 
@@ -30,7 +32,7 @@ In our design, we have implemented a 2-way associative L1 instruction cache and 
 
 The overall memory hierarchy is as such:
 
--insert overall hierarchy img
+![alt text](image-1.png)
 
 As shown in the diagram above, the processor reads and writes from the L1 caches, which read from and write to the L2 cache, which reads from and writes to main memory.
 
