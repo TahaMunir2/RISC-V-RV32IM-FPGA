@@ -339,11 +339,11 @@ assign set_rd = addr[12:5];
 assign block_offset_rd = addr[4:2];
 ```
 ```SystemVerilog
-hit0_wb = (cache[set_wb].block0.tag == tag_bits_wb && cache[set_wb].block0.valid);
-hit1_wb = (cache[set_wb].block1.tag == tag_bits_wb && cache[set_wb].block1.valid);
-hit2_wb = (cache[set_wb].block2.tag == tag_bits_wb && cache[set_wb].block2.valid);
-hit3_wb = (cache[set_wb].block3.tag == tag_bits_wb && cache[set_wb].block3.valid);
-miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
+hit0 = ((cache[set_rd].block0.tag == tag_bits_rd) && cache[set_rd].block0.valid);
+hit1 = ((cache[set_rd].block1.tag == tag_bits_rd) && cache[set_rd].block1.valid);
+hit2 = ((cache[set_rd].block2.tag == tag_bits_rd) && cache[set_rd].block2.valid);
+hit3 = ((cache[set_rd].block3.tag == tag_bits_rd) && cache[set_rd].block3.valid);
+miss = ~(hit0 | hit1 | hit2 | hit3);
 ```
 
 The read logic also updates the used bits for our LRU mechanism, which will be discussed in more detail later.
