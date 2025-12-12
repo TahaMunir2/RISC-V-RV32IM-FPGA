@@ -1,6 +1,19 @@
 
 ## Overview
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Implementation](#implementation)
+  - [Lab 4](#lab-4)
+  - [Single Cycle](#single-cycle)
+  - [Pipelining](#pipelining)
+  - [Z Extensions](#z-extensions)
+  - [Interrupts and FPGA](#interrupts-and-fpga)
+    - [F1 FSM Video](#f1-fsm-video)
+- [Mistakes](#mistakes)
+- [Reflection](#reflection)
+
 My main contributions in chronological order were:
 - Test Benching and Top-level integration for Lab 4
 - Implementing all 6 instructions for the Single Cycle CPU
