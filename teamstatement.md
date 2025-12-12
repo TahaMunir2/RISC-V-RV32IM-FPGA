@@ -409,6 +409,10 @@ When either stall is high, all pipeline registers, the PC, and the branch predic
 
 In our cycle-by-cycle simulation, the cache does not appear faster—a hit still takes one cycle. However, in real hardware, cache hits complete in 0.1–3 ns while main memory takes 50–100 ns. Our simulation abstracts this latency difference, but a physical implementation would show significant acceleration.
 
+#### Schematic
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+
 ---
 
 ### M-Type Instructions (RV32M Extension)
@@ -465,8 +469,6 @@ M instructions are treated as ordinary R-type ALU operations:
 
 Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 
-#### Schematic
-
 ---
 
 ### Z-type Extensions (Zicsr and Zba)
@@ -497,6 +499,8 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 - We chose to implement the Zba instructions due to their efficiency; they condensed adding and shifting into 1 instruction, which could be useful given how common those instructions are.
 
 #### Schematic
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
 
 ---
 ### FPGA and Interrupts
