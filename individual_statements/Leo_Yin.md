@@ -43,9 +43,33 @@ It is, however, important to note that I did not testbench this code and that mu
 
 Initially, my goal for this section was to create the cache array for the i cache and d cache, which were 2-way associative caches that included a valid bit in each block, and a used bit (for LRU replacement policy) in each set.
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/block_store.png)
+```SystemVerilog
+typedef struct packed {
+    logic [7:0] byte3;  
+    logic [7:0] byte2;  
+    logic [7:0] byte1;  
+    logic [7:0] byte0;
+} word_store;
+
+typedef struct packed {
+    logic valid;
+    logic dirty;
+    logic [20:0] tag;
+    word_store word3;
+    word_store word2;
+    word_store word1;
+    word_store word0;
+} block_store;
+
+typedef struct packed {
+    logic used;
+    block_store block1;
+    block_store block0;
+} set_store;
+```
 
 I intended for the array to mirror the image below:
+
 ![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cache_array.png)
 
 I intended for the instruction cache array to be able to load data from L2 on command, supply data to the processor when requested, and update its valid and dirty bits as directed by the cache controller. The controller would have specified the set, block offset, transfer size, and whether a read or write is enabled.
