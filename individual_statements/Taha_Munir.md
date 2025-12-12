@@ -25,8 +25,54 @@ I made the following unit test benches:
 
 With each test bench thoroughly testing the full functionality of the block:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/pc_tb.png)
-> Example: Testbench for PC block.
+```cpp
+TEST_F(SignextTestbench, SRC0Test1)
+{
+    top->instr = 4063236096; // F2300000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967075); // FFFFFF23
+}
+
+TEST_F(SignextTestbench, SRC0Test2)
+{
+    top->instr = 180097588; // instr[31] is 0 so imm = 0AB
+    top->eval();
+    EXPECT_EQ(top->immext, 171); // 000000AB
+}
+
+TEST_F(SignextTestbench, SRC1Test1)
+{
+    top->ImmSrc = 1;
+    top->instr = 202506240; // 0C120000
+    top->eval();
+    EXPECT_EQ(top->immext, 192); // 000000C0
+}
+
+TEST_F(SignextTestbench, SRC1Test2)
+{
+    top->ImmSrc = 1;
+    top->instr = 4229038080; // FC120000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967232); //FFFFFFC0
+}
+
+TEST_F(SignextTestbench, SRC2Test1)
+{
+    top->ImmSrc = 2;
+    top->instr = 2113933056; // 01111110000000000000111100000000
+    top->eval();
+    EXPECT_EQ(top->immext, 2046); // 00000000000000000000011111111110
+}
+
+TEST_F(SignextTestbench, SRC2Test2)
+{
+    top->ImmSrc = 2;
+    top->instr = 4261416832; // 11111110000000000000111110000000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967294); // 11111111111111111111111111111110
+}
+```
+> Example: Testbench for Sign Extension block
 
 To make the testbenches, I used the 2 reference test benches we were given and spent a lot of time combing through the header files to try and fully understand how to best utilise the tools we had available to most thoroughly and efficiently troubleshoot our design for the many, many mistakes we were bound to make. I standardised an approach for our whole group where we would add unit test benches the first time we would integrate a new block into the circuit, and then using CPU wide testbenches for that block going forward. This was a healthy balance between thorough testing and time efficiency.
 
