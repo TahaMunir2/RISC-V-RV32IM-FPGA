@@ -1,9 +1,8 @@
 
 
 
-#### 2.2 Hazard Unit
-##### 1.	Why hazards occur in a pipeline? 
-(A good analogy may be the conveyor belt along an assembly line in a car factory. At any one time, there are multiple cars along the belt, with each car being built stage by stage by workers who only specialize in one action)
+### 2.2 Hazard Unit
+#### 1.	Why hazards occur in a pipeline? 
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image1.png)
@@ -37,7 +36,7 @@ In summary, the primary goals of the Hazard Unit are:
 
 
 
-##### Data hazard resolution: forwarding logic
+#### Data hazard resolution: forwarding logic
 For most arithmetic and logical instructions, the result becomes available before Write-Back, either at the end of the `EX` or `MEM` stage, allowing us to resolve these hazards without inserting stalls by forwarding the result directly to the ALU inputs.
 The Hazard Unit implements this forwarding by checking whether the source registers used by the instruction currently in the Execute (EX) stage match the destination registers of instructions that are still in the Memory (MEM) or Write-Back (WB) stages.
 Forwarding Decision Conditions (PUT the code for forwarding only somewhere around here or right next)
@@ -164,13 +163,13 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 ```
 ---
 
-## 3. Schematic
+#### 3. Schematic
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_pipelining.png)
 
 ---
 
-## 4. Testing & Verification
+#### 4. Testing & Verification
 
 ### 4.1 Hazard Unit Testing
 #### Test 1: Forward From MEM to Operand1 (`T1_MEM_Fwd_Op1`)
@@ -363,7 +362,8 @@ selectline2  = 2'b00
 ```
 ---
 
-## 1. Scope
+
+### 1. Scope
 
 We implemented the full RV32M base extension (eight instructions):
 
@@ -393,9 +393,9 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
 
 ---
 
-## 2. ALU changes
+### 2. ALU changes
 
-### 2.1 ALUCtrl widened
+#### 2.1 ALUCtrl widened
 - `ALUCtrl` was widened from 4 bits to **5 bits** to accomodate for the 8 new M instructions.
 - Here are the encodings in the new mapping:
 
@@ -410,7 +410,7 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
 
 All previous RV32I ALU codes remain unchanged in the lower range. The new encodings were chosen to be contiguous, incrementing ALUCtrl for every new encoding.
 
-### 2.2 Multiplication implementation
+#### 2.2 Multiplication implementation
 
 The RV32M multiplication instructions (`MUL`, `MULH`, `MULHSU`, `MULHU`) are all implemented inside the main ALU as purely combinational operations that produce a full 64-bit product and then select either the low or high 32 bits, with the correct signed/unsigned interpretation of the operands.
 
@@ -465,7 +465,7 @@ case (ALUCtrl)
 default: ALUout = 32'b0;
 endcase
 ```
-### 2.3. Division and remainder with edge cases
+#### 2.3. Division and remainder with edge cases
 The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
 •	DIV (ALUCtrl = 5'b10000)
 •	DIVU (ALUCtrl = 5'b10001)
@@ -537,7 +537,7 @@ and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
 
 
-## 3. Control Path Changes for M Instructions
+### 3. Control Path Changes for M Instructions
 
 To support RV32M, the control unit (`control.sv`) was extended in two ways:
 
@@ -633,10 +633,10 @@ Adding RV32M required three main changes:
    - Signed/unsigned division and remainder with RISC‑V corner cases (divide‑by‑zero, `-2^31 / -1`).
 3. Extend control decode for `opcode == OPC_OP` and `funct7 == 7'b0000001`, mapping `(funct3, funct7)` → `ALUCtrl` while leaving all R‑type control signals unchanged.
 
-Everything else in the CPU (pipeline registers, hazard unit, branch logic, memories) is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute.
+Everything else in the CPU (pipeline registers, hazard unit, branch logic, memories) is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute. Integration was hence modular and local to ALU/control unit modules. Behaviour matches the RISC‑V spec, including all specified corner cases.
 
 
-## 5. ALU test cases (selected) — exact format
+## 5. ALU test cases (selected assortment)
 
 ### 5.1.11 ALU Test: DIVU (Unsigned Division by Zero)
 
@@ -705,10 +705,6 @@ What It Tests
 ---
 
 ### 6 Trade-offs & notes
-- Simplicity vs. timing: combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
-- Only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards.
+- Simplicity vs. timing: My ombinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+- On the other hand, only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards. This was benefitial in that my design integrated smoothly with the rest of the CPU, including our branch-predictor, multi-level cache, and Z-extensions.
 
-Summary
-- RV32M support implemented in ALU + control with unique 5‑bit `ALUCtrl` encodings for all eight M instructions.
-- Behaviour matches the RISC‑V spec, including all specified corner cases.
-- M instructions forward and write back like other R-type ALU operations; integration is modular and local to ALU/control.
