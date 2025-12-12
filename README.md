@@ -215,7 +215,7 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ## 3 Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschemg.svg)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
 
 ## 4 Testing and Verification
 
