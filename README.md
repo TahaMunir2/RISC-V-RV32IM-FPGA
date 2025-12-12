@@ -12,7 +12,7 @@ On this page, you can find links to the:
 
 ## Team Statement:
 
-### [Team Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+### [Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
 
 ## Individual Statements:
 
