@@ -1,3 +1,33 @@
+# Group 5 Team Statement
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Quick Start](#quick-start)
+- [Methodology](#methodology)
+  - [Collaboration](#collaboration)
+  - [Testing Philosophy](#testing-philosophy)
+  - [Shift in Design Approach](#shift-in-design-approach)
+- [Implementation and Design Decisions](#implementation-and-design-decisions)
+  - [Single-Cycle Reduced RV32I CPU](#single-cycle-reduced-rv32i-cpu)
+  - [Full RV32I (37-Instruction)](#full-rv32i-37-instruction)
+  - [Pipelined Processor](#pipelined-processor)
+  - [Branch Prediction](#branch-prediction)
+  - [Hierarchical Cache](#hierarchical-cache)
+  - [M-Type Instructions (RV32M Extension)](#m-type-instructions-rv32m-extension)
+  - [Z-type Extensions (Zicsr and Zba)](#z-type-extensions-zicsr-and-zba)
+  - [FPGA and Interrupts](#fpga-and-interrupts)
+  - [Out-of-Order Superscalar Processor](#out-of-order-superscalar-processor)
+  - [Out-of-Order Superscalar with Load Instructions](#out-of-order-superscalar-with-load-instructions)
+- [Over-arching Results](#over-arching-results)
+- [VBuddy results](#vbuddy-results)
+  - [Superscalar arithmetic: Shift Operations (sup_shifts.s)](#superscalar-arithmetic-shift-operations-sup_shiftss)
+  - [FPGA with Trap Handler Routine](#fpga-with-trap-handler-routine)
+- [Future Considerations](#future-considerations)
+  - [Out-of-Order Superscalar with Branches, Jumps, and Store Instructions](#out-of-order-superscalar-with-branches-jumps-and-store-instructions)
+  - [RISC-V Vector Extension (RVV)](#risc-v-vector-extension-rvv)
+  - [FPGA Integration](#fpga-integration)
+- [References](#references)
 
 ## Introduction
 
