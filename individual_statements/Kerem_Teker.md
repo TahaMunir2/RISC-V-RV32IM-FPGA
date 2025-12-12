@@ -569,10 +569,11 @@ endcase
 ```
 ##### 2.3. Division and remainder with edge cases
 The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
-•	DIV (ALUCtrl = 5'b10000)
-•	DIVU (ALUCtrl = 5'b10001)
-•	REM (ALUCtrl = 5'b10010)
-•	REMU (ALUCtrl = 5'b10011)
+
+- DIV (ALUCtrl = 5'b10000)
+- DIVU (ALUCtrl = 5'b10001)
+- REM (ALUCtrl = 5'b10010)
+- REMU (ALUCtrl = 5'b10011)
 
 ```Systemverilog
         5'b10000: begin //DIV
