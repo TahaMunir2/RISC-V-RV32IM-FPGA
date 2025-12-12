@@ -208,7 +208,7 @@ end
 
 Additionally, I needed to separate the hit detection and way determination paths for the writeback requests (from L1d), and the read requests (from both L1d and L1i) as they would use different addresses.
 
-read hit detection path:
+Read hit detection path:
 ```SystemVerilog
 assign tag_bits_rd = addr[ADDRESS_WIDTH-1:13];
 assign set_rd = addr[12:5];
@@ -227,7 +227,7 @@ miss = ~(hit0 | hit1 | hit2 | hit3);
 
 
 ```
-writeback hit detection path:
+Writeback hit detection path:
 ```SystemVerilog
 assign tag_bits_wb = l1write_back_addr_buffer[ADDRESS_WIDTH-1:13];
 assign set_wb = l1write_back_addr_buffer[12:5];
