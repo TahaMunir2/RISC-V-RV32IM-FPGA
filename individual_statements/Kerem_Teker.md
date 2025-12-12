@@ -720,7 +720,7 @@ I was mostly well-engaged throughout the project, but specifically for the compa
 ## 3. Reflection
 The technical knowledge and skills that I am taking away for this project are evident and have been detailed exhaustively above.
 
-What I want to share with you is the personal take-aways that I personally have received from this project.
+What I want to share with you is the individual take-aways that I personally have received from this project.
 The key conmponents of this project for me have been:
 - Passion: I absolutely loved working on this project. I did not know I could enjoy digital hardware design to such an extent, and besides the knowledge and professional skills that I obtained, I believe this newly found passion has altered my perception of what paths I could potentially want to go onto in the future and professionally.
 - Collaboration: Not only did love doing the project, I loved doing it with the team I had. We already knew each other from our tutorial group last year as well as the end of year project and the chemistry we have developped is one of our key take-aways. I now know that our chemistry is a key determinant of our success with this team as well as any other team that I am part of in the future.
