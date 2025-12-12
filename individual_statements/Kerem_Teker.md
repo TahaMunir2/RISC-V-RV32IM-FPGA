@@ -7,15 +7,181 @@
 My main contributions in chronological order was:
 - Designing the Program Counter block for our single-cycle design
 - Modifying the base doit.sh script for compatibility on Both WSL and MacOS
-- F1 assembly code and Testbench and Testbenching for PDF tests
+- Tests on Vbuddy: F1 assembly code and Testbench and Testbenching for PDF tests
 - Pipelining: design and test-benching of Hazard unit and part of top-level integration
 - M-extension
 - Memory adaptation for Synthesis on FPGA
 
 
 
+### . PC block
 
 
+### 2. doit.sh script
+
+
+### 3. Tests on Vbuddy
+
+#### F1 Lights
+
+https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
+
+Here is the assembly code that we used to implement the F1 countdown mechanism:
+```asm
+main:
+    addi a0, zero, 0
+    addi t2, zero, 1
+mloop:
+    bne x8, t2, mloop
+    jal t3, iloop
+    addi a0, zero, 0
+    jal t3, mloop
+iloop:
+    li a0, 0
+    addi    a0, a0, 1
+    addi    a0, a0, 2
+    addi    a0, a0, 4
+    addi    a0, a0, 8
+    addi    a0, a0, 16
+    addi    a0, a0, 32
+    addi    a0, a0, 64
+    addi    a0, a0, 128
+    jalr t3, t3, 0
+end:
+    addi a0, zero, 0
+```
+Our trigger input is mapped to register 8 in our register file. This assembly code program loops at the top of mloop until the value of trigger is set to 1. If `x8` is set, we enter the F1 count-up subroutine by jumping to iloop. Once the subroutine is finished, we return to the main loop, where, if trigger is set again, the subroutine is re-entered.
+
+```cpp
+TEST_F(CpuTestbench, F1StartLights)
+{
+    setupTest("f1");
+
+    initSimulation();
+
+    // Initialise VBuddy
+    vbdOpen();
+    vbdSetMode(1);
+
+    // Main simulation loop
+    for (int i = 0; i < MAX_SIM_CYCLES && !Verilated::gotFinish(); ++i)
+    {
+        // delay introduced
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Advance one clock cycle
+        runSimulation(1);
+        top_->trigger = vbdFlag();
+
+        // Drive the bargraph with the lower 8 bits of the F1 output signal
+        vbdBar(top_->F1_SIGNAL & 0xFF);
+        // & 0xFF is to truncate the result to fit the number of LEDs
+    }
+
+    vbdClose();
+
+    // CpuTestbench::TearDown() will be called by gtest automatically
+}
+
+```
+
+
+The delay that I introduced at the beginning of each cycle allows us to have the distinguisably slow count-up that you can observe in the video. As mentioned, trigger is set by `vbdFlag()` on the Vbuddy chip.
+    
+
+
+#### PDF tests
+```cpp
+TEST_F(CpuTestbench, noisy)
+{
+
+    setupTest("5_pdf");
+    setData("reference/noisy.mem"); // the .mem file from which we read was changed for each test
+
+
+    // Create Vdut, set up tracing, reset, etc.
+    initSimulation();
+
+    // Initialise VBuddy
+    vbdOpen();
+    vbdSetMode(1);
+    vbdHeader("Single PDF");
+
+
+    const int MAX_FUNC_CYC = 1000650;   // this gives pdf.s enough time to build the PDF
+    int  bins = 0;     // display-cycle counter
+    bool display = false;
+    int  prev_a0 = top_->a0; // value of a0 before display phase, which will allow us to track when it first changes
+    
+    // Main simulation loop
+    for (int i = 0;i <MAX_FUNC_CYC && !Verilated::gotFinish(); ++i)
+    {
+
+        runSimulation(1);
+
+
+
+        // display turns on the first time the program changes a0
+        if (!display && top_->a0 != prev_a0) {
+            prev_a0 = top_->a0;
+            display = true;
+        }
+
+        if (display) {
+                ++bins;
+
+                // a0 only changes every 4 instructions in display loop
+                // so that we can fit the shape in a single or less windows
+                //we can change this value as we see fit, which we did during testing and documentation (see videos)
+                 if (bins % 4 == 0) {
+                    vbdCycle(i);
+                    vbdPlot(int(top_->a0) & 0xFF, 0, 255);
+                 }
+            // }
+        }
+    }
+
+    vbdClose();
+
+    // CpuTestbench::TearDown() will be called by gtest automatically
+}
+```
+
+##### gaussian.mem
+
+
+
+
+https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
+
+
+
+
+##### triangle.mem
+
+
+
+
+https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
+
+
+
+##### noisy.mem, 1
+
+
+
+
+
+https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
+
+
+
+
+##### noisy.mem, 2
+
+
+
+
+https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
 
 ### 4. Hazard Unit
 #### 1.	Why hazards occur in a pipeline? 
