@@ -259,7 +259,7 @@ No special handling is required elsewhere (hazard unit, register file, pipeline 
 - Forwarding and stall logic remain unchanged:
   - Hazard unit inspects register numbers and `RegWrite` / `ResultSrc` only.
   - It does not need to know whether EX does ADD or MUL.  
-- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`; M instructions use ALU result.
+- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`.
 
 Timing caveat: combinational multiplier/divider are likely the `EX` critical path. Typical mitigation for this are:
 
