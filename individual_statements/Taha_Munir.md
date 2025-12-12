@@ -15,8 +15,6 @@ I was also the GitHub "repo master" and although I did try to keep on top of kee
 
 ## Implementation
 
----
-
 ### Lab 4
 
 For Lab 4, we spun a random wheel, and I was fortunate enough to be handed the role of top-level integration and test benching. This meant I would have to not only fully understand how each module works to make unit test benches for each module to thoroughly test their functionality, but also understand how our CPU works overall to correctly integrate the whole circuit and troubleshoot using gtkWave.
