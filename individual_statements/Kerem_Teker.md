@@ -261,6 +261,29 @@ TEST_F(CpuTestbench, noisy)
 For the videos, see the single-cycle-cpu branch.
 
 ### 4. Hazard Unit
+For the Hazard Unit, the key design decisions I made revolved around correctness, minimal performance loss, and structural clarity. Because the hazard unit directly influences control flow and data correctness across the entire pipeline, I prioritised decisions that made hazard behaviour explicit, predictable, and easy to reason about during debugging.
+
+- I designed the hazard unit as a single, centralized module responsible for both data and control hazards, rather than splitting logic across stages. This ensured that stalling, flushing, and forwarding decisions were derived from a consistent and coherent view of pipeline state, and avoided duplicated or conflicting logic.
+
+- Forwarding logic was implemented to be aggressive but safe: operands are forwarded from the earliest possible stage (MEM before WB) to minimise stalls, while explicitly ignoring register x0 to preserve architectural correctness. This mirrors the conceptual model taught in lectures and made validation against expected pipeline behaviour straightforward.
+
+- I chose to flush the Decode-to-Execute register during a load stall instead of stalling it. This prevents instruction duplication and makes the stall behaviour unambiguous: the bubble is intentional, visible, and architecturally clean.
+
+
+While implementing the Hazard Unit, I kept the following design requirements and considerations in mind:
+
+- Forwarding should eliminate stalls wherever data is available early enough, especially for ALU-to-ALU dependency chains.
+
+- Stalls should be introduced only when forwarding is provably insufficient (i.e. load-use hazards).
+
+- Flushing must be precise and limited to the minimum required stages to avoid unnecessary pipeline disruption.
+
+- All control decisions must remain synchronous and predictable, making pipeline behaviour easy to trace cycle-by-cycle during simulation.
+
+- The hazard unit should closely resemble the canonical pipeline model taught in lectures, reducing conceptual overhead and easing verification.
+
+Overall, the Hazard Unit was designed to be conservative where correctness is at risk and aggressive where performance can be safely recovered, striking a balance between efficiency and architectural robustness.
+
 #### 1.	Why hazards occur in a pipeline? 
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
