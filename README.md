@@ -970,6 +970,8 @@ This leads to the satisfying demonstration below:
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
 > Note, we reused the binary counter logic here to show how cool it looks at a faster speed
 
+Here, the reaction time would be 363 (0x16b) * 0.01 = 3.63s.
+
 
 
 
