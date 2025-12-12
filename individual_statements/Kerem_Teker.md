@@ -1,7 +1,19 @@
 # Yusuf Kerem Teker: Personal contributions and reflection
 ## Overview
 
+
+
 ## Succint Summary of contributions
+My main contributions in chronological order was:
+- Designing the Program Counter block for our single-cycle design
+- Developping a unitary version of the shell script (doit.sh) compatible on Both Windows Subsystem for Linux and MacOS
+- F1 assembly code and Testbench for running it on Vbuddy
+- Assembly code for top-level testbenching
+- Testbenching for PDF tests
+- Pipelining: design and test-benching of Hazard unit and part of top-level integration
+- M-extension
+- Memory adaptation for Synthesis on FPGA
+
 
 
 
