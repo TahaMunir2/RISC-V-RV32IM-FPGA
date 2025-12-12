@@ -8,9 +8,10 @@
   - [2.3 L1 Data Cache](#23-l1-data-cache)
   - [2.4 L2 Cache](#24-l2_cache)
 - [3. Schematic](#3-schematic)
-  - [3.1 Overall Hierarchy Schematic](#31-overall-hierarchy-schematic)
-  - [3.2 A Closer Look at L1 and L2](#32-a-closer-look-at-l1-and-l2)
-  - [3.3 A Closer Look at L2 and Main Memory](#33-a-closer-look-at-l2-and-main-memory)
+  - [3.1 Overall CPU Schematic](#31-Overall-CPU-Schematic)
+  - [3.2 Overall Hierarchy Schematic](#32-overall-hierarchy-schematic)
+  - [3.3 A Closer Look at L1 and L2](#33-a-closer-look-at-l1-and-l2)
+  - [3.4 A Closer Look at L2 and Main Memory](#34-a-closer-look-at-l2-and-main-memory)
 - [4. Testing & Verification](#4-testing--verification)
   - [4.1 L1 Instruction Cache Testing](#41-l1-instruction-cache-testing)
   - [4.2 L1 Data Cache Testing](#42-l1-data-cache-testing)
@@ -645,19 +646,26 @@ In our cycle-by-cycle simulation, the cache does not appear to improve performan
 
 ## 3. Schematic
 
-### 3.1 Overall Hierarchy Schematic
+### 3.1 Overall CPU Schematic
+
+---
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+
+
+### 3.2 Overall Hierarchy Schematic
 
 ---
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_schematic_c.png)
 
-### 3.2 A Closer Look at L1 and L2
+### 3.3 A Closer Look at L1 and L2
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L1L2_schematic.png)
 
 ---
 
-### 3.3 A Closer Look at L2 and Main Memory
+### 3.4 A Closer Look at L2 and Main Memory
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L2main_schematic.png)
 
