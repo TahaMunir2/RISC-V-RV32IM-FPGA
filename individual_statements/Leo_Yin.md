@@ -1,14 +1,14 @@
-# Taha Munir (02562044) Individual Statement
+# Leo Yin (02574254) Personal Statement
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Implementation](#implementation)
   - [Lab 4](#lab-4)
-  - [Single Cycle](#single-cycle)
-  - [Pipelining](#pipelining)
-  - [Z Extensions](#z-extensions)
-  - [Interrupts and FPGA](#interrupts-and-fpga)
+  - [Designing the L1d and L1i cache](#designing-the-d1d-and-d1i-cache)
+  - [L1i and L1d cache testbenching](#l1i-and-l1d-cache-testbenching)
+  - [Designing the L2 cache ](#designing-the-l2-cache)
+  - [L2 cache testbenching](#l2-cache-testbenching)
 - [Mistakes](#mistakes)
 - [Reflection](#reflection)
 
