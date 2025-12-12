@@ -643,7 +643,7 @@ https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
 
 #### noisy.mem, 2
 
-
+The reason for the second video showing noisy.mem being dislayed on Vbuddy is to emphasize the custom displaying frequency capability that I achieved by choosing to display the value of our output register a0 every N counter cycles. This allows us to fit the shapes on the Vbuddy display as we wish.
 
 
 https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
