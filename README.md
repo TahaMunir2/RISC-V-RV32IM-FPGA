@@ -252,12 +252,12 @@ When `Jump_e` is asserted:
 
 ### 2.2 Hazard Unit
 #### 1.	Why hazards occur in a pipeline? 
-(A good analogy may be the conveyor belt along an assembly line in a car factory. At any one time, there are multiple cars along the belt, with each car being built stage by stage by workers who only specialize in one action)
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image1.png)
 
-In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. 
+In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation immediately back to the register file if the subseuent instructions are dependent upon that register.
+
 A special case arises when the first instruction is a “Load” instruction.
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image2.png)
@@ -266,16 +266,23 @@ When the instruction immediately after an “lw” instruction has a source regi
 
 Control Hazards are caused by branch instructions where the condition required for the branch is true, meaning the branch is taken. Once it is determined that the branch predicate is true, the program counter must branch to a different location, and the sequential order in which instructions are fetched from the instruction memory is broken. Depending on the offset of a branch instruction, an asserted branch invalidates the instructions fetched after the branch instruction and before the deduction of the branch condition’s validity. 
 
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Untitled.png)
+
+It is only at the point where the red arrow is, which is 2 clock cycles after the `beq` instruction is fetched from instruction memory, that the branch condition predicate is determined in the `EXECUTE` stage:
+
+`FETCH` --> `DECODE` --> `EX`
+
+
 #### 2.	Motivation for/responsibilities of the hazard unit
 Our hazard unit encapsulates all of the regulatory logic required to tackle the issues introduced by pipelining, including both data hazards and control hazards. Hence, the hazard unit is a single comprehensive module that triggers and employs stalling, flushing, and forwarding mechanisms (what these mechanisms do will be explained later together with the solutions). We chose this unitary and holistic approach to resolving both kinds of hazards because the input signals required to generate the relevant control signals for stalling, flushing and forwarding are the same or similar.
 
 In summary, the primary goals of the Hazard Unit are:
 
-•	To resolve data hazards through forwarding whenever possible, minimizing performance loss.
+- To resolve data hazards through forwarding whenever possible, minimizing performance loss.
 
-•	To detect and stall only when forwarding cannot supply the required operand in time (“Load” data dependency).
+- To detect and stall only when forwarding cannot supply the required operand in time (“Load” data dependency).
 
-•	To flush instructions that enter the pipeline speculatively once a branch outcome becomes known.
+- To flush instructions that enter the pipeline speculatively once a branch outcome becomes known.
 
 
 
@@ -311,11 +318,11 @@ end
 ```
 The forwarding logic compares decoded operands rs1E and rs2E with the destination registers rdM and rdWB:
 
-•	If the instruction in the MEM stage writes a register (regWriteM = 1) and its destination rdM matches the operand in EX, then the operand should be forwarded from MEM.
+- If the instruction in the MEM stage writes a register (regWriteM = 1) and its destination rdM matches the operand in EX, then the operand should be forwarded from MEM.
 
-•	Else if the instruction in the WB stage writes a register (WriteBack_Regfile = 1) and its destination rdWB matches, then forward from WB.
+- Else if the instruction in the WB stage writes a register (WriteBack_Regfile = 1) and its destination rdWB matches, then forward from WB.
 
-•	Register x0 is never forwarded, so matches must ignore rd = 0.
+- Register x0 is never forwarded, so matches must ignore rd = 0.
 
 
 ##### Select Line Encoding
@@ -337,11 +344,11 @@ Why forwarding ignores loads here
 Even though this logic covers most RAW hazards, it does not prevent a load word hazard, because a load instruction does not produce valid data until the end of the MEM stage. In such cases, forwarding would still not provide the correct value in time, which is why the Hazard Unit must insert a stall (described in Section 4).
 Forwarding entirely removes stalls that would otherwise be caused by data dependencies for:
 
-•	ALU-to-ALU dependency chains (e.g., add, sub, and, or, etc.)
+- ALU-to-ALU dependency chains (e.g., add, sub, and, or, etc.)
 
-•	Immediate arithmetic dependencies (e.g., addi, ori)
+- Immediate arithmetic dependencies (e.g., addi, ori)
 
-•	Register-producing control instructions if value is known early (e.g., jalr)
+- Register-producing control instructions if value is known early (e.g., jalr)
 
 #### 4. Load word data dependency
 Forwarding cannot resolve a dependency when the preceding instruction is a load. In a load instruction, the data is only available after the Memory stage, meaning forwarding cannot provide a valid operand in the immediate next cycle.
@@ -381,15 +388,15 @@ end
 ```
 
 The stall condition used in the design asserts when: (Same as data dependency section, put the code somewhere over here)
-•	The instruction in Execute is a load (resultSrCE == 2'b01), and
-•	Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
-•	rdE != 0.
+- The instruction in Execute is a load (resultSrCE == 2'b01), and
+- Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
+- rdE != 0.
 This is implemented in:
 (code)
 When a stall is necessary:
-•	PCWrite = 0 prevents PC update,
-•	F_Write = 0 prevents writing to IF/ID,
-•	flush_d_exec = 1 inserts a bubble into Execute.
+- PCWrite = 0 prevents PC update,
+- F_Write = 0 prevents writing to IF/ID,
+- flush_d_exec = 1 inserts a bubble into Execute.
 Thus, one cycle later, forwarding can resume as normal.
 
 
