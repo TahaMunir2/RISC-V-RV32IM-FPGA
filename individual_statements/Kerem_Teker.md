@@ -299,7 +299,7 @@ In a pipelined CPU, multiple instructions are executed in parallel. Hazards aris
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image1.png)
 
-In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation immediately back to the register file if the subseuent instructions are dependent upon that register.
+In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation to the register file as soon as it becomes available if the subsequent instructions are dependent upon that register.
 
 A special case arises when the first instruction is a “Load” instruction.
 
@@ -320,11 +320,11 @@ Our hazard unit encapsulates all of the regulatory logic required to tackle the 
 
 In summary, the primary goals of the Hazard Unit are:
 
-•	To resolve data hazards through forwarding whenever possible, minimizing performance loss.
+- To resolve data hazards through forwarding whenever possible, minimizing performance loss.
 
-•	To detect and stall only when forwarding cannot supply the required operand in time (“Load” data dependency).
+- To detect and stall only when forwarding cannot supply the required operand in time (“Load” data dependency).
 
-•	To flush instructions that enter the pipeline speculatively once a branch outcome becomes known.
+- To flush instructions that enter the pipeline speculatively once a branch outcome becomes known.
 
 
 
@@ -332,7 +332,8 @@ In summary, the primary goals of the Hazard Unit are:
 #### Data hazard resolution: forwarding logic
 For most arithmetic and logical instructions, the result becomes available before Write-Back, either at the end of the `EX` or `MEM` stage, allowing us to resolve these hazards without inserting stalls by forwarding the result directly to the ALU inputs.
 The Hazard Unit implements this forwarding by checking whether the source registers used by the instruction currently in the Execute (EX) stage match the destination registers of instructions that are still in the Memory (MEM) or Write-Back (WB) stages.
-Forwarding Decision Conditions (PUT the code for forwarding only somewhere around here or right next)
+
+Forwarding Decision Conditions:
 ```systemverilog
 always_comb begin
     //Default:no forwarding
