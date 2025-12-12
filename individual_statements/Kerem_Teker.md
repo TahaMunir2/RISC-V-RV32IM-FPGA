@@ -1,8 +1,4 @@
 # Yusuf Kerem Teker: Personal contributions and reflection
-## Overview
-
-
-
 ## Succint Summary of contributions
 My main contributions in chronological order was:
 - Designing the Program Counter block for our single-cycle design
@@ -15,23 +11,6 @@ My main contributions in chronological order was:
 
 
 ### 1. PC block
-#### Inputs
-
-```systemverilog
-    input logic clk,
-    input logic [WIDTH-1:0] Imm_op, 
-    input logic [WIDTH-1:0] ALU,
-    input logic rst,
-    input logic [1:0] pc_src,
-    output logic [WIDTH-1:0] pc,
-    output logic [WIDTH-1:0] pc_save
-```
-> Width is 32 as our CPU is 32-bit
-- We need Imm_op to add an offset to PC for JAL instructions
-- We need ALU to add PC and rs1 for JALR instructions
-- We need pc_src to determine how to increment PC
-- We output pc_save for saving return addresses for jump instructions
-
 #### Logic
 
 ```systemverilog
@@ -52,10 +31,17 @@ always_ff @(posedge clk)
     end
 assign pc = internal_pc;
 ```
+For the PC block, key design decisions that I made were in accuracy, efficiency and modularity:
+- An intermediate bus, `internal_pc`, was used for accomplishing easy addition of new update values for PC. For example, when implementing stalls for pipelining, `internal_pc<=pc` was easily implemented. Making sure the value of PC goes through an intermediate and internal bus also enabled me to avoid making silly mistakes.
+- Variable names were picked to clearly and uniquely indicate the case for the new value of PC.
 
-- Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
+I kept in mind the following important considerations for this section:
+- ROM starts at the address BFC00000 due to the memory map we were provided in the project brief
+- PC must be conserved as a return address when jump instructions occur
+- The PC source must toggle appropriately between the PC as normally incremented and the PC for branch and jump and link instructions
+- JALR instructions involving addition operations with PC in ALU 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+
 
 ### 2. doit.sh script
 
@@ -200,6 +186,8 @@ The delay that I introduced at the beginning of each cycle allows us to have the
 
 
 #### PDF tests
+Displaying the value from gaussian.mem, noisy.mem, etc. on every clock cycle caused the Vbuddy output to appear as a flatline because the display updates far faster than the underlying data meaningfully changes. The memory files we used (gaussian.mem, triangle.mem, etc) represent a discrete set of sampled values (e.g. a PDF or noisy signal), but when the same or slowly changing value is driven to the display at the full system clock rate, consecutive frames become visually indistinguishable. Since Vbuddy effectively renders a time-averaged or human-perceivable signal rather than individual clock transitions, the rapid repetition of identical (or near-identical) values collapses into a constant level on screen, giving the appearance of a flatline rather than a varying waveform. That is why the following code was developped, so the display is only updated every 4 clock cycles (this value can be changed as desired) and only if the previous value was not the exact same:
+
 ```cpp
 TEST_F(CpuTestbench, noisy)
 {
@@ -255,43 +243,7 @@ TEST_F(CpuTestbench, noisy)
     // CpuTestbench::TearDown() will be called by gtest automatically
 }
 ```
-
-##### gaussian.mem
-
-
-
-
-https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
-
-
-
-
-##### triangle.mem
-
-
-
-
-https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
-
-
-
-##### noisy.mem, 1
-
-
-
-
-
-https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
-
-
-
-
-##### noisy.mem, 2
-
-
-
-
-https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
+For the videos, see the single-cycle-cpu branch.
 
 ### 4. Hazard Unit
 #### 1.	Why hazards occur in a pipeline? 
@@ -398,7 +350,6 @@ Forwarding cannot resolve a dependency when the preceding instruction is a load.
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image4.png)
  
-(Modify this diagram to show that the execute stage is actually flushed, not stalled)
 In this case, the Hazard Unit must stall the pipeline for exactly one cycle. It freezes the Program Counter and Fetch-to-Decode pipeline register and flushes the Decode-to-Execute pipeline register. The reason why Decode-to-Execute pipeline register is flushed is that if it were only stalled, the “lw” instruction would propagate through to the memory stage but also still remain in the Decode-to-Execute pipeline register, essentially duplicating the lw instruction. Thus, flushing this stage of the pipeline both achieves the stall required for synchronization (since the next register is not able to propagate into the execute stage) and prevents the duplication that would cause 2 back to back “lw” instructions.
 
 ```systemverilog
@@ -430,17 +381,18 @@ end
 
 ```
 
-The stall condition used in the design asserts when: (Same as data dependency section, put the code somewhere over here)
-•	The instruction in Execute is a load (resultSrCE == 2'b01), and
-•	Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
-•	rdE != 0.
-This is implemented in:
-(code)
+The stall condition used in the design asserts when:
+- The instruction in Execute is a load (resultSrCE == 2'b01), and
+- Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
+- rdE != 0.
+
 When a stall is necessary:
-•	PCWrite = 0 prevents PC update,
-•	F_Write = 0 prevents writing to IF/ID,
-•	flush_d_exec = 1 inserts a bubble into Execute.
+- PCWrite = 0 prevents PC update,
+- F_Write = 0 prevents writing to IF/ID,
+- flush_d_exec = 1 inserts a bubble into Execute.
 Thus, one cycle later, forwarding can resume as normal.
+
+How a bubble/NOP is implemented is discussed elsewhere, but in essence, all of the inputs for a given stage is set to 0, including both control and data signals.
 
 
 #### 5. Control hazard detection and Flush logic
@@ -744,7 +696,21 @@ For exact details, see the Interrupts and FPGA branch.
 
 ## Mistakes made
 
-## Reflection
+Like other teammates, I did not realise the power of gtkWave at first. Later, for top-level integration of the pipelined design, gtkWave was really handy. I just wish we had started using it earlier in our debugging process for the pipelined design, which would have saved very precious time. These small time inefficiencies prevented me from embarking on the Vector extension, which I really wanted to implement.
 
+Another underlying cause of my shortcoming in not accomplishing the Vector extension was the wrong expectations that I set for myself. Before doing the M extension, I over-estimated the difficulty and the amount of time it would consume. By then, I had already opted out of doing the vector extension. However, after rapidly finishing the M extension, I realised I had enough time and capability to have done the vector extension instead. With other responsibilities coming in as well, I simply opted out of it. However, if from the start, I had set my expectations more accurately and acted accordingly, creating a clear timeline, I believe I could have implemented the vector extension as well.
+
+I was mostly well-engaged throughout the project, but specifically for the compatible doit.sh file I implemented, I forgot to encourage my teammates to use this compatible version, which often resulted in diverging versions of this file.
+
+## Reflection
+The technical knowledge and skills that I am taking away for this project are evident and have been detailed exhaustively above.
+
+What I want to share with you is the personal take-aways that I personally have received from this project.
+The key conmponents of this project for me have been:
+- Passion: I absolutely loved working on this project. I did not know I could enjoy digital hardware design to such an extent, and besides the knowledge and professional skills that I obtained, I believe this newly found passion has altered my perception of what paths I could potentially want to go onto in the future and professionally.
+- Collaboration: Not only did love doing the project, I loved doing it with the team I had. We already knew each other from our tutorial group last year as well as the end of year project and the chemistry we have developped is one of our key take-aways. I now know that our chemistry is a key determinant of our success with this team as well as any other team that I am part of in the future.
+- Ambition: with the vector extension, I learnt that achieving ambitious goals is less about the difficulty of the task than the expectations, mindset, and ambition you embark on the journey with. 
+
+  
 
 
