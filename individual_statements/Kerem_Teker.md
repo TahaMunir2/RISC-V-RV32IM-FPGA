@@ -736,70 +736,11 @@ Array-based memory designs, which we used initially throughout the project, are 
 
 To program the FPGA, we had to use a program called Quartus. We were able to put our .sv files onto Quartus and use its many, many features to set up the right conditions for the FPGA to allow us to port our CPU onto it.
 
-The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. We MUST make sure to uncheck make the output registered or else it will take 2 cycles to read (I had this issue for days). For this imem block, we would also need to initialise its memory content using a program.mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. For exact details, see:
+The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. We MUST make sure to uncheck make the output registered or else it will take 2 cycles to read (I had this issue for days). For this imem block, we would also need to initialise its memory content using a program.mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation.
 
+Even though we adapted our memories in accordance with the FPGA-friendly coding styles necessary, Quartus did not correctly infer and implement our BRAM blocks on the target FPGA. As such, we used the IP 2-Port (Read and Write) RAM module in the catalogue section of Quartus, which allowed us to correctly implement our memory modules as BRAM blocks. As such, FPGA-specific hardware also required an FPGA wrapper.
 
-We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation.
-
-Even though we adapted our memories in accordance with the FPGA-friendly coding styles necessary, Quartus did not correctly infer and implement our BRAM blocks on the target FPGA. As such, we used the IP 2-Port (Read and Write) RAM module in the catalogue section of Quartus, which allowed us to correctly implement our memory modules as BRAM blocks.
-
-And now we would need to call the new dmem_ram inside the datamem module:
-
-```systemverilog
-    dmem_ram dmem_inst (
-        .clock   (clk),
-        .address (word_index),
-        .data    (WD),
-        .wren    (MemWrite),
-        .byteena (byteena),
-        .q       (raw_word)
-    );
-```
-- Note **`raw_word`** is the word without load-size or load-sign logic implemented.
-
-#### Top:
-We must take note that, as reading memory is now synchronous, we must not pass the outputs of the memory blocks through the pipeline registers; instead, they can go straight to the next stage.
-
-However, this also means we must now change the logic, as our previous instructions assumed that we had synchronous reads. This includes adding a stall buffer in top, as when we call stall, our BRAM has already gotten our instruction, and if we don't hold onto it will get overwritten and lost:
-
-```systemverilog
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            Stall_Active <= 0;
-            InstrD_Saved <= 0;
-        end else begin
-            Stall_Active <= flush_d_exec; 
-            if (flush_d_exec && !Stall_Active) begin
-                InstrD_Saved <= InstrF_raw;
-            end
-        end
-    end
-```
-We must also kill the cycle that occurs while we are branching, as even though we update the address our ROM is accessing, as it is asynchronous, it still grabs the previous address, which will run an instruction we don't want to run:
-
-```systemverilog
-    always_ff @(posedge clk) begin
-        if (rst) kill_cycle <= 0;
-        else kill_cycle <= (JumpE || false_prediction || trap_en || mret_en); 
-    end
-
-    assign InstrF = (kill_cycle || rst) ? 32'h00000013 : // addi x0, x0, 0 or NOP
-                    (Stall_Active) ? InstrD_Saved : InstrF_raw;
-```
-
-We also need to deal with RAW (read after write) hazards in the decode stage, while there are data dependancies in the writeback stage, by skipping the registers and forwarding directly:
-
-```systemverilog
-    always_comb begin
-    if (RegWriteW && (Rs1D != 0) && (Rs1D == RdW)) RD1D_Correct = ResultW;
-    else  RD1D_Correct = RD1D;
-
-    if (RegWriteW && (Rs2D != 0) && (Rs2D == RdW))  RD2D_Correct = ResultW;
-    else RD2D_Correct = RD2D;
-    end
-```
-
-Now that the hazards are all dealt with, we can focus on adding FPGA-specific hardware to our SystemVerilog code. This includes GPIO (for LEDS), 7-segment display mapping, a debouncer and an FPGA Wrapper.
+For exact details, see the Interrupts and FPGA branch.
 
 ## Mistakes made
 
