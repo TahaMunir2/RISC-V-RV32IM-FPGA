@@ -5,7 +5,7 @@ My main contributions in chronological order were:
 - Test Benching and Top-level integration for Lab 4
 - Implementing all 6 instructions for the Single Cycle CPU
 - Designing the Pipeline Registers
-- Designed L1d and L1i cache
+- Helped design L1d and L1i cache
 - Zicsr and Zba Extensions
 - FPGA and Interrupts
 
@@ -120,7 +120,7 @@ I added the following cases in the signextender block for it to be able to under
 
 For lab 4, we only defined the logic to load a word from the RAM; however, now we need to handle store instructions and byte addressing.
 
-#### Read Logic
+##### Read Logic
 
 ```systemverilog
 always_comb begin
@@ -140,7 +140,7 @@ end
 - The rest of the logic is the same as the ROM.
 - We use little-endian logic.
 
-#### Write Logic
+##### Write Logic
 
 ```systemverilog
 always_ff @(posedge clk) begin
@@ -159,9 +159,97 @@ end
 
 ### Pipelining
 
-```systemverilog
+For pipelining, my work was simpler; I simply had to pass the registers through if there was no stall active and then flush the content if we needed to flush for branch instructions. I can demonstrate this by just showing my Fetch to Decode pipeline register:
 
+```systemverilog
+    always @(posedge clk) begin
+        if (rst || flush) begin
+            instr_d <= 32'h00000033;
+            pc_d <= 0;
+            pc_save_d <= 0;
+        end
+        
+        else if(enable) begin
+            instr_d <= instr_f;
+            pc_d <= pc_f;
+            pc_save_d <= pc_save_f;
+        end
+    end
 ```
+- For stalls, we simply make enable low so the pipeline register maintains its old values for 1 more cycle.
+- In the case of a flush, we want to send a no-op out, so we send out the instruction for ADDI x0, x0, 0.
+- We treat rst as the same as flushing the CPU.
+
+This was repeated for the rest of the pipeline registers.
+
+### Z Extensions:
+
+I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
+
+I noticed that CSR instructions were omitted on the project brief from the full RV32I implementation, so I did some research into them and found out they are sometimes referred to as the Zicsr extension and are used to implement interrupts by utilising a Control Status Register module.
+
+The control shift register is a register of a fixed size, much larger than the register we use in the reg file module, and has special registers with each register having a special name, purpose and way of handling, unlike the general-purpose registers we use in regfile. The registers are used for a variety of purposes, such as handling interrupts (as discussed in the Interrupts and FPGA branch), managing privilege levels, measuring time/performance, and identifying hardware, among others.
+
+The Zicsr instructions are implemented with the CSR to read from it and write to it. All Zicsr instructions are atomic read-modify-write instructions, as in they read the old value of the control status register into rd and modify rd all in 1 instruction. In contrast, if we wanted to do this with our normal registers, it would require 2 instructions, one to copy and one to write. There are 6 Zicsr instructions csrrw, csrrs, csrrc, csrrwi, csrrsi and csrrci, with the latter 3 being immediate (instead of register) versions of the first 3. Each instruction has a CSR register (that will be both the source and the destination), a destination register that will get the old value of that CSR, and either a source register or a 5-bit unsigned immediate that will be used for determining the new value of that CSR, as shown below:
+
+| Instruction | funct3 | Operation |
+|-------------|--------|-----------|
+| CSRRW | 001 | rd = CSR[addr], CSR[addr] = rs1 |
+| CSRRS | 010 | rd = CSR[addr], CSR[addr] = CSR[addr] \| rs1 |
+| CSRRC | 011 | rd = CSR[addr], CSR[addr] = CSR[addr] & ~rs1 |
+| CSRRWI | 101 | rd = CSR[addr], CSR[addr] = uimm[4:0] |
+| CSRRSI | 110 | rd = CSR[addr], CSR[addr] = CSR[addr] \| uimm[4:0] |
+| CSRRCI | 111 | rd = CSR[addr], CSR[addr] = CSR[addr] & ~uimm[4:0] |
+
+
+The logic for these was implemented as shown below:
+
+```systemverilog
+always_comb begin
+        temp = dout;
+        case(CSR_OP)
+            2'b01: temp =  wd; // CSRRW(I)
+            2'b10: temp = temp | wd;   // CSRRS(I)  
+            2'b11: temp = temp & (~wd); // CSRRC(I)
+            default: temp = dout;
+        endcase
+    end
+```
+
+This was done inside a new module called CSR, which started with instantiating a register of size 4096:
+
+```systemverilog
+  logic[DATA_WIDTH-1:0] csr_array [CSR_WIDTH-1:0];
+```
+
+Key Points:
+- As CSR instructions are atomic, we had to modify our stall logic to check for data dependencies in CSR instructions.
+- I would modify this file to make the CSRs more special in the next extension.
+- I had to add a new ALU Source MUX at the top, which determined if ALUop1 was an imm or register value for CSR instructions ending with an I.
+- I also had to modify the Sign Extension block to properly extend the 5-bit unsigned immediate.
+- I also had to modify the control path to handle these new instructions.
+
+I also added Zba instructions while I was at it, as they seemed quite easy and helped simplify shift and add instructions into just 1 atomic instruction:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+
+### Interrupts and FPGA:
+
+This was the hardest yet most rewarding thing I designed for this project. I was able to port our pipelined CPU with the Z extension onto an FPGA, as well as add a trap handler for 2 types of interrupts: timer and external (trigger) interrupts and design a 4-state FSM to run the F1 lights in assembly utilising the functionality of our interrupts. 
+
+Due to the extreme depth of the implementation, please refer to: [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
+> This part is not easily summarisable as changes and additions were required in almost every part of the CPU, so please look at my thorough breakdown of the FPGA implementation.
+
+#### Design Decisions:
+- I chose to add 2 types of outputs, the 7-segment displays and the LEDs, to show how our CPU could handle multiple outputs, as well as 2 types of interrupts to demonstrate the robustness of our design.
+- I wanted to make sure our CPU wasn't only an output circuit but was also responsive to inputs, so I changed trigger to be key[0] on the FPGA and utilised the trap handler to deal with I/O as an actual CPU would, instead of how trigger is described in the project brief.
+- I chose to use MMIO due to our memory map practically inviting us to make use of the unmapped space between RAM and ROM.
+- I removed M instructions due to our simulated circuit lacking multi-cycle divide logic (as division is extremely complex on real hardware).
+- I removed the branch predictor as its logic almost completely broke with our synchronous read.
+- I chose to implement the F1 Lights FSM as it was made in the EEE labs using simply an FSM defined in SystemVerilog, and I wanted to push myself to make an assembly program to run the same logic on our actual CPU that had been ported onto the same FPGA.
+
+#### F1 FSM Video
+https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
 
 ## Mistakes
 
