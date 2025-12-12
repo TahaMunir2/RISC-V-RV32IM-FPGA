@@ -85,7 +85,7 @@ An FPGA (Field Programmable Gate Array) is a programmable integrated circuit whi
 
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
-We were able to get everything from the full RV32I instruction set, along with pipelining, as well as external interrupts and timer interrupts, with a trap handler in machine mode working on our FPGA and then make our own version of F1 lights in assembly to run on the FPGA.
+We were able to get everything from the full RV32I instruction set, along with pipelining, as well as external interrupts and timer interrupts, with a trap handler in machine mode working on our FPGA all running at the full 50 MHz and then make our own version of F1 lights in assembly to run on the FPGA.
 
 ## Implementation:
 
