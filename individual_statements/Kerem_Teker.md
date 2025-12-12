@@ -1,6 +1,8 @@
 # Yusuf Kerem Teker: Personal contributions and reflection
 ## Overview
 
+## Succint Summary of contributions
+
 
 
 ### 2.2 Hazard Unit
