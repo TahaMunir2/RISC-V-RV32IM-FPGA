@@ -2572,6 +2572,10 @@ All test cases pass
   - [2.3 L1 Data Cache](#23-l1-data-cache)
   - [2.4 L2 Cache](#24-l2_cache)
 - [3. Schematic](#3-schematic)
+  - [3.1 Overall CPU Schematic](#31-Overall-CPU-Schematic)
+  - [3.2 Overall Hierarchy Schematic](#32-overall-hierarchy-schematic)
+  - [3.3 A Closer Look at L1 and L2](#33-a-closer-look-at-l1-and-l2)
+  - [3.4 A Closer Look at L2 and Main Memory](#34-a-closer-look-at-l2-and-main-memory)
 - [4. Testing & Verification](#4-testing--verification)
   - [4.1 L1 Instruction Cache Testing](#41-l1-instruction-cache-testing)
   - [4.2 L1 Data Cache Testing](#42-l1-data-cache-testing)
@@ -2580,7 +2584,9 @@ All test cases pass
 
 ## 1. Overview
 
-Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be.
+Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be. However, caches are significantly more expensive than main memory and cannot occupy too much area, which is why they are designed to be only a fraction of main memory’s size.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/cache_speed.png)
 
 Caches exploit spatial and temporal locality in order to improve fetch and writeback speed. Spatial locality is the principle that accessing one memory location increases the likelihood that adjacent memory locations (in the virtual memory space) will be accessed shortly afterward. On the other hand, the concept of temporal locality is that recently accessed data is also highly likely to be re-accessed due to the inherently cyclic nature of programming.
 
@@ -2594,7 +2600,7 @@ In our design, we have implemented a 2-way associative L1 instruction cache and 
 
 The overall memory hierarchy is as such:
 
--insert overall hierarchy img
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_hierarchy.png)
 
 As shown in the diagram above, the processor reads and writes from the L1 caches, which read from and write to the L2 cache, which reads from and writes to main memory.
 
@@ -2835,7 +2841,7 @@ The specifications for our L2 cache are as follows:
 
 | Parameter | Selected Value |
 | --------- | -------------- |
-| Total Cache Size | 32 MB |
+| Total Cache Size | 32 KB |
 | Number of Sets | 256 |
 | Associativity | 4-way |
 | Block Size | 8 words |
@@ -3163,9 +3169,69 @@ if (wr_en && l1write_buffer && (addr[31:4] == l1write_back_addr_buffer[31:4])) b
 end
 ```
 
+
+---
+
+### 2.5 Pipeline Integration
+
+Integrating the cache hierarchy into the pipelined processor required a mechanism to freeze the entire pipeline when either L1 cache is fetching data from higher levels in the memory hierarchy.
+
+#### The Problem
+
+When an L1 cache miss occurs, the cache must fetch data from the L2 cache (and potentially from main memory). This takes multiple cycles. During this time, the pipeline cannot proceed, because if instruction cache misses we have no instruction to decode; if the data cache misses, we cannot complete the memory stage.
+
+#### The Solution: Global Stall Signals
+
+Each L1 cache outputs a `stall` signal indicating it is waiting for data:
+
+| Signal | Source | Asserted When |
+|--------|--------|---------------|
+| `stall_l1i` | L1 Instruction Cache | Fetching instruction line from L2 |
+| `stall_l1d` | L1 Data Cache | Fetching data line from L2 or waiting for writeback |
+
+We combine these into enable signals for every pipeline component:
+
+| Component | Enable Signal |
+|-----------|---------------|
+| Fetch-Decode Register | `enable_fd = !(stall_l1i \|\| stall_l1d)` |
+| Decode-Execute Register | `enable_de = !(stall_l1i \|\| stall_l1d)` |
+| Execute-Memory Register | `enable_em = !(stall_l1i \|\| stall_l1d)` |
+| Memory-Writeback Register | `enable_mw = !(stall_l1i \|\| stall_l1d)` |
+| PC Block | `enable_pc_block = !(stall_l1i \|\| stall_l1d)` |
+| Branch Predictor | `enable_branch_predictor = !(stall_l1i \|\| stall_l1d)` |
+
+When either stall signal is high, all enable signals go low, freezing the entire pipeline in place. The pipeline registers hold their current values, the PC stops incrementing, and the branch predictor stops updating. Once the cache miss is resolved and both stall signals are low, the pipeline resumes from exactly where it stopped.
+
+#### A Note on Performance
+
+In our cycle-by-cycle simulation, the cache does not appear to improve performance. A cache hit still takes one cycle, just like a direct memory access would in our earlier designs. However, in real hardware, the benefit is substantial. A cache hit completes in 0.2-3 nanoseconds, while a main memory access takes 10-50 nanoseconds. Our simulation abstracts away this latency difference, but in a physical implementation, the cache hierarchy would provide significant acceleration by avoiding the slow path to main memory on most accesses.
+
 ---
 
 ## 3. Schematic
+
+### 3.1 Overall CPU Schematic
+
+---
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+
+
+### 3.2 Overall Hierarchy Schematic
+
+---
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_schematic_c.png)
+
+### 3.3 A Closer Look at L1 and L2
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L1L2_schematic.png)
+
+---
+
+### 3.4 A Closer Look at L2 and Main Memory
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L2main_schematic.png)
 
 ---
 
@@ -3192,9 +3258,7 @@ We created a c++ testbench (l1i_cache_tb.cpp) that isolates the instruction cach
    ```bash
    ./doit.sh tests/l1i_cache_tb.cpp
    ```
-
-Here are the results:
-
+   
 ---
 
 ### 4.2 L1 Data Cache Testing
@@ -3225,9 +3289,6 @@ We also created a c++ testbench (l1d_cache_tb.cpp) to isolate the data cache mod
    ./doit.sh tests/l1d_cache_tb.cpp
    ```
 
-Here are the results:
-
-
 ---
 
 ### 4.3 L2 Cache Testing
@@ -3253,11 +3314,13 @@ We also created a c++ testbench (l2_cache_tb.cpp) to isolate the data cache modu
    ```
 Here are the results:
 
+
 ![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-1.png)
 
 ![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-2.png)
 
 ![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-3.png)
+
 
 ---
 
@@ -3442,22 +3505,9 @@ They follow the RISC-V spec’s special cases:
 DIV / DIVU: result is −1 (all ones), i.e. 0xFFFFFFFF.
 REM / REMU: result is the original dividend (rs1).
 2.	Signed overflow (−2³¹ / −1):
-o	For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
+- For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
 The result saturates to 0x80000000 (unchanged dividend).
-o	For REM in this special case, the remainder is 0.
-Implementation-wise, for DIV:
-5'b10000: begin // DIV
-    if (ALUop2 == 0) begin
-        ALUout = -1;
-    end
-    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
-        ALUout = 32'h80000000;
-    end
-    else begin
-        ALUout = $signed(ALUop1) / $signed(ALUop2);
-    end
-end
-and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
+- For REM in this special case, the remainder is 0.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
 
 
@@ -3535,7 +3585,7 @@ No special handling is required elsewhere (hazard unit, register file, pipeline 
 - Forwarding and stall logic remain unchanged:
   - Hazard unit inspects register numbers and `RegWrite` / `ResultSrc` only.
   - It does not need to know whether EX does ADD or MUL.  
-- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`; M instructions use ALU result.
+- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`.
 
 Timing caveat: combinational multiplier/divider are likely the `EX` critical path. Typical mitigation for this are:
 
@@ -3856,7 +3906,36 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ## 3 Schematic
 
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
+
 ## 4 Testing and Verification
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+4. Open gtkWave in a new terminal:
+   ```bash
+   gtkwave
+   ```
+
+5. Drag and drop the waveform.vcd into the gtkwave terminal.
+
 
 ### Zicsr Testbench
 
@@ -3882,7 +3961,6 @@ We ran the following assembly code to test out the Zba functionality. Notably, w
 
 
 As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each operation takes 1 clock cycle, whereas without these instructions it would be spread out over 2 cycles.
-
 
 ---
 
@@ -3973,7 +4051,7 @@ An FPGA (Field Programmable Gate Array) is a programmable integrated circuit whi
 
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
-We were able to get everything from the full RV32I instruction set, along with pipelining, as well as external interrupts and timer interrupts, with a trap handler in machine mode working on our FPGA and then make our own version of F1 lights in assembly to run on the FPGA.
+We were able to get everything from the full RV32I instruction set, along with pipelining, as well as external interrupts and timer interrupts, with a trap handler in machine mode working on our FPGA all running at the full 50 MHz and then make our own version of F1 lights in assembly to run on the FPGA.
 
 ## Implementation:
 
@@ -4538,6 +4616,26 @@ Quartus actually provides you with an RTL netlist diagram:
 
 ### Interrupts and Simulation
 
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+
+
 #### External Interupts
 
 We first edited our simulated circuit to have synchronous memory and then made test cases we could trace on gtkwave for debugging.
@@ -4548,7 +4646,7 @@ This first test case shows a simple program where the address of the trap handle
 
 This is done in verify.cpp via turning on a0 for a few cycles:
 
-```
+```cpp
 	setupTest("interrupt_test"); 
     initSimulation();
     runSimulation(100);
@@ -4580,7 +4678,7 @@ The next test was to set the clock; this once was a bit longer as I wanted to sh
 - Line 40 is mret, which returns to what we were doing before.
 
 This is done in verify.cpp by doing:
-```
+```cpp
     setupTest("timer");
     setData("reference/gaussian.mem");
     initSimulation();
@@ -4611,7 +4709,7 @@ Which matches up with the memory we expected. It is interesting to see that our 
 #### LEDs and 7-Segment Displays Test
 
 Firstly, we just wanted a simple test to check that our outputs and address mapping worked correctly on our FPGA.
-```
+```asm
 WIDTH=32;
 DEPTH=2048;
 ADDRESS_RADIX=HEX;
@@ -4635,7 +4733,7 @@ END;
 
 Next, we wanted to test out the  external interrupt logic and trap handler routine, as well as check if more complex instructions like branch and csrrw would work.
 
-```
+```asm
 000 : BFC000B7; -- LUI x1, 0xBFC00 
 001 : 03008093; -- ADDI x1, x1, 0x30 (x1 = 0xBFC00030, trap handler address)
 002 : 30509073; -- CSRW mtvec, x1 
@@ -4673,7 +4771,6 @@ Next, we wanted to test out the  external interrupt logic and trap handler routi
 - C-F is the trap handler; it is only ever accessed when the trap is triggered.
 
 
-
 https://github.com/user-attachments/assets/d3bf95f0-1b92-4ace-abf1-3764e90d6b53
 > We removed the pulse logic, as our CPU was not detecting it for some reason.
 
@@ -4684,7 +4781,7 @@ Note: For some reason, our key[1] wasn't working on the FPGA we were given, so h
 
 Next, we wanted to out our timer interrupt logic for this we needed a test that would alternate the time every 'x' amount of time. 
 
-```
+```asm
 000 : 0200006F; JAL x0, 32 (0x008)
 
 -- Trap Handler
@@ -4714,23 +4811,135 @@ Next, we wanted to out our timer interrupt logic for this we needed a test that 
 ```
 - 8-E set up the CSRs the same as before, but now for timers instead of trigger
 - F just clears a0 to be safe
-- 10-13 set the timer to be 33,554,432 cycles which at 50MHz should only take about 2/3's of a second
+- 10-13 set the timer to be 33,554,432 cycles, which at 50MHz should only take about 2/3's of a second
 - 14 is an infinite loop
 - 1 (This is now in the trap handler) increments a0 by 1 (for our counter)
 - 2-3 set the LEDs to display a0 (in binary)
 - 4-6 reset the timer with the same value (our time resets if we set it)
 - mret to go back to our infinite loop
 
-This creates a simple binary counter with the value shown in Hex on the left as shown below:
+This creates a simple binary counter with the value shown in Hex on the left, as shown below:
 
 https://github.com/user-attachments/assets/702378ec-2748-4001-a209-32438d559ac6
 
 ## F1 Lights 
 
-https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
+Finally, we wanted to recreate the F1 lights reaction test on our FPGA, now using our brand new timer and external interrupts for synchronisation and inputs.
 
+First, I created this FSM model and defined 4 states for the implementation.
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/F1FSM.png)
+
+- S0: We increment the amount of LEDs that are on 1 by 1 until they are all on.
+- S1: Once they are all on, we wait 1 second and turn them off.
+- S2: We start incrementing a0 to test reaction time.
+- S3: If the trigger is pressed, then stop everything and display the reaction time.
+
+This can be written in assembly for the .mif file as follows:
+
+### Setup
+```asm
+000 : 00100513; -- ADDI x10, x0, 1
+001 : 80002237; -- LUI x4, 0x80002
+002 : 00A22023; -- SW x10, 0(x4) (turn on first LED)
+003 : 10000093; -- ADDI x1, x0, 256
+004 : 30509073; -- CSRW mtvec, x1 (set trap handler address (040))
+005 : 00000513; -- ADDI x10, x0, 0 (x10 = 0)
+006 : 00000A13; -- ADDI x20, x0, 0 (x20 = 0)
+007 : 00000593; -- ADDI x11, x0, 0 (x11 = 0)
+008 : 00100193; -- ADDI x3, x0, 1 (x3 = 1)
+009 : 00719193; -- SLLI x3, x3, 7 (bit 7 = 1)
+00A : 8001E193; -- ORI x3, x3, 0x800 (bit 11 and bit 7 = 1) 
+00B : 30419073; -- CSRW mie, x3
+00C : 00800113; -- ADDI x2, x0, 8
+00D : 30011073; -- CSRW mstatus, x2 (MIE = 1)
+00E : 800012B7; -- LUI x5, 0x80001
+00F : 0002A223; -- SW x0, 4(x5) (clear upper bits)
+010 : 02FAF337; -- LUI x6, 0x02FAF 
+011 : 08030313; -- ADDI x6, x6, 0x080 (x6 = 50,000,000 or 1s at 50Mhz)
+012 : 0062A023; -- SW x6, 0(x5)
+013 : 0000006F; -- JAL x0, 0 (loop)
+[014..03F] : 00000013;
+```
+
+### Trap Handler Setup
+```asm
+-- Trap Handler
+040 : 342022F3; -- CSRR x5, mcause 
+041 : 00F2F293; -- ANDI x5, x5, 15 (mask bottom 4 bits)
+042 : 00B00313; -- ADDI x6, x0, 11 (Load 11)
+043 : 06628663; -- BEQ x5, x6, Freeze (offset 112, if external interrupt then jump to state 3)
+044 : 04059463; -- BNE x11, x0, Count-up (offset 72, if x11 is high, we are in state 2)
+045 : 3FFA2A93; -- SLTI x21, x20, 0x3FF  (check if leds all high)
+046 : 020A8063; -- BEQ x21, x0, Transition (offset 32, branch to transition if x21 is 0, state 1)
+```
+
+### State 0
+```asm
+-- LEDs light up (state 0):
+047 : 001A1A13; -- SLLI x20, x20, 1  (turn next LED on: state 0)
+048 : 001A6A13; -- ORI x20, x20, 1 (keep the previous LEDs on)
+049 : 80002237; -- LUI x4, 0x80002
+04A : 01422023; -- SW x20, 0(x4) (update LED)
+04B : 02FAF337; -- LUI x6, 0x02FAF
+04C : 08030313; -- ADDI x6, x6, 0x080 (prepare to load timer)
+04D : 0380006F; -- JAL x0, Exit (offset 56)
+```
+
+### State 1
+```asm
+-- Transition (state 1)
+04E : 00000A13; -- ADDI x20, x0, 0 (x20 = 0, turn off LEDs)
+04F : 00100593; -- ADDI x11, x0, 1 (x11 = 1, go to state 2 next time)
+050 : 00000513; -- ADDI x10, x0, 0 (reset x10)
+051 : 80002237; -- LUI x4, 0x80002 
+052 : 01422023; -- SW x20, 0(x4) (store LEDS to turn off)
+053 : 0007A337; -- LUI x6, 0x0007A
+054 : 12030313; -- ADDI x6, x6, 0x120 (prepare timer for 0.1s, 7A120 is 500,000)
+055 : 0180006F; -- JAL x0, Exit (offset 24)
+```
+
+### State 2
+```asm
+-- Count-up (state 2)
+056 : 00150513; -- ADDI x10, x10, 1 (increment a0)
+057 : 80002237; -- LUI x4, 0x80002
+058 : 00A22023; -- SW x10, 0(x4) (update LEDs to show x10)
+059 : 0007A337; -- LUI x6, 0x0007A
+05A : 12030313; -- ADDI x6, x6, 0x120 (reset timer for 0.1s)
+```
+
+### State 3
+```asm
+-- Freeze Logic (state 3)
+05F : 30005073; -- CSRWI mstatus, 0  (turn off all interrupts)
+060 : FFDFF06F; -- JAL x0, -4, (don't go back to main stay here)
+[061..3FF] : 00000000;
+```
+
+### Trap Handler exit for States 0, 1 and 2
+```asm
+-- Exit (part of state 0, 1 and 2)
+05B : 800012B7; -- LUI x5, 0x80001
+05C : 0002A223; -- SW x0, 4(x5)
+05D : 0062A023; -- SW x6, 0(x5) (set timer)
+05E : 30200073; -- MRET
+```
+
+- We have made use of branch instructions to implement the FSM conditions.
+- We have made use of the fact that the timer resets every time we set it, but also that we can change what it's set to.
+- To stop the program once we press the trigger, we disable all interrupts after it is pressed and don't leave the trap handler.
+- We increment a0 by 1 every 10ms, so to determine your reaction time, you must multiply a0 (in hex) by 0.01.
+
+This leads to the satisfying demonstration below:
+
+https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
+> Note, we reused the binary counter logic here to show how cool it looks at a faster speed
+
+Here, the reaction time would be 363 (0x16b) * 0.01 = 3.63s.
 
 ---
+
 # Out-of-Order Superscalar Processor
 
 ## Table of Contents
@@ -6058,13 +6267,13 @@ Here are the results:
 
 The concepts implemented in this out-of-order superscalar processor extend beyond the scope of the lecture material, requiring extensive independent research into advanced computer architecture techniques pioneered in the 1960s and refined through decades of processor development.
 
-- [Superscalar Processor](https://en.wikipedia.org/wiki/Superscalar_processor)
 - [Out-of-Order Processor Overview from ScienceDirect](https://www.sciencedirect.com/topics/computer-science/out-of-order-processor)
 - [Register Renaming Techniques](https://fiveable.me/advanced-computer-architecture/unit-6/register-renaming-techniques/study-guide/6kjpVCqRFiiGhaTX)
 - [The Reorder Buffer](https://docs.boom-core.org/en/latest/sections/reorder-buffer.html)
 - [The Rename Stage](https://docs.boom-core.org/en/latest/sections/rename-stage.html)
 
 ---
+
 
 # Out-of-Order Superscalar Processor with Load Instructions
 
@@ -6901,14 +7110,3 @@ Here are the results:
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
 
 ---
-
-
-
-
-
-
-
-
-
-
-
