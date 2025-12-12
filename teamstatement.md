@@ -454,7 +454,7 @@ For our CSR module, which we implemented in the execute stage, we first initiali
 | CSRRSI | 110 | rd = CSR[addr], CSR[addr] = CSR[addr] \| uimm[4:0] |
 | CSRRCI | 111 | rd = CSR[addr], CSR[addr] = CSR[addr] & ~uimm[4:0] |
 
-For Zba, we had to implement these instructions by modifying the ALU and Control modules where the number indicates how many times we shift before we add:
+For Zba, we had to implement these instructions by modifying the ALU and Control modules, where the number indicates how many times we shift before we add:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
 
@@ -466,10 +466,12 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 
 #### Schematic
 
-
 ---
 ### FPGA and Interrupts
 
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
+
+We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#FPGA:-F1-test-with-external-and-timer-interrupts-on-DE-10-Lite)
 
 
 
