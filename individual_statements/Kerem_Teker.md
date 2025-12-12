@@ -23,7 +23,8 @@ In a pipelined CPU, multiple instructions are executed in parallel. Hazards aris
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image1.png)
 
-In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. 
+In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation immediately back to the register file if the subseuent instructions are dependent upon that register.
+
 A special case arises when the first instruction is a “Load” instruction.
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image2.png)
@@ -649,7 +650,7 @@ Adding RV32M required three main changes:
    - Signed/unsigned division and remainder with RISC‑V corner cases (divide‑by‑zero, `-2^31 / -1`).
 3. Extend control decode for `opcode == OPC_OP` and `funct7 == 7'b0000001`, mapping `(funct3, funct7)` → `ALUCtrl` while leaving all R‑type control signals unchanged.
 
-Everything else in the CPU (pipeline registers, hazard unit, branch logic, memories) is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute. Integration was hence modular and local to ALU/control unit modules. Behaviour matches the RISC‑V spec, including all specified corner cases.
+Everything else in the CPU is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute. Integration was hence modular and local to ALU/control unit modules. Behaviour matches the RISC‑V spec, including all specified corner cases.
 
 
 ## 5. ALU test cases (selected assortment)
@@ -721,6 +722,6 @@ What It Tests
 ---
 
 ### 6 Trade-offs & notes
-- Simplicity vs. timing: My ombinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+- Simplicity vs. timing: My combinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 - On the other hand, only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards. This was benefitial in that my design integrated smoothly with the rest of the CPU, including our branch-predictor, multi-level cache, and Z-extensions.
 
