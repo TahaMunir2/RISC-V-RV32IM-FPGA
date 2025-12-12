@@ -25,7 +25,7 @@ On this page, you can find links to the:
 
 ## Compilation of READMEs
 
-## [Book](https://github.com/TahaMunir2/Team5/blob/main/book.md)
+## [Master Book](https://github.com/TahaMunir2/Team5/blob/main/book.md)
 
 
 ## Contributions table
