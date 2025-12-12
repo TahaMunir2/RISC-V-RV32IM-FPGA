@@ -1,5 +1,4 @@
-
-## Overview
+# Taha Munir (02562044) Individual Statement
 
 ## Table of Contents
 
@@ -13,6 +12,10 @@
     - [F1 FSM Video](#f1-fsm-video)
 - [Mistakes](#mistakes)
 - [Reflection](#reflection)
+
+---
+
+## Overview
 
 My main contributions in chronological order were:
 - Test Benching and Top-level integration for Lab 4
