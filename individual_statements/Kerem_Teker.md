@@ -14,8 +14,48 @@ My main contributions in chronological order was:
 
 
 
-### . PC block
+### 1. PC block
+#### Inputs
 
+```systemverilog
+    input logic clk,
+    input logic [WIDTH-1:0] Imm_op, 
+    input logic [WIDTH-1:0] ALU,
+    input logic rst,
+    input logic [1:0] pc_src,
+    output logic [WIDTH-1:0] pc,
+    output logic [WIDTH-1:0] pc_save
+```
+> Width is 32 as our CPU is 32-bit
+- We need Imm_op to add an offset to PC for JAL instructions
+- We need ALU to add PC and rs1 for JALR instructions
+- We need pc_src to determine how to increment PC
+- We output pc_save for saving return addresses for jump instructions
+
+#### Logic
+
+```systemverilog
+logic [WIDTH-1:0] branch_pc, inc_pc, internal_pc;
+assign branch_pc = internal_pc+Imm_op;
+assign inc_pc = internal_pc+4;
+assign pc_save = inc_pc;
+
+always_ff @(posedge clk)
+    if (rst) internal_pc <= 32'hBFC00000;
+    else begin
+        case (pc_src)
+            2'b00: internal_pc <= inc_pc;    // PC + 4
+            2'b01: internal_pc <= branch_pc; // JAL
+            2'b10: internal_pc <= ALU;       // JALR
+            default: internal_pc <= inc_pc;  
+        endcase
+    end
+assign pc = internal_pc;
+```
+
+- Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
+
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
 
 ### 2. doit.sh script
 
@@ -1053,3 +1093,10 @@ We also need to deal with RAW (read after write) hazards in the decode stage, wh
 ```
 
 Now that the hazards are all dealt with, we can focus on adding FPGA-specific hardware to our SystemVerilog code. This includes GPIO (for LEDS), 7-segment display mapping, a debouncer and an FPGA Wrapper.
+
+## Mistakes made
+
+## Reflection
+
+
+
