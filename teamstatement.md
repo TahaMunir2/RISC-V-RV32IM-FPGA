@@ -435,6 +435,8 @@ M instructions are treated as ordinary R-type ALU operations:
 
 Our implementation is purely combinational (single-cycle). Combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 
+#### Schematic
+
 ---
 
 ### Z-type Extensions (Zicsr and Zba)
