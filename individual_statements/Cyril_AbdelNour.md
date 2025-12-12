@@ -1159,7 +1159,7 @@ Looking back at this project, I'm genuinely grateful for the experience. It push
 
 The most valuable outcome is the set of skills I'll carry into my career. Debugging with GTKWave taught me how to systematically trace through a complex system, choosing the right signals to watch and reasoning about timing. Early on, the processor felt overwhelming with so many signals. By the end, I could follow a single instruction through the entire pipeline cycle-by-cycle. This kind of methodical analysis applies far beyond processor design.
 
-I also became much more comfortable thinking in hardware rather than software. SystemVerilog looks like code, but it describes circuits. There were moments where I wrote something that made sense sequentially, only to realize it would synthesize into something completely wrong because hardware is concurrent. The mindset shift of understanding what's happening in parallel rather than step-by-step—is something I'll use in any future hardware work.
+I also became much more comfortable thinking in hardware rather than software. SystemVerilog looks like code, but it describes circuits. There were moments where I wrote something that made sense sequentially, only to realize it would synthesize into something completely wrong because hardware is concurrent. The mindset shift of understanding what's happening in parallel rather than one after another is something I'll use in any future hardware work.
 
 ### Collaboration
 
