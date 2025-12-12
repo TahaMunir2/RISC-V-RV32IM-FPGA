@@ -354,10 +354,6 @@ What It Tests
 ---
 
 ### 6 Trade-offs & notes
-- Simplicity vs. timing: combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
-- Only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards.
+- Simplicity vs. timing: My combinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+- On the other hand, only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards. This was benefitial in that my design was modular and integrated smoothly with the rest of the CPU, including our branch-predictor, multi-level cache, and Z-extensions.
 
-Summary
-- RV32M support implemented in ALU + control with unique 5‑bit `ALUCtrl` encodings for all eight M instructions.
-- Behaviour matches the RISC‑V spec, including all specified corner cases.
-- M instructions forward and write back like other R-type ALU operations; integration is modular and local to ALU/control.
