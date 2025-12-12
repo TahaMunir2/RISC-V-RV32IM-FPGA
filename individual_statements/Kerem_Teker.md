@@ -447,13 +447,6 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 ```
 ---
 
-#### 3. Schematic
-
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_pipelining.png)
-
-
----
-
 ### 5. M-extension
 #### 1. Scope
 
