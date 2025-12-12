@@ -1,8 +1,4 @@
 # Yusuf Kerem Teker: Personal contributions and reflection
-## Overview
-
-
-
 ## Succint Summary of contributions
 My main contributions in chronological order was:
 - Designing the Program Counter block for our single-cycle design
@@ -15,23 +11,6 @@ My main contributions in chronological order was:
 
 
 ### 1. PC block
-#### Inputs
-
-```systemverilog
-    input logic clk,
-    input logic [WIDTH-1:0] Imm_op, 
-    input logic [WIDTH-1:0] ALU,
-    input logic rst,
-    input logic [1:0] pc_src,
-    output logic [WIDTH-1:0] pc,
-    output logic [WIDTH-1:0] pc_save
-```
-> Width is 32 as our CPU is 32-bit
-- We need Imm_op to add an offset to PC for JAL instructions
-- We need ALU to add PC and rs1 for JALR instructions
-- We need pc_src to determine how to increment PC
-- We output pc_save for saving return addresses for jump instructions
-
 #### Logic
 
 ```systemverilog
@@ -52,10 +31,17 @@ always_ff @(posedge clk)
     end
 assign pc = internal_pc;
 ```
+For the PC block, key design decisions that I made were in accuracy, efficiency and modularity:
+- An intermediate bus, `internal_pc`, was used for accomplishing easy addition of new update values for PC. For example, when implementing stalls for pipelining, `internal_pc<=pc` was easily implemented. Making sure the value of PC goes through an intermediate and internal bus also enabled me to avoid making silly mistakes.
+- Variable names were picked to clearly and uniquely indicate the case for the new value of PC.
 
-- Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
+I kept in mind the following important considerations for this section:
+- ROM starts at the address BFC00000 due to the memory map we were provided in the project brief
+- PC must be conserved as a return address when jump instructions occur
+- The PC source must toggle appropriately between the PC as normally incremented and the PC for branch and jump and link instructions
+- JALR instructions involving addition operations with PC in ALU 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+
 
 ### 2. doit.sh script
 
@@ -200,6 +186,8 @@ The delay that I introduced at the beginning of each cycle allows us to have the
 
 
 #### PDF tests
+Displaying the value from gaussian.mem, noisy.mem, etc. on every clock cycle caused the Vbuddy output to appear as a flatline because the display updates far faster than the underlying data meaningfully changes. The memory files we used (gaussian.mem, triangle.mem, etc) represent a discrete set of sampled values (e.g. a PDF or noisy signal), but when the same or slowly changing value is driven to the display at the full system clock rate, consecutive frames become visually indistinguishable. Since Vbuddy effectively renders a time-averaged or human-perceivable signal rather than individual clock transitions, the rapid repetition of identical (or near-identical) values collapses into a constant level on screen, giving the appearance of a flatline rather than a varying waveform. That is why the following code was developped, so the display is only updated every 4 clock cycles (this value can be changed as desired) and only if the previous value was not the exact same:
+
 ```cpp
 TEST_F(CpuTestbench, noisy)
 {
@@ -255,43 +243,7 @@ TEST_F(CpuTestbench, noisy)
     // CpuTestbench::TearDown() will be called by gtest automatically
 }
 ```
-
-##### gaussian.mem
-
-
-
-
-https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
-
-
-
-
-##### triangle.mem
-
-
-
-
-https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
-
-
-
-##### noisy.mem, 1
-
-
-
-
-
-https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
-
-
-
-
-##### noisy.mem, 2
-
-
-
-
-https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
+For the videos, see the single-cycle-cpu branch.
 
 ### 4. Hazard Unit
 #### 1.	Why hazards occur in a pipeline? 
