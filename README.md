@@ -12,11 +12,11 @@
     * [3.2 Decoding M operations under OPC_OP](#32-decoding-m-operations-under-opc_op)
 * [4. Interaction with the Existing Pipeline and Hazards](#4-interaction-with-the-existing-pipeline-and-hazards)
 * [5. Summary](#5-summary)
-* [6. ALU test cases (selected) — exact format](#5-alu-test-cases-selected--exact-format)
-    * [6.1.11 ALU Test: DIVU (Unsigned Division by Zero)](#5111-alu-test-divu-unsigned-division-by-zero)
-    * [6.1.12 ALU Test: REM (Remainder with Divisor Zero)](#5112-alu-test-rem-remainder-with-divisor-zero)
-    * [6.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)](#5113-alu-test-remu-unsigned-remainder-with-divisor-zero)
-* [7. Trade-offs & notes](#6-trade-offs--notes)
+* [6. ALU test cases (selected) — exact format](#6-alu-test-cases-selected--exact-format)
+    * [6.1.11 ALU Test: DIVU (Unsigned Division by Zero)](#6111-alu-test-divu-unsigned-division-by-zero)
+    * [6.1.12 ALU Test: REM (Remainder with Divisor Zero)](#6112-alu-test-rem-remainder-with-divisor-zero)
+    * [6.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)](#6113-alu-test-remu-unsigned-remainder-with-divisor-zero)
+* [7. Trade-offs & notes](#7-trade-offs--notes)
 
 ---
 
