@@ -471,7 +471,7 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 
 For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
 
-We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#FPGA:-F1-test-with-external-and-timer-interrupts-on-DE-10-Lite)
+We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#FPGA-with-Trap-Handler-Routine)
 
 
 
@@ -621,10 +621,10 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 ---
 
-### FPGA: F1 test with external and timer interrupts on DE-10 Lite
+### FPGA with Trap Handler Routine
 
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
-
+> F1 test with external and timer interrupts on DE-10 Lite
 ---
 
 ## Future Considerations
