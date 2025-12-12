@@ -417,9 +417,6 @@ We implemented the full RV32M integer multiply/divide extension, adding eight in
 
 **64-bit Product for Multiplication:** We extend operands to 64 bits before multiplying, then select either the low or high 32 bits. This is necessary because SystemVerilog's `a * b` produces a result with width equal to the wider operand—if we multiplied 32-bit values, the upper bits would be lost.
 
-
-**KEREM TO WRITE IN THE SECTION ABOVE**
-
 **RISC-V Division Edge Cases:** The spec defines specific behaviour for corner cases:
 
 | Condition | DIV/DIVU Result | REM/REMU Result |
@@ -448,9 +445,16 @@ We decided to implement 2 new extensions, the Zicsr extension, which entailed ad
 
 For our CSR module, which we implemented in the execute stage, we first initialised a register array of size 4096 and set up combinational logic for 6 new instructions. They were all atomic read-modify-write instructions, as in they read the old value of the control status register into rd and modify rd all in 1 instruction. The I at the end of the instructions determines if we use a register or an immediate for the operations.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg)
+| Instruction | funct3 | Operation |
+|-------------|--------|-----------|
+| CSRRW | 001 | rd = CSR[addr], CSR[addr] = rs1 |
+| CSRRS | 010 | rd = CSR[addr], CSR[addr] = CSR[addr] \| rs1 |
+| CSRRC | 011 | rd = CSR[addr], CSR[addr] = CSR[addr] & ~rs1 |
+| CSRRWI | 101 | rd = CSR[addr], CSR[addr] = uimm[4:0] |
+| CSRRSI | 110 | rd = CSR[addr], CSR[addr] = CSR[addr] \| uimm[4:0] |
+| CSRRCI | 111 | rd = CSR[addr], CSR[addr] = CSR[addr] & ~uimm[4:0] |
 
-For Zba, we had to implement these instructions by modifying the ALU and Control modules:
+For Zba, we had to implement these instructions by modifying the ALU and Control modules where the number indicates how many times we shift before we add:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
 
