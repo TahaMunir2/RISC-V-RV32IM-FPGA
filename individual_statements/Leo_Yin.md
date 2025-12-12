@@ -173,6 +173,8 @@ else if (fetch_i && fetch_d) begin
 end
 ```
 
+
+
 Furthermore, after running into complications with the writeback logic, I turned again to real world cache designs to better understand how it should be implemented. This led me to redraw the L2 schematic again to incorporate writeback buffers. These buffers allowed data to be captured immediately and processed later, preventing data loss during long writeback operations. They also resolved the limitation of having only a single writeback port with a fixed bus width while needing to handle both L1 writeback data (4 words) and L2 writeback data (8 words). I used a state machine to sequence the 8 word L2 writeback through the 4 word port.
 
 | L2wb_buffer | L2wb_buffer_next (if writeback succesfful) |
@@ -239,6 +241,8 @@ hit2_wb = (cache[set_wb].block2.tag == tag_bits_wb && cache[set_wb].block2.valid
 hit3_wb = (cache[set_wb].block3.tag == tag_bits_wb && cache[set_wb].block3.valid);
 miss_wb = ~(hit0_wb | hit1_wb | hit2_wb | hit3_wb);
 ```
+
+
 
 Similar to the L1 caches, I decided to use a default fill in pattern of 0-3 on cold misses, and LRU eviction logic for capacity misses.
 
