@@ -301,7 +301,23 @@ Due to the extreme depth of the implementation, please refer to: [GitHub README]
 #### F1 FSM Video
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
 
+---
+
 ## Mistakes
 
+Although we were able to achieve so much in just a few weeks, we were still prone to many mistakes and learning opportunities. For example, at the start, we struggled with task delegation. I found myself having to do the majority of the work for lab 4 and the single cycle, which led to the CPU mostly developing under my design philosophy and the others having trouble catching up with all the changes I made. We were able to better understand how to delegate tasks as the project went o,n to more fairly distribute the workload so everyone was able to understand what was changing in our CPU.
+
+I also did not fully utilise gtkWave at first, choosing to only use it as a last resort when test benching lab 4; however, I quickly realised how brilliant it was, especially after we pipelined our CPU and broke the signals into dozens upon dozens of wires.
+
+I also found developing on the FPGA extremely daunting and wish I had spent more time initially trying to understand FPGAs by using the CAS labs as a reference instead of trying to jump right in. After the first day of hopelessly wandering through the Quartus interface I quickly realised I needed to take time to research it, so I did, instead of skipping to the fun part and found it very useful to use the EEE Year 2 resources as guidance on how to get started.
+
+---
+
 ## Reflection
+
+Overall, we achieved a lot more than we could have ever imagined in this project and I am proud of my contributions as well as the work of the group overall. Going in 3 of us had already worked together quite a bit in projects last year so we were quite familiar with each other as project partners and knew we were compatible and this project helped solidify that belief, by the end of the project we were spending 10 hours straight in the EEE building all designing debugging and planning together. 
+
+I tried pushing our learning to the absolute limits of what we were taught implementing all of what we were suggested to do in the lectures; such as branch prediction, split heirarchical cache and superscalar as well as stuff we were told probably wasn't worth our time such as porting onto FPGA and we were also able to tie in concepts from other modules like software for the trap handler and synchronisation of the interrupts. I learnt a lot about researching as well as planning and organising my thoughts before jumping into a design.
+
+If we had more time, I would have probably focused on implementing the rest of the extensions onto our FPGA by adding a branch predictor with a buffer, adding cache and implementing appropriate stalls for division instructions and taking advantage of DSP for multiplication. I could have also added more inputs to our CPU, such as using the 10 switches on the FPGA to have different MMIO usecases. Perhaps I could have added software interrupts and exceptions as well to further expand the utility of our Control Status Register, as in a completely RISC-V implementation, it has a very wide array of functionality. However, given the time restraints of the project, I am very satisfied with all that I was able to accomplish. 
 
