@@ -228,6 +228,8 @@ For pipelining, my work was simpler; I simply had to pass the registers through 
 
 This was repeated for the rest of the pipeline registers.
 
+---
+
 ### Z Extensions:
 
 I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
@@ -278,6 +280,8 @@ Key Points:
 I also added Zba instructions while I was at it, as they seemed quite easy and helped simplify shift and add instructions into just 1 atomic instruction:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+
+---
 
 ### Interrupts and FPGA:
 
