@@ -9,6 +9,8 @@ At the beginning of each stage of the project, our team established a clear divi
 
 Overall, this CPU project has been a practical demonstration of technical cooperation, disciplined planning, and organised development. Our final implementation not only reflects the functionality of a working RISC-V processor but also the effectiveness of our workflow, communication, and mutual accountability as a team. We all worked with passion, which we believe drove us to produce the results that we revel in.
 
+---
+
 ## Quick Start
 For this project, in accordance with the guidance provided in the Project Brief, we implemented the full set of 37 instructions in the RISCV32I architecture, and the proposed extensions of Pipelining and Cache. We implemented 2 levels of cache: 2-way associative split level 1 cache (L1d and L1i) and 4-way associative level 2 cache. 
 
@@ -20,6 +22,8 @@ Our final design is split amongst 3 different models:
 - **5-stage pipelined, with hierarchical cache and a 2-bit branch predictor RV32IM_Zicsr_Zba Processor**
 - **5-stage pipelined Out-of-Order Superscalar Processor**
 - **5-stage FPGA-ported Processor with 2 types of interrupts and a trap handler**
+
+---
 
 ## Methodology
 
@@ -33,6 +37,8 @@ We decided to implement both CPU testing and unit testing each time we added a n
 We initially approached each branch by breaking it into sections as suggested by the project brief (i.e. 1 person does testing, 1 does data path, etc.), and we continued this approach until everyone had testbenched 1 branch each to make sure everyone was comfortable with both hardware and software. However, after that we realised integrating code between different people can be tricky so we decided to focus on the theoretical implementation to each branch as a group but assigning the actual coding to 1 person, this is reflected in our contribution table where initially each section is split up evenly between each person and then later on 1 person does the whole section, although everyone was still involved in the theoretical appraoch. Due to this, and also for complexity and time issues, we forked our implementation at branch prediction and ended up with 3 different CPU's as our final implementations, as they were developed in parallel, as shown in the diagram below:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
+
+---
 
 ## Implementation and Design Decisions:
 
@@ -566,41 +572,21 @@ The delay that I introduced at the beginning of each cycle allows us to have the
 
 ##### gaussian.mem
 
-
-
-
 https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
-
-
-
 
 ##### triangle.mem
 
-
-
-
 https://github.com/user-attachments/assets/bff91a51-b9f0-47c0-a872-223c2331e0df
-
-
 
 ##### noisy.mem, 1
 
-
-
-
-
 https://github.com/user-attachments/assets/770a829a-33fc-433d-b491-fc4e19501dce
-
-
-
 
 ##### noisy.mem, 2
 
 The reason for the second video showing noisy.mem being dislayed on Vbuddy is to emphasize the custom displaying frequency capability that I achieved by choosing to display the value of our output register a0 every N counter cycles. This allows us to fit the shapes on the Vbuddy display as we wish.
 
-
 https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
-
 
 ### Superscalar arithmetic: Shift Operations (`sup_shifts.s`)
 ```asm
@@ -631,10 +617,9 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 ### FPGA: F1 test with external and timer interrupts on DE-10 Lite
 
-
 https://github.com/user-attachments/assets/2adacb26-7459-44d5-94f8-997369829358
 
-
+---
 
 ## Future Considerations
 
@@ -652,9 +637,7 @@ The challenge is that misprediction penalties in superscalar processors are seve
 
 Our simple 2-bit predictor would help, but achieving real performance gains requires a much more sophisticated predictor. Modern processors like the Cortex-A77 use neural-network-based predictors precisely because the cost of misprediction is so high in wide out-of-order machines.
 
-
 **Store Instruction Handling:** Stores introduce complexity because different store operations could write to the same area in memory in a different order from the one specified in the assembly program. Hence, we need to implement Stores such that they would only write to the data cache at commit time.
-
 
 ### RISC-V Vector Extension (RVV)
 
