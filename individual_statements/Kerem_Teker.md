@@ -19,6 +19,10 @@ Control Hazards are caused by branch instructions where the condition required f
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Untitled.png)
 
+It is only at the point where the red arrow is, which is 2 clock cycles after the `beq` instruction is fetched from instruction memory, that the branch condition predicate is determined in the `EXECUTE` stage:
+
+`FETCH` --> `DECODE` --> `EX`
+
 #### 2.	Motivation for/responsibilities of the hazard unit
 Our hazard unit encapsulates all of the regulatory logic required to tackle the issues introduced by pipelining, including both data hazards and control hazards. Hence, the hazard unit is a single comprehensive module that triggers and employs stalling, flushing, and forwarding mechanisms (what these mechanisms do will be explained later together with the solutions). We chose this unitary and holistic approach to resolving both kinds of hazards because the input signals required to generate the relevant control signals for stalling, flushing and forwarding are the same or similar.
 
