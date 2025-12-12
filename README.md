@@ -290,7 +290,8 @@ In summary, the primary goals of the Hazard Unit are:
 #### Data hazard resolution: forwarding logic
 For most arithmetic and logical instructions, the result becomes available before Write-Back, either at the end of the `EX` or `MEM` stage, allowing us to resolve these hazards without inserting stalls by forwarding the result directly to the ALU inputs.
 The Hazard Unit implements this forwarding by checking whether the source registers used by the instruction currently in the Execute (EX) stage match the destination registers of instructions that are still in the Memory (MEM) or Write-Back (WB) stages.
-Forwarding Decision Conditions (PUT the code for forwarding only somewhere around here or right next)
+
+Forwarding Decision Conditions:
 ```systemverilog
 always_comb begin
     //Default:no forwarding
