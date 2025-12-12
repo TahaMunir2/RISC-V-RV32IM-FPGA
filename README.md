@@ -590,6 +590,8 @@ The delay that I introduced at the beginning of each cycle allows us to have the
 
 
 ### PDF tests
+Displaying the value from gaussian.mem, noisy.mem, etc. on every clock cycle caused the Vbuddy output to appear as a flatline because the display updates far faster than the underlying data meaningfully changes. The memory files we used (gaussian.mem, triangle.mem, etc) represent a discrete set of sampled values (e.g. a PDF or noisy signal), but when the same or slowly changing value is driven to the display at the full system clock rate, consecutive frames become visually indistinguishable. Since Vbuddy effectively renders a time-averaged or human-perceivable signal rather than individual clock transitions, the rapid repetition of identical (or near-identical) values collapses into a constant level on screen, giving the appearance of a flatline rather than a varying waveform. That is why the following code was developped, so the display is only updated every 4 clock cycles (this value can be changed as desired) and only if the previous value was not the exact same:
+
 ```cpp
 TEST_F(CpuTestbench, noisy)
 {
