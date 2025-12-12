@@ -43,7 +43,7 @@ On this page, you can find links to the:
 |               | Top Level Integration     |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |                    |        *       |               |
 | [Full 37 Instructions implementation](https://github.com/TahaMunir2/Team5/tree/FULL-RV32I)      | Control Unit             |                   |     **                  |                   |                       |
-|          | Data Path             |                       |                 **      |         *         |                       |
+|          | Data Path             |                       |                 **      |                  |                       |
 |        | Program Counter Block             |                       |                 **      |                   |                       |
 |      | Integration             |                       |                  **     |                   |                       |
 |      | Testing and Verification          |                       |            **           |                   |                       |
