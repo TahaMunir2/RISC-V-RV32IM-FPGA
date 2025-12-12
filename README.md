@@ -405,12 +405,15 @@ How a bubble/NOP is implemented is discussed elsewhere, but in essence, all of t
  
 In the image, the first instruction in the sequence is “beq s1, s2, L1”. In the first clock cycle, the instruction is fetched from instruction memory and fed to the pipeline register connecting the fetch stage to the decode stage. In the second clock cycle, the branch instruction is decoded and the relevant registers read from the register file. Meanwhile, the next instruction – “sub s8, t1, s3” – is fetched from instruction memory. Only by the third clock cycle, does the ALU determine that s1 and s2 are equal. However, two new instructions have been fetched already from instruction memory under the speculative assumption that the branch will not be taken. The solution is to “flush” the fetch and decode stages. To do this, the hazard unit outputs a control signal to the Fetch-to-Decode and Decode-to-Execute pipeline registers. Our pipeline registers have internal logic that synchronously sets the contents of the pipeline registers to 0 once the one-bit control signal from the hazard unit triggers flushing. Since the PC is updated to the branch target, the pipeline then continues with correct instructions.
 
+Below is the code implementing this simple logic:
 ```systemverilog
 if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
         flush_f_d = 1;
         flush_d_exec = 1;
     end
 ```
+
+PC source is sufficient for determining a branch/jump instruction.
 ---
 
 ## 3. Schematic
