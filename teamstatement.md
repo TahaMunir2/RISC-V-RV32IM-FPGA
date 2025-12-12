@@ -5,9 +5,6 @@
 - [Introduction](#introduction)
 - [Quick Start](#quick-start)
 - [Methodology](#methodology)
-  - [Collaboration](#collaboration)
-  - [Testing Philosophy](#testing-philosophy)
-  - [Shift in Design Approach](#shift-in-design-approach)
 - [Implementation and Design Decisions](#implementation-and-design-decisions)
   - [Single-Cycle Reduced RV32I CPU](#single-cycle-reduced-rv32i-cpu)
   - [Full RV32I (37-Instruction)](#full-rv32i-37-instruction)
@@ -631,10 +628,9 @@ This branch extends the out-of-order superscalar processor to support load instr
 
 ## Over-arching Results
 
-## VBuddy results
+### VBuddy results
+
 #### F1 test on Vbuddy
-
-
 
 https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
 
