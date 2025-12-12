@@ -19,6 +19,76 @@ My main contributions in chronological order was:
 
 ### 2. doit.sh script
 
+The crux of the issue was that macOS does not ship realpath by default.
+So every `realpath` call in the doit.sh file had to be replaced with POSIX-portable logic. Here is the final version of the code:
+```bash
+#!/bin/bash
+
+# This script runs the testbench
+# Usage: ./doit.sh <file1.cpp> <file2.cpp>
+
+# Constants
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TEST_FOLDER="$SCRIPT_DIR/tests"
+RTL_FOLDER="$SCRIPT_DIR/../rtl"
+GREEN=$(tput setaf 2)
+RED=$(tput setaf 1)
+RESET=$(tput sgr0)
+
+# Variables
+passes=0
+fails=0
+
+# Handle terminal arguments
+if [[ $# -eq 0 ]]; then
+    # If no arguments provided, run all tests
+    files=(${TEST_FOLDER}/*.cpp)
+else
+    # If arguments provided, use them as input files
+    files=("$@")
+fi
+
+cd $SCRIPT_DIR
+
+# Wipe previous test output
+rm -rf test_out/*
+
+# Iterate through files
+for file in "${files[@]}"; do
+    name=$(basename "$file" _tb.cpp | cut -f1 -d\-)
+
+    # If verify.cpp -> we are testing the top module
+    if [ $name == "verify.cpp" ]; then
+        name="top"
+    fi
+
+    # Translate Verilog -> C++ including testbench
+    verilator   -Wall --trace \
+                -cc ${RTL_FOLDER}/${name}.sv \
+                --exe ${file} \
+                -y ${RTL_FOLDER} \
+                --prefix "Vdut" \
+                -o Vdut \
+                -LDFLAGS "-lgtest -lgtest_main -lpthread"
+
+    # Build C++ project with automatically generated Makefile
+    make -j -C obj_dir/ -f Vdut.mk
+
+    # Run executable simulation file
+    ./obj_dir/Vdut
+
+    # Check if the test succeeded or not
+    if [ $? -eq 0 ]; then
+        ((passes++))
+    else
+        ((fails++))
+    fi
+
+done
+
+# Save obj_dir in test_out
+mv obj_dir test_out/
+```
 
 ### 3. Tests on Vbuddy
 
@@ -877,3 +947,109 @@ What It Tests
 - Simplicity vs. timing: My combinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
 - On the other hand, only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards. This was benefitial in that my design integrated smoothly with the rest of the CPU, including our branch-predictor, multi-level cache, and Z-extensions.
 
+
+
+### Memory Adaptation for FPGA
+
+Before I describe what we implemented in the FPGA, I must tell you what we omitted; we branched off the Z extension branch, so superscalar and cache were not included in the rtl, due to time restraints, and they were still being developed, and fears of complexity added by them. M instructions were removed as division was causing huge timing delays in compilation in Quartus. Branch prediction and evalprediction modules had to be removed as memory was changed to synchronous, which meant their logic no longer applied, and a buffer and much more complex logic would need to be thought up to keep their functionality. This meant Z instructions and Full RV32I with Pipelining were still included in our FPGA implementation.
+
+To program the FPGA, we had to use a program called Quartus. We were able to put our .sv files onto Quartus and use its many, many features to set up the right conditions for the FPGA to allow us to port our CPU onto it.
+
+The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. We MUST make sure to uncheck make the output registered or else it will take 2 cycles to read (I had this issue for days). For this imem block, we would also need to initialise its memory content using a program. mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. We initialise a new block inside our in-memory block like so:
+
+#### Memory:
+
+```systemverilog
+    imem_ram imem_inst (
+        .clock   (clk),
+        .address (word_index),
+        .data    (32'b0),   // never write
+        .wren    (1'b0),
+        .q       (q)
+    );
+```
+
+- Note word_index is the address with the bottom 2 bits taken out, as they are always assumed to be 0.
+
+We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation. We would need to compute the byteena logic as follows:
+
+```systemverilog
+    always_comb begin
+        byteena = 4'b0000;
+        case (SizeWrite)
+            2'b00: begin
+                // store byte
+                byteena = 4'b0001 << byte_offset;
+            end
+            2'b01: begin
+                // store halfword 
+                if (byte_offset[1] == 1'b0)
+                    byteena = 4'b0011;
+                else
+                    byteena = 4'b1100;
+            end
+            default: begin
+                // store word
+                byteena = 4'b1111;
+            end
+        endcase
+    end
+```
+
+And now we would need to call the new dmem_ram inside the datamem module:
+
+```systemverilog
+    dmem_ram dmem_inst (
+        .clock   (clk),
+        .address (word_index),
+        .data    (WD),
+        .wren    (MemWrite),
+        .byteena (byteena),
+        .q       (raw_word)
+    );
+```
+- Note **`raw_word`** is the word without load-size or load-sign logic implemented.
+
+#### Top:
+We must take note that, as reading memory is now synchronous, we must not pass the outputs of the memory blocks through the pipeline registers; instead, they can go straight to the next stage.
+
+However, this also means we must now change the logic, as our previous instructions assumed that we had synchronous reads. This includes adding a stall buffer in top, as when we call stall, our BRAM has already gotten our instruction, and if we don't hold onto it will get overwritten and lost:
+
+```systemverilog
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            Stall_Active <= 0;
+            InstrD_Saved <= 0;
+        end else begin
+            Stall_Active <= flush_d_exec; 
+            if (flush_d_exec && !Stall_Active) begin
+                InstrD_Saved <= InstrF_raw;
+            end
+        end
+    end
+```
+We must also kill the cycle that occurs while we are branching, as even though we update the address our ROM is accessing, as it is asynchronous, it still grabs the previous address, which will run an instruction we don't want to run:
+
+```systemverilog
+    always_ff @(posedge clk) begin
+        if (rst) kill_cycle <= 0;
+        else kill_cycle <= (JumpE || false_prediction || trap_en || mret_en); 
+    end
+
+    assign InstrF = (kill_cycle || rst) ? 32'h00000013 : // addi x0, x0, 0 or NOP
+                    (Stall_Active) ? InstrD_Saved : InstrF_raw;
+```
+
+We also need to deal with RAW (read after write) hazards in the decode stage, while there are data dependancies in the writeback stage, by skipping the registers and forwarding directly:
+
+```systemverilog
+    always_comb begin
+    if (RegWriteW && (Rs1D != 0) && (Rs1D == RdW)) RD1D_Correct = ResultW;
+    else  RD1D_Correct = RD1D;
+
+    if (RegWriteW && (Rs2D != 0) && (Rs2D == RdW))  RD2D_Correct = ResultW;
+    else RD2D_Correct = RD2D;
+    end
+```
+
+Now that the hazards are all dealt with, we can focus on adding FPGA-specific hardware to our SystemVerilog code. This includes GPIO (for LEDS), 7-segment display mapping, a debouncer and an FPGA Wrapper.
