@@ -4,9 +4,9 @@
 # Usage: ./doit.sh <file1.cpp> <file2.cpp>
 
 # Constants
-SCRIPT_DIR=$(dirname "$(realpath "$0")")
-TEST_FOLDER=$(realpath "$SCRIPT_DIR/tests")
-RTL_FOLDER=$(realpath "$SCRIPT_DIR/../rtl")
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TEST_FOLDER="$SCRIPT_DIR/tests"
+RTL_FOLDER="$SCRIPT_DIR/../rtl"
 GREEN=$(tput setaf 2)
 RED=$(tput setaf 1)
 RESET=$(tput sgr0)
