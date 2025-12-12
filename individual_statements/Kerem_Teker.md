@@ -6,10 +6,8 @@
 ## Succint Summary of contributions
 My main contributions in chronological order was:
 - Designing the Program Counter block for our single-cycle design
-- Developping a unitary version of the shell script (doit.sh) compatible on Both Windows Subsystem for Linux and MacOS
-- F1 assembly code and Testbench for running it on Vbuddy
-- Assembly code for top-level testbenching
-- Testbenching for PDF tests
+- Modifying the base doit.sh script for compatibility on Both WSL and MacOS
+- F1 assembly code and Testbench and Testbenching for PDF tests
 - Pipelining: design and test-benching of Hazard unit and part of top-level integration
 - M-extension
 - Memory adaptation for Synthesis on FPGA
@@ -17,7 +15,9 @@ My main contributions in chronological order was:
 
 
 
-### 2.2 Hazard Unit
+
+
+### 4. Hazard Unit
 #### 1.	Why hazards occur in a pipeline? 
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
@@ -379,8 +379,8 @@ selectline2  = 2'b00
 ```
 ---
 
-
-### 1. Scope
+### M-extension
+#### 1. Scope
 
 We implemented the full RV32M base extension (eight instructions):
 
@@ -410,9 +410,9 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
 
 ---
 
-### 2. ALU changes
+#### 2. ALU changes
 
-#### 2.1 ALUCtrl widened
+##### 2.1 ALUCtrl widened
 - `ALUCtrl` was widened from 4 bits to **5 bits** to accomodate for the 8 new M instructions.
 - Here are the encodings in the new mapping:
 
@@ -427,7 +427,7 @@ From the perspective of the internal logic of the CPU, M instructions behave lik
 
 All previous RV32I ALU codes remain unchanged in the lower range. The new encodings were chosen to be contiguous, incrementing ALUCtrl for every new encoding.
 
-#### 2.2 Multiplication implementation
+##### 2.2 Multiplication implementation
 
 The RV32M multiplication instructions (`MUL`, `MULH`, `MULHSU`, `MULHU`) are all implemented inside the main ALU as purely combinational operations that produce a full 64-bit product and then select either the low or high 32 bits, with the correct signed/unsigned interpretation of the operands.
 
@@ -482,7 +482,7 @@ case (ALUCtrl)
 default: ALUout = 32'b0;
 endcase
 ```
-#### 2.3. Division and remainder with edge cases
+##### 2.3. Division and remainder with edge cases
 The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
 •	DIV (ALUCtrl = 5'b10000)
 •	DIVU (ALUCtrl = 5'b10001)
@@ -535,10 +535,11 @@ They follow the RISC-V spec’s special cases:
 DIV / DIVU: result is −1 (all ones), i.e. 0xFFFFFFFF.
 REM / REMU: result is the original dividend (rs1).
 2.	Signed overflow (−2³¹ / −1):
-o	For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
+- For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
 The result saturates to 0x80000000 (unchanged dividend).
-o	For REM in this special case, the remainder is 0.
+- For REM in this special case, the remainder is 0.
 Implementation-wise, for DIV:
+```Systemverilog
 5'b10000: begin // DIV
     if (ALUop2 == 0) begin
         ALUout = -1;
@@ -550,9 +551,9 @@ Implementation-wise, for DIV:
         ALUout = $signed(ALUop1) / $signed(ALUop2);
     end
 end
+```
 and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
-
 
 ### 3. Control Path Changes for M Instructions
 
@@ -645,8 +646,8 @@ For this coursework, some modifications were indeed made to accomodate synthesis
 Adding RV32M required three main changes:
 
 1. Extend ALU control space to 5 bits (`ALUCtrl`) and add unique encodings for the eight M ops.  
-2. Add multiplier/divider datapaths in the ALU:
-   - 64‑bit products for each signedness combination, sliced per MUL* semantics.
+2. Add multiplier/divider/remainder datapaths in the ALU:
+   - 64‑bit product with operand handling for signedness combination, sliced as upper/lower 32-bits per MUL* semantics.
    - Signed/unsigned division and remainder with RISC‑V corner cases (divide‑by‑zero, `-2^31 / -1`).
 3. Extend control decode for `opcode == OPC_OP` and `funct7 == 7'b0000001`, mapping `(funct3, funct7)` → `ALUCtrl` while leaving all R‑type control signals unchanged.
 
