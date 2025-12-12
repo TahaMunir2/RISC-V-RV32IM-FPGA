@@ -17,7 +17,7 @@
   - [Out-of-Order Superscalar Processor](#out-of-order-superscalar-processor)
   - [Out-of-Order Superscalar with Load Instructions](#out-of-order-superscalar-with-load-instructions)
 - [Over-arching Results](#over-arching-results)
-- [VBuddy results](#vbuddy-results)
+  - [VBuddy results](#vbuddy-results)
   - [Superscalar arithmetic: Shift Operations (sup_shifts.s)](#superscalar-arithmetic-shift-operations-sup_shiftss)
   - [FPGA with Trap Handler Routine](#fpga-with-trap-handler-routine)
 - [Future Considerations](#future-considerations)
