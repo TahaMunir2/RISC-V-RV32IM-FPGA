@@ -1,5 +1,20 @@
 # Yusuf Kerem Teker: Personal contributions and reflection
-## Succint Summary of contributions
+## Table of Contents
+
+- [Yusuf Kerem Teker: Personal contributions and reflection](#yusuf-kerem-teker-personal-contributions-and-reflection)
+  - [Table of Contents](#table-of-contents)
+  - [1. Succint Summary of contributions](#1-succint-summary-of-contributions)
+    - [1. PC block](#1-pc-block)
+    - [2. doit.sh script](#2-doitsh-script)
+    - [3. Tests on Vbuddy](#3-tests-on-vbuddy)
+    - [4. Hazard Unit](#4-hazard-unit)
+    - [5. M-extension](#5-m-extension)
+    - [6. Memory Adaptation for FPGA](#6-memory-adaptation-for-fpga)
+  - [2. Mistakes made](#2-mistakes-made)
+  - [3. Reflection](#3-reflection)
+
+
+## 1. Succint Summary of contributions
 My main contributions in chronological order was:
 - Designing the Program Counter block for our single-cycle design
 - Modifying the base doit.sh script for compatibility on Both WSL and MacOS
@@ -416,7 +431,7 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 
 ---
 
-### M-extension
+### 5. M-extension
 #### 1. Scope
 
 We implemented the full RV32M base extension (eight instructions):
@@ -682,7 +697,7 @@ Everything else in the CPU is unchanged — they see M instructions as standard 
 
 
 
-### Memory Adaptation for FPGA
+### 6. Memory Adaptation for FPGA
 
 Array-based memory designs, which we used initially throughout the project, are convenient for correctness but do not map reliably onto physical FPGA resources. On an FPGA, on-chip memory is implemented using Block RAM (BRAM), which is a dedicated, fixed hardware resource with strict architectural constraints such as synchronous read/write behavior, limited port configurations, and vendor-specific inference rules. Simply describing a memory as a generic array in SystemVerilog does not guarantee that the synthesis tool will infer BRAM; instead, it may result in inefficient distributed logic or fail to synthesize altogether for larger memories. As a result, our original memory modules had to be redesigned to conform to BRAM-compatible access patterns—most notably by using synchronous reads, explicit clocking, and FPGA-friendly coding styles. 
 
@@ -694,7 +709,7 @@ Even though we adapted our memories in accordance with the FPGA-friendly coding 
 
 For exact details, see the Interrupts and FPGA branch.
 
-## Mistakes made
+## 2. Mistakes made
 
 Like other teammates, I did not realise the power of gtkWave at first. Later, for top-level integration of the pipelined design, gtkWave was really handy. I just wish we had started using it earlier in our debugging process for the pipelined design, which would have saved very precious time. These small time inefficiencies prevented me from embarking on the Vector extension, which I really wanted to implement.
 
@@ -702,10 +717,10 @@ Another underlying cause of my shortcoming in not accomplishing the Vector exten
 
 I was mostly well-engaged throughout the project, but specifically for the compatible doit.sh file I implemented, I forgot to encourage my teammates to use this compatible version, which often resulted in diverging versions of this file.
 
-## Reflection
+## 3. Reflection
 The technical knowledge and skills that I am taking away for this project are evident and have been detailed exhaustively above.
 
-What I want to share with you is the personal take-aways that I personally have received from this project.
+What I want to share with you is the individual take-aways that I personally have received from this project.
 The key conmponents of this project for me have been:
 - Passion: I absolutely loved working on this project. I did not know I could enjoy digital hardware design to such an extent, and besides the knowledge and professional skills that I obtained, I believe this newly found passion has altered my perception of what paths I could potentially want to go onto in the future and professionally.
 - Collaboration: Not only did love doing the project, I loved doing it with the team I had. We already knew each other from our tutorial group last year as well as the end of year project and the chemistry we have developped is one of our key take-aways. I now know that our chemistry is a key determinant of our success with this team as well as any other team that I am part of in the future.
