@@ -381,17 +381,18 @@ end
 
 ```
 
-The stall condition used in the design asserts when: (Same as data dependency section, put the code somewhere over here)
-•	The instruction in Execute is a load (resultSrCE == 2'b01), and
-•	Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
-•	rdE != 0.
-This is implemented in:
-(code)
+The stall condition used in the design asserts when:
+- The instruction in Execute is a load (resultSrCE == 2'b01), and
+- Its destination register rdE matches either source register in Decode (rs1D or rs2D), and
+- rdE != 0.
+
 When a stall is necessary:
-•	PCWrite = 0 prevents PC update,
-•	F_Write = 0 prevents writing to IF/ID,
-•	flush_d_exec = 1 inserts a bubble into Execute.
+- PCWrite = 0 prevents PC update,
+- F_Write = 0 prevents writing to IF/ID,
+- flush_d_exec = 1 inserts a bubble into Execute.
 Thus, one cycle later, forwarding can resume as normal.
+
+How a bubble/NOP is implemented is discussed elsewhere, but in essence, all of the inputs for a given stage is set to 0, including both control and data signals.
 
 
 #### 5. Control hazard detection and Flush logic
