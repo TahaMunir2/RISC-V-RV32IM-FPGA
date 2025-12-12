@@ -19,11 +19,8 @@
 - [Over-arching Results](#over-arching-results)
   - [VBuddy results](#vbuddy-results)
   - [Superscalar arithmetic: Shift Operations (sup_shifts.s)](#superscalar-arithmetic-shift-operations-sup_shiftss)
-  - [FPGA with Trap Handler Routine](#fpga-with-trap-handler-routine)
+  - [FPGA F1 Lights](#fpga-with-trap-handler-routine)
 - [Future Considerations](#future-considerations)
-  - [Out-of-Order Superscalar with Branches, Jumps, and Store Instructions](#out-of-order-superscalar-with-branches-jumps-and-store-instructions)
-  - [RISC-V Vector Extension (RVV)](#risc-v-vector-extension-rvv)
-  - [FPGA Integration](#fpga-integration)
 - [References](#references)
 
 ## Introduction
