@@ -711,7 +711,7 @@ https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
 
 ---
 
-# Full RV32I (37-Instruction):
+# Full RV32I:
 
 ## Table of Contents
 - [1. Overview](#overview)
