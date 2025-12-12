@@ -458,9 +458,30 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 ## Schematic
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/images/Modified%20Single%20Cycle%20CPU%20diagram.jpg)
+![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ## Testing
+
+#### Running the code
+
+1. Navigate to the testbench ( `tb` ) folder:
+   ```bash
+   cd repo/tb
+   ```
+
+2. Make scripts executable:
+   ```bash
+   chmod +x doit.sh assemble.sh
+   ```
+   Grant execution permissions to the assembly and run scripts.
+
+3. Run the test:
+   ```bash
+   ./doit.sh tests/verify.cpp
+   ```
+   Execute the testbench with the verification file to validate the program.
+   > For unit test benches, replace verify.cpp with the appropriately named _tb.cpp file
+
 
 ### Test Benches:
 
@@ -470,8 +491,54 @@ For lab 4 (which covered the first 3 instructions), we made unit tests for every
 
 With each test bench containing many test cases:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/pc_tb.png)
-> Example: Testbench for PC block.
+```cpp
+TEST_F(SignextTestbench, SRC0Test1)
+{
+    top->instr = 4063236096; // F2300000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967075); // FFFFFF23
+}
+
+TEST_F(SignextTestbench, SRC0Test2)
+{
+    top->instr = 180097588; // instr[31] is 0 so imm = 0AB
+    top->eval();
+    EXPECT_EQ(top->immext, 171); // 000000AB
+}
+
+TEST_F(SignextTestbench, SRC1Test1)
+{
+    top->ImmSrc = 1;
+    top->instr = 202506240; // 0C120000
+    top->eval();
+    EXPECT_EQ(top->immext, 192); // 000000C0
+}
+
+TEST_F(SignextTestbench, SRC1Test2)
+{
+    top->ImmSrc = 1;
+    top->instr = 4229038080; // FC120000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967232); //FFFFFFC0
+}
+
+TEST_F(SignextTestbench, SRC2Test1)
+{
+    top->ImmSrc = 2;
+    top->instr = 2113933056; // 01111110000000000000111100000000
+    top->eval();
+    EXPECT_EQ(top->immext, 2046); // 00000000000000000000011111111110
+}
+
+TEST_F(SignextTestbench, SRC2Test2)
+{
+    top->ImmSrc = 2;
+    top->instr = 4261416832; // 11111110000000000000111110000000
+    top->eval();
+    EXPECT_EQ(top->immext, 4294967294); // 11111111111111111111111111111110
+}
+```
+> Example: Testbench for Sign Extension block
 
 For a single cycle, we used the testbenches provided in the project brief for our testing:
 
@@ -483,20 +550,10 @@ And all the tests passed:
 
 ### F1 Lights
 
-
-
 https://github.com/user-attachments/assets/0c69e605-449a-43a5-ae6c-754687139dbb
 
-
-
-
 Here is the assembly code that we used to implement the F1 countdown mechanism:
-```
-
-.text
-.globl main
-.text
-.globl main
+```asm
 main:
     addi a0, zero, 0
     addi t2, zero, 1
@@ -617,7 +674,11 @@ TEST_F(CpuTestbench, noisy)
 
 #### gaussian.mem
 
+
+
+
 https://github.com/user-attachments/assets/e1337251-4626-412e-a283-311f928022b8
+
 
 
 
@@ -648,10 +709,9 @@ The reason for the second video showing noisy.mem being dislayed on Vbuddy is to
 
 https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
 
-
 ---
 
-# Full RV32I
+# Full RV32I (37-Instruction):
 
 ## Table of Contents
 - [1. Overview](#overview)
@@ -1188,7 +1248,6 @@ Here are the results:
 All test cases pass.
 
 ---
-
 # Pipelined RISC-V Processor
 
 ## Table of Contents
@@ -1287,7 +1346,7 @@ Where:
 
 The table (from Harris and Harris book) below shows typical propagation delays for processor components:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_component_delays.png)
+![](https://github.com/TahaMunir2/Team5/blob/main/images/p_component_delays.png)
 
 ##### Single-Cycle Processor Performance
 
@@ -1975,12 +2034,25 @@ The baseline approach predicts all branches as **not taken**, but this performs 
 
 #### Our Solution: Two-Bit Dynamic Prediction
 
-- A **one-bit predictor** remembers only the last outcome
-- Problem: it **mispredicts twice per loop** (first and last iteration)
+##### Comparing performance between a 1-bit and a 2-bit branch predictor
 
-- A **two-bit predictor** requires two consecutive mispredictions before changing its prediction
-- Four states: *Strongly Taken → Weakly Taken → Weakly Not Taken → Strongly Not Taken*
-- Result: **mispredicts only once per loop** instead of twice
+Consider a simple loop that iterates 100 times:
+
+**One-bit predictor** (remembers only the last outcome):
+- First iteration: Predicted not taken → Actually taken → **Misprediction #1**
+- Iterations 2–99: Predicted taken → Actually taken → Correct
+- Last iteration: Predicted taken → Actually not taken → **Misprediction #2**
+- **Result: 2 mispredictions per loop**
+
+**Two-bit predictor** (requires two consecutive mispredictions to flip):
+- First iteration: Starts at `WEAKLY_NOT_TAKEN`, predicted not taken → Actually taken → **Misprediction #1**, moves to `WEAKLY_TAKEN`
+- Second iteration: Now predicting taken → Actually taken → Correct, moves to `STRONGLY_TAKEN`
+- Iterations 3–99: Predicted taken → Actually taken → Correct, stays at `STRONGLY_TAKEN`
+- Last iteration: Predicted taken → Actually not taken → **Misprediction #2**, moves to `WEAKLY_TAKEN`
+- **Next loop entry**: Still predicting taken → Actually taken → **Correct** (unlike one-bit!)
+- **Result: 1 misprediction per loop** (only the exit)
+
+The key insight is that after exiting a loop, the two-bit predictor stays in `WEAKLY_TAKEN` rather than flipping to "not taken". This means when the loop is re-entered, it still predicts correctly.
 
 #### Branch Target Buffer (BTB)
 
@@ -2460,16 +2532,6 @@ Note that:
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingcorrectpred.jpg)
 
 
-##### Performance Comparison
-Comparison of pipeline behavior with and without branch prediction, showing reduced flush cycles for predictable branch patterns.
-
-**Without Branch Prediction:**
-
-
-**With Branch Prediction:**
-
-
-
 #### Running the code
 
 1. Navigate to the testbench ( `tb` ) folder:
@@ -2494,9 +2556,11 @@ Here are the results:
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverify.jpg)
 
+All test cases pass
 
 
 ---
+
 
 # Hierarchical Cache
 
