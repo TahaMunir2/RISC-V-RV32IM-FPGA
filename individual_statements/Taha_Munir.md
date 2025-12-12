@@ -304,7 +304,7 @@ I also added Zba instructions while I was at it, as they seemed quite easy and h
 This was the hardest yet most rewarding thing I designed for this project. I was able to port our pipelined CPU with the Z extension onto an FPGA, as well as add a trap handler for 2 types of interrupts: timer and external (trigger) interrupts and design a 4-state FSM to run the F1 lights in assembly utilising the functionality of our interrupts. 
 
 Due to the extreme depth of the implementation, please refer to: [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
-> This part is not easily summarisable as changes and additions were required in almost every part of the CPU, so please look at my thorough breakdown of the FPGA implementation.
+> This part is not easily summarisable as changes and additions were required in almost every part of the CPU, so please look at my thorough breakdown of the FPGA implementation for this section.
 
 #### Design Decisions:
 - I chose to add 2 types of outputs, the 7-segment displays and the LEDs, to show how our CPU could handle multiple outputs, as well as 2 types of interrupts to demonstrate the robustness of our design.
