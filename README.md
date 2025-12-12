@@ -21,7 +21,7 @@
 
 Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be. However, caches are significantly more expensive than main memory and cannot occupy too much area, which is why they are designed to be only a fraction of main memory’s size.
 
-![alt text](image.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/cache_speed.png)
 
 Caches exploit spatial and temporal locality in order to improve fetch and writeback speed. Spatial locality is the principle that accessing one memory location increases the likelihood that adjacent memory locations (in the virtual memory space) will be accessed shortly afterward. On the other hand, the concept of temporal locality is that recently accessed data is also highly likely to be re-accessed due to the inherently cyclic nature of programming.
 
@@ -35,7 +35,7 @@ In our design, we have implemented a 2-way associative L1 instruction cache and 
 
 The overall memory hierarchy is as such:
 
-![alt text](image-1.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_hierarchy.png)
 
 As shown in the diagram above, the processor reads and writes from the L1 caches, which read from and write to the L2 cache, which reads from and writes to main memory.
 
@@ -649,17 +649,17 @@ In our cycle-by-cycle simulation, the cache does not appear to improve performan
 
 ---
 
-![alt text](image-2.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_schematic_c.png)
 
 ### 3.2 A Closer Look at L1 and L2
 
-![alt text](image-3.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L1L2_schematic.png)
 
 ---
 
 ### 3.3 A Closer Look at L2 and Main Memory
 
-![alt text](image-4.png)
+![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L2main_schematic.png)
 
 ---
 
