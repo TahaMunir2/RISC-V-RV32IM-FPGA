@@ -448,6 +448,20 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 ---
 
 ### 5. M-extension
+For the M-extension, my design decisions focused on ISA correctness, minimal pipeline impact, and localised complexity. The goal was to add RV32M support without changing how instructions flow through the CPU.
+
+All M instructions were implemented as single-cycle, purely combinational ALU operations. This is not ideal for timing, but it simplifies verification and guarantees strict compliance with the RISC-V specification, which was the priority for this coursework.
+
+I widened ALUCtrl from 4 to 5 bits to cleanly accommodate the eight new M operations, keeping all existing RV32I encodings unchanged. This avoided overloading control codes and made debugging clearer.
+
+For multiplication, operands are explicitly extended to 64 bits before multiplication to avoid SystemVerilog truncation issues and to make signed/unsigned behaviour unambiguous.
+
+Division and remainder logic explicitly handles all RISC-V corner cases (divide-by-zero and signed overflow) directly inside the ALU.
+
+Control-path changes were kept minimal: from the pipeline’s perspective, M instructions behave exactly like normal R-type ALU ops. No changes were needed to hazard detection, forwarding, or write-back logic.
+
+Overall, the M-extension integrates as a modular ALU enhancement rather than a structural CPU change, keeping the design simple, robust, and easy to verify.
+
 #### 1. Scope
 
 We implemented the full RV32M base extension (eight instructions):
