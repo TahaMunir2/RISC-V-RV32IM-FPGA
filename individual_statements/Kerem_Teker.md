@@ -350,7 +350,6 @@ Forwarding cannot resolve a dependency when the preceding instruction is a load.
 
 ![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image4.png)
  
-(Modify this diagram to show that the execute stage is actually flushed, not stalled)
 In this case, the Hazard Unit must stall the pipeline for exactly one cycle. It freezes the Program Counter and Fetch-to-Decode pipeline register and flushes the Decode-to-Execute pipeline register. The reason why Decode-to-Execute pipeline register is flushed is that if it were only stalled, the “lw” instruction would propagate through to the memory stage but also still remain in the Decode-to-Execute pipeline register, essentially duplicating the lw instruction. Thus, flushing this stage of the pipeline both achieves the stall required for synchronization (since the next register is not able to propagate into the execute stage) and prevents the duplication that would cause 2 back to back “lw” instructions.
 
 ```systemverilog
