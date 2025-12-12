@@ -704,21 +704,6 @@ REM / REMU: result is the original dividend (rs1).
 - For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
 The result saturates to 0x80000000 (unchanged dividend).
 - For REM in this special case, the remainder is 0.
-Implementation-wise, for DIV:
-```Systemverilog
-5'b10000: begin // DIV
-    if (ALUop2 == 0) begin
-        ALUout = -1;
-    end
-    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
-        ALUout = 32'h80000000;
-    end
-    else begin
-        ALUout = $signed(ALUop1) / $signed(ALUop2);
-    end
-end
-```
-and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
 
 ### 3. Control Path Changes for M Instructions
@@ -795,7 +780,7 @@ No special handling is required elsewhere (hazard unit, register file, pipeline 
 - Forwarding and stall logic remain unchanged:
   - Hazard unit inspects register numbers and `RegWrite` / `ResultSrc` only.
   - It does not need to know whether EX does ADD or MUL.  
-- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`; M instructions use ALU result.
+- Write‑back still selects ALU result / memory data / PC+4 based on `ResultSrc`.
 
 Timing caveat: combinational multiplier/divider are likely the `EX` critical path. Typical mitigation for this are:
 
