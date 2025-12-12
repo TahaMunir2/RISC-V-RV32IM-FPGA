@@ -428,7 +428,7 @@ if(PCSrcE == 2'b10 || PCSrcE == 2'b01) begin
 
 ---
 
-### M-extension
+### 6. M-extension
 #### 1. Scope
 
 We implemented the full RV32M base extension (eight instructions):
@@ -694,7 +694,7 @@ Everything else in the CPU is unchanged — they see M instructions as standard 
 
 
 
-### 6. Memory Adaptation for FPGA
+### 7. Memory Adaptation for FPGA
 
 Array-based memory designs, which we used initially throughout the project, are convenient for correctness but do not map reliably onto physical FPGA resources. On an FPGA, on-chip memory is implemented using Block RAM (BRAM), which is a dedicated, fixed hardware resource with strict architectural constraints such as synchronous read/write behavior, limited port configurations, and vendor-specific inference rules. Simply describing a memory as a generic array in SystemVerilog does not guarantee that the synthesis tool will infer BRAM; instead, it may result in inefficient distributed logic or fail to synthesize altogether for larger memories. As a result, our original memory modules had to be redesigned to conform to BRAM-compatible access patterns—most notably by using synchronous reads, explicit clocking, and FPGA-friendly coding styles. 
 
@@ -706,7 +706,7 @@ Even though we adapted our memories in accordance with the FPGA-friendly coding 
 
 For exact details, see the Interrupts and FPGA branch.
 
-## 7. Mistakes made
+## 8. Mistakes made
 
 Like other teammates, I did not realise the power of gtkWave at first. Later, for top-level integration of the pipelined design, gtkWave was really handy. I just wish we had started using it earlier in our debugging process for the pipelined design, which would have saved very precious time. These small time inefficiencies prevented me from embarking on the Vector extension, which I really wanted to implement.
 
@@ -714,7 +714,7 @@ Another underlying cause of my shortcoming in not accomplishing the Vector exten
 
 I was mostly well-engaged throughout the project, but specifically for the compatible doit.sh file I implemented, I forgot to encourage my teammates to use this compatible version, which often resulted in diverging versions of this file.
 
-## 8. Reflection
+## 9. Reflection
 The technical knowledge and skills that I am taking away for this project are evident and have been detailed exhaustively above.
 
 What I want to share with you is the personal take-aways that I personally have received from this project.
