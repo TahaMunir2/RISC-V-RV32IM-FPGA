@@ -3338,11 +3338,11 @@ Here are the results:
     * [3.2 Decoding M operations under OPC_OP](#32-decoding-m-operations-under-opc_op)
 * [4. Interaction with the Existing Pipeline and Hazards](#4-interaction-with-the-existing-pipeline-and-hazards)
 * [5. Summary](#5-summary)
-* [5. ALU test cases (selected) — exact format](#5-alu-test-cases-selected--exact-format)
-    * [5.1.11 ALU Test: DIVU (Unsigned Division by Zero)](#5111-alu-test-divu-unsigned-division-by-zero)
-    * [5.1.12 ALU Test: REM (Remainder with Divisor Zero)](#5112-alu-test-rem-remainder-with-divisor-zero)
-    * [5.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)](#5113-alu-test-remu-unsigned-remainder-with-divisor-zero)
-* [6. Trade-offs & notes](#6-trade-offs--notes)
+* [6. ALU test cases (selected) — exact format](#6-alu-test-cases-selected--exact-format)
+    * [6.1.11 ALU Test: DIVU (Unsigned Division by Zero)](#6111-alu-test-divu-unsigned-division-by-zero)
+    * [6.1.12 ALU Test: REM (Remainder with Divisor Zero)](#6112-alu-test-rem-remainder-with-divisor-zero)
+    * [6.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)](#6113-alu-test-remu-unsigned-remainder-with-divisor-zero)
+* [7. Trade-offs & notes](#7-trade-offs--notes)
 
 ---
 
@@ -3438,7 +3438,7 @@ end
 
 assign product = ALUop1_ext * ALUop2_ext;
 ```
-The reason why we extend each operand to 64 bits even before the multiplication is that, in SystemVerilog, the width of a * b is the max of the operand widths. If the current 32-bit format of ALUop1 and ALUop2 were used, the raw product would also 32 bits. That 32-bit product would then extended to 64 bits when assigned to signed_unsigned_mult, but the upper 32 bits of the result of the multiplication would already have been lost. Therefore, we simply increase the number of bits of our operands to 64 and use ```Systemverilog $signed ``` and ```Systemverilog $unsigned ```, which already take care of the sign extension.
+The reason why we extend each operand to 64 bits even before the multiplication is that, in SystemVerilog, the width of a * b is the max of the operand widths. If the current 32-bit format of ALUop1 and ALUop2 were used, the raw product would also 32 bits. That 32-bit product would then extended to 64 bits when assigned to signed_unsigned_mult, but the upper 32 bits of the result of the multiplication would already have been lost. Therefore, we simply increase the number of bits of our operands to 64 and use `$signed` and `$unsigned`, which already take care of the sign extension.
 
 The only task that now remains is to select the upper or lower 32-bits of the product, which is then as such:
 ```Systemverilog
@@ -3454,10 +3454,11 @@ endcase
 ```
 ### 2.3. Division and remainder with edge cases
 The four division/remainder operations share the existing 32-bit ALUout result and are coded as:
-•	DIV (ALUCtrl = 5'b10000)
-•	DIVU (ALUCtrl = 5'b10001)
-•	REM (ALUCtrl = 5'b10010)
-•	REMU (ALUCtrl = 5'b10011)
+
+- DIV (ALUCtrl = 5'b10000)
+- DIVU (ALUCtrl = 5'b10001)
+- REM (ALUCtrl = 5'b10010)
+- REMU (ALUCtrl = 5'b10011)
 
 ```Systemverilog
         5'b10000: begin //DIV
@@ -3610,9 +3611,9 @@ Adding RV32M required three main changes:
 Everything else in the CPU (pipeline registers, hazard unit, branch logic, memories) is unchanged — they see M instructions as standard R‑type ALU ops that take longer to compute.
 
 
-## 5. ALU test cases (selected) — exact format
+## 6. ALU test cases (selected) — exact format
 
-### 5.1.11 ALU Test: DIVU (Unsigned Division by Zero)
+### 6.1.11 ALU Test: DIVU (Unsigned Division by Zero)
 
 Purpose  
 Checks divide-by-zero behaviour for unsigned division.
@@ -3634,7 +3635,7 @@ What It Tests
 
 ---
 
-### 5.1.12 ALU Test: REM (Remainder with Divisor Zero)
+### 6.1.12 ALU Test: REM (Remainder with Divisor Zero)
 
 Purpose  
 Verifies that for signed remainder the dividend is returned when the divisor is zero.
@@ -3656,7 +3657,7 @@ What It Tests
 
 ---
 
-### 5.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)
+### 6.1.13 ALU Test: REMU (Unsigned Remainder with Divisor Zero)
 
 Purpose  
 Confirms that in the unsigned case, the remainder also returns the dividend on divide-by-zero.
@@ -3678,14 +3679,9 @@ What It Tests
 
 ---
 
-### 6 Trade-offs & notes
-- Simplicity vs. timing: combinational implementation is easy to verify but slow. Alternatives for synthesis: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
-- Only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards.
-
-Summary
-- RV32M support implemented in ALU + control with unique 5‑bit `ALUCtrl` encodings for all eight M instructions.
-- Behaviour matches the RISC‑V spec, including all specified corner cases.
-- M instructions forward and write back like other R-type ALU operations; integration is modular and local to ALU/control.
+### 7. Trade-offs & notes
+- Simplicity vs. timing: My combinational implementation is easy to verify but slow. Even though I did make optimisations when computing products, the design is not synthesizable. Alternatives for synthesis were the following: multi-cycle or pipelined multiply/divide units, or a long‑latency functional unit.
+- On the other hand, only two modules changed: `alu.sv` (wider `ALUCtrl`, M logic) and `control.sv` (wider `ALUCtrl` output, M decoding). No structural changes to pipeline or hazards. This was benefitial in that my design was modular and integrated smoothly with the rest of the CPU, including our branch-predictor, multi-level cache, and Z-extensions.
 
 ---
 
