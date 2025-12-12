@@ -179,22 +179,9 @@ They follow the RISC-V spec’s special cases:
 DIV / DIVU: result is −1 (all ones), i.e. 0xFFFFFFFF.
 REM / REMU: result is the original dividend (rs1).
 2.	Signed overflow (−2³¹ / −1):
-o	For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
+- For DIV, when ALUop1 == 0x80000000 and ALUop2 == 0xFFFFFFFF:
 The result saturates to 0x80000000 (unchanged dividend).
-o	For REM in this special case, the remainder is 0.
-Implementation-wise, for DIV:
-5'b10000: begin // DIV
-    if (ALUop2 == 0) begin
-        ALUout = -1;
-    end
-    else if (ALUop1 == 32'h80000000 && ALUop2 == 32'hFFFFFFFF) begin
-        ALUout = 32'h80000000;
-    end
-    else begin
-        ALUout = $signed(ALUop1) / $signed(ALUop2);
-    end
-end
-and similar for DIVU, REM, and REMU using $unsigned or $signed as appropriate.
+- For REM in this special case, the remainder is 0.
 Again, this is a purely combinational, single-cycle implementation. In a real design you would normally use a multi-cycle divider for timing reasons, but for this coursework the emphasis is correctness and simplicity.
 
 
