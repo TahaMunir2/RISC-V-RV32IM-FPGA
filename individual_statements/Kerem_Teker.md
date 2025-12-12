@@ -800,50 +800,16 @@ What It Tests
 
 ### Memory Adaptation for FPGA
 
-Before I describe what we implemented in the FPGA, I must tell you what we omitted; we branched off the Z extension branch, so superscalar and cache were not included in the rtl, due to time restraints, and they were still being developed, and fears of complexity added by them. M instructions were removed as division was causing huge timing delays in compilation in Quartus. Branch prediction and evalprediction modules had to be removed as memory was changed to synchronous, which meant their logic no longer applied, and a buffer and much more complex logic would need to be thought up to keep their functionality. This meant Z instructions and Full RV32I with Pipelining were still included in our FPGA implementation.
+Array-based memory designs, which we used initially throughout the project, are convenient for correctness but do not map reliably onto physical FPGA resources. On an FPGA, on-chip memory is implemented using Block RAM (BRAM), which is a dedicated, fixed hardware resource with strict architectural constraints such as synchronous read/write behavior, limited port configurations, and vendor-specific inference rules. Simply describing a memory as a generic array in SystemVerilog does not guarantee that the synthesis tool will infer BRAM; instead, it may result in inefficient distributed logic or fail to synthesize altogether for larger memories. As a result, our original memory modules had to be redesigned to conform to BRAM-compatible access patterns—most notably by using synchronous reads, explicit clocking, and FPGA-friendly coding styles. 
 
 To program the FPGA, we had to use a program called Quartus. We were able to put our .sv files onto Quartus and use its many, many features to set up the right conditions for the FPGA to allow us to port our CPU onto it.
 
-The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. We MUST make sure to uncheck make the output registered or else it will take 2 cycles to read (I had this issue for days). For this imem block, we would also need to initialise its memory content using a program. mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. We initialise a new block inside our in-memory block like so:
+The first hurdle was the memory; as we discussed, we would need to use 2 BRAM blocks. First, imem: It would need 1024, 32-bit words called imem_ram, which we will call inside the insmem module. We MUST make sure to uncheck make the output registered or else it will take 2 cycles to read (I had this issue for days). For this imem block, we would also need to initialise its memory content using a program.mif file where we will write the instruction memory code (similar to our program.hex files). This insmem would now be clocked too, making reading from it synchronous. For exact details, see:
 
-#### Memory:
 
-```systemverilog
-    imem_ram imem_inst (
-        .clock   (clk),
-        .address (word_index),
-        .data    (32'b0),   // never write
-        .wren    (1'b0),
-        .q       (q)
-    );
-```
+We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation.
 
-- Note word_index is the address with the bottom 2 bits taken out, as they are always assumed to be 0.
-
-We would follow the same process as above from datamem, however, now with 32768 32-bit words, and with byte-enable indexing turned on and no memory initialisation. We would need to compute the byteena logic as follows:
-
-```systemverilog
-    always_comb begin
-        byteena = 4'b0000;
-        case (SizeWrite)
-            2'b00: begin
-                // store byte
-                byteena = 4'b0001 << byte_offset;
-            end
-            2'b01: begin
-                // store halfword 
-                if (byte_offset[1] == 1'b0)
-                    byteena = 4'b0011;
-                else
-                    byteena = 4'b1100;
-            end
-            default: begin
-                // store word
-                byteena = 4'b1111;
-            end
-        endcase
-    end
-```
+Even though we adapted our memories in accordance with the FPGA-friendly coding styles necessary, Quartus did not correctly infer and implement our BRAM blocks on the target FPGA. As such, we used the IP 2-Port (Read and Write) RAM module in the catalogue section of Quartus, which allowed us to correctly implement our memory modules as BRAM blocks.
 
 And now we would need to call the new dmem_ram inside the datamem module:
 
