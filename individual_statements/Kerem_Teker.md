@@ -696,7 +696,21 @@ For exact details, see the Interrupts and FPGA branch.
 
 ## Mistakes made
 
-## Reflection
+Like other teammates, I did not realise the power of gtkWave at first. Later, for top-level integration of the pipelined design, gtkWave was really handy. I just wish we had started using it earlier in our debugging process for the pipelined design, which would have saved very precious time. These small time inefficiencies prevented me from embarking on the Vector extension, which I really wanted to implement.
 
+Another underlying cause of my shortcoming in not accomplishing the Vector extension was the wrong expectations that I set for myself. Before doing the M extension, I over-estimated the difficulty and the amount of time it would consume. By then, I had already opted out of doing the vector extension. However, after rapidly finishing the M extension, I realised I had enough time and capability to have done the vector extension instead. With other responsibilities coming in as well, I simply opted out of it. However, if from the start, I had set my expectations more accurately and acted accordingly, creating a clear timeline, I believe I could have implemented the vector extension as well.
+
+I was mostly well-engaged throughout the project, but specifically for the compatible doit.sh file I implemented, I forgot to encourage my teammates to use this compatible version, which often resulted in diverging versions of this file.
+
+## Reflection
+The technical knowledge and skills that I am taking away for this project are evident and have been detailed exhaustively above.
+
+What I want to share with you is the personal take-aways that I personally have received from this project.
+The key conmponents of this project for me have been:
+- Passion: I absolutely loved working on this project. I did not know I could enjoy digital hardware design to such an extent, and besides the knowledge and professional skills that I obtained, I believe this newly found passion has altered my perception of what paths I could potentially want to go onto in the future and professionally.
+- Collaboration: Not only did love doing the project, I loved doing it with the team I had. We already knew each other from our tutorial group last year as well as the end of year project and the chemistry we have developped is one of our key take-aways. I now know that our chemistry is a key determinant of our success with this team as well as any other team that I am part of in the future.
+- Ambition: with the vector extension, I learnt that achieving ambitious goals is less about the difficulty of the task than the expectations, mindset, and ambition you embark on the journey with. 
+
+  
 
 
