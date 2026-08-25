@@ -28,11 +28,11 @@ The control shift register is a register of a fixed size, much larger than the r
 
 The Zicsr instructions are implemented with the CSR to read from it and write to it. All Zicsr instructions are atomic read-modify-write instructions, as in they read the old value of the control status register into rd and modify rd all in 1 instruction. In contrast, if we wanted to do this with our normal registers, it would require 2 instructions, one to copy and one to write. There are 6 Zicsr instructions csrrw, csrrs, csrrc, csrrwi, csrrsi and csrrci, with the latter 3 being immediate (instead of register) versions of the first 3. Each instruction has a CSR register (that will be both the source and the destination), a destination register that will get the old value of that CSR, and either a source register or a 5-bit unsigned immediate that will be used for determining the new value of that CSR, as shown below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/ZICSR.jpg)
 
 The Zba instructions are also atomic in the sense that they reduce shifting and adding into 1 instruction. They are called sh1add, sh2add and sh3add, which are shortened versions of shift and add. They operate on the normal registers and not on the CSR registers, and are just a simple way to make programs more efficient.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/zba_instructions.png)
 
 ## 2. Implementation
 
@@ -85,7 +85,7 @@ always_comb begin
 - **`2'b10: temp = temp | wd`**: **CSRRS stands for Control Status Register Read and Set**, and you do the same **read** as before but for writing, you go through all the bits in wd and if they are high than the corresponding bit in temp will also be **set** (the rest of the bits are untouched), this can be simplified into an OR operation.
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/csr.png)
 
 #### Decoder
 
@@ -215,7 +215,7 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ## 3 Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/zschem.svg)
 
 ## 4 Testing and Verification
 
@@ -248,7 +248,7 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ### Zicsr Testbench
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr_tb.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/csr_tb.png)
 
 - Line 6: We set x1 to 12345678 and csr[340] to 12345678 with t1 by running csr read and write
 - Line 8: We use csr read and set with t2, which is 0000FFFF to set the bottom 2 bytes to 1, so csr[340] = 1234FFFF
@@ -257,16 +257,16 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 Each time we are saving csr[340] into x1, so we can trace the waveforms to check it's actually changing correctly (note: t1 = reg[6], t2 = reg[7], t3 = reg[28]) as shown below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/gtkwave.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/gtkwave.png)
 
 ### Zba Testbench
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/shadd_tb.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/shadd_tb.png)
 
 
 We ran the following assembly code to test out the Zba functionality. Notably, we had to add a line at the top of the file to allow the compiler to accept the Zba instructions **`.option arch, +zba`**.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_gtkwave.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/zba_gtkwave.png)
 
 
 As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each operation takes 1 clock cycle, whereas without these instructions it would be spread out over 2 cycles.
