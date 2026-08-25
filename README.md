@@ -630,7 +630,7 @@ The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/ooofull_2.png)
 
 ---
 
@@ -830,6 +830,6 @@ main:
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/ooofverify.jpg)
 
 ---
