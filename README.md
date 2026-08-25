@@ -22,7 +22,7 @@
 
 Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be. However, caches are significantly more expensive than main memory and cannot occupy too much area, which is why they are designed to be only a fraction of main memory’s size.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/cache_speed.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/cache_speed.png)
 
 Caches exploit spatial and temporal locality in order to improve fetch and writeback speed. Spatial locality is the principle that accessing one memory location increases the likelihood that adjacent memory locations (in the virtual memory space) will be accessed shortly afterward. On the other hand, the concept of temporal locality is that recently accessed data is also highly likely to be re-accessed due to the inherently cyclic nature of programming.
 
@@ -36,7 +36,7 @@ In our design, we have implemented a 2-way associative L1 instruction cache and 
 
 The overall memory hierarchy is as such:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_hierarchy.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/overall_hierarchy.png)
 
 As shown in the diagram above, the processor reads and writes from the L1 caches, which read from and write to the L2 cache, which reads from and writes to main memory.
 
@@ -101,7 +101,7 @@ However, if the read request is a miss, the instruction cache stalls the rest of
 #### Load from L2
 On a miss the instruction cache needs to decide which way to store the fetched data into. For cold misses, our cache defaults to replacing block 0 if both bits are invalid, or block 1 if block0.valid = 1. However, for capacity misses, our cache uses an LRU replacement policy.
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/cimage.png)
 
 Cold miss eviction:
 - `!cache[set].block0.valid && !cache[set].block1.valid` → both blocks are invalid → replace block 0
@@ -650,24 +650,24 @@ In our cycle-by-cycle simulation, the cache does not appear to improve performan
 
 ---
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/mdiagram.png)
 
 
 ### 3.2 Overall Hierarchy Schematic
 
 ---
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_schematic_c.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/overall_schematic_c.png)
 
 ### 3.3 A Closer Look at L1 and L2
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L1L2_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/L1L2_schematic.png)
 
 ---
 
 ### 3.4 A Closer Look at L2 and Main Memory
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L2main_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/L2main_schematic.png)
 
 ---
 
@@ -751,11 +751,11 @@ We also created a c++ testbench (l2_cache_tb.cpp) to isolate the data cache modu
 Here are the results:
 
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-1.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/cimage-1.png)
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-2.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/cimage-2.png)
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-3.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/cimage-3.png)
 
 
 ---
