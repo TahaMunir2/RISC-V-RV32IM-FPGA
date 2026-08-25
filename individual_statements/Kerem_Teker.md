@@ -287,19 +287,19 @@ Overall, the Hazard Unit was designed to be conservative where correctness is at
 #### 1.	Why hazards occur in a pipeline? 
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image1.png)
+![diagram](../images/image1.png)
 
 In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation to the register file as soon as it becomes available if the subsequent instructions are dependent upon that register.
 
 A special case arises when the first instruction is a “Load” instruction.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image2.png)
+![diagram](../images/image2.png)
  
 When the instruction immediately after an “lw” instruction has a source register that is meant to be written into by the `lw` instruction, the 2 stage difference between the decode and memory stages means that the result of the “lw” instruction only becomes available once the next instruction has already reached and completed its execution stage. This is shown by the topmost arrow pointing from the bus carrying the result of the data memory (the “lw” result) to the top input of the ALU. Since the data dependency involves a result that only becomes available in the same clock cycle as the execution of the dependent instruction, forwarding on its own is no longer sufficient. 
 
 Control Hazards are caused by branch instructions where the condition required for the branch is true, meaning the branch is taken. Once it is determined that the branch predicate is true, the program counter must branch to a different location, and the sequential order in which instructions are fetched from the instruction memory is broken. Depending on the offset of a branch instruction, an asserted branch invalidates the instructions fetched after the branch instruction and before the deduction of the branch condition’s validity. 
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Untitled.png)
+![diagram](../images/Untitled.png)
 
 It is only at the point where the red arrow is, which is 2 clock cycles after the `beq` instruction is fetched from instruction memory, that the branch condition predicate is determined in the `EXECUTE` stage:
 
@@ -370,7 +370,7 @@ To control operand multiplexers feeding the ALU, the Hazard Unit sets two 2-bit 
 
 So the circuit schematic for exclusively the hazard unit’s forwarding mechanism is identical to that detailed in the lecture slides as shown below:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image3.png)
+![diagram](../images/image3.png)
  
 What this diagram does not cover is how the hazard unit tackles load word data dependencies and control hazards, discussed later.
 Why forwarding ignores loads here
@@ -386,7 +386,7 @@ Forwarding entirely removes stalls that would otherwise be caused by data depend
 #### 4. Load word data dependency
 Forwarding cannot resolve a dependency when the preceding instruction is a load. In a load instruction, the data is only available after the Memory stage, meaning forwarding cannot provide a valid operand in the immediate next cycle.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image4.png)
+![diagram](../images/image4.png)
  
 In this case, the Hazard Unit must stall the pipeline for exactly one cycle. It freezes the Program Counter and Fetch-to-Decode pipeline register and flushes the Decode-to-Execute pipeline register. The reason why Decode-to-Execute pipeline register is flushed is that if it were only stalled, the “lw” instruction would propagate through to the memory stage but also still remain in the Decode-to-Execute pipeline register, essentially duplicating the lw instruction. Thus, flushing this stage of the pipeline both achieves the stall required for synchronization (since the next register is not able to propagate into the execute stage) and prevents the duplication that would cause 2 back to back “lw” instructions.
 
@@ -435,7 +435,7 @@ How a bubble/NOP is implemented is discussed elsewhere, but in essence, all of t
 
 #### 5. Control hazard detection and Flush logic
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image5.png)
+![diagram](../images/image5.png)
  
 In the image, the first instruction in the sequence is “beq s1, s2, L1”. In the first clock cycle, the instruction is fetched from instruction memory and fed to the pipeline register connecting the fetch stage to the decode stage. In the second clock cycle, the branch instruction is decoded and the relevant registers read from the register file. Meanwhile, the next instruction – “sub s8, t1, s3” – is fetched from instruction memory. Only by the third clock cycle, does the ALU determine that s1 and s2 are equal. However, two new instructions have been fetched already from instruction memory under the speculative assumption that the branch will not be taken. The solution is to “flush” the fetch and decode stages. To do this, the hazard unit outputs a control signal to the Fetch-to-Decode and Decode-to-Execute pipeline registers. Our pipeline registers have internal logic that synchronously sets the contents of the pipeline registers to 0 once the one-bit control signal from the hazard unit triggers flushing. Since the PC is updated to the branch target, the pipeline then continues with correct instructions.
 

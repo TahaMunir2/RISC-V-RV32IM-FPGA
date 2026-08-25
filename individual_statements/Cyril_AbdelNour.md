@@ -775,11 +775,11 @@ The ROB performs three operations: Allocation, Writeback, and Commit.
 
 **Allocation:** When instructions are dispatched, they are allocated at the `tail` pointer. The tail advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-allocation.png)
+![diagram](../images/rob-allocation.png)
 
 **Writeback:** When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`. Since execution does not occur in order, results arrive at the ROB out of program order.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-writeback.png)
+![diagram](../images/rob-writeback.png)
 
 
 **Commit:** Instructions commit from the `head` in program order. Only entries with `ready=1` that haven't been committed yet can retire. The ROB commits up to 2 instructions per cycle:
@@ -851,17 +851,17 @@ The writeback logic runs on the negative edge of the clock while dispatch, issue
 
 When an ALU produces a result, dependent instructions can wake up and potentially issue in the same cycle.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ruuwritebacktrick.png)
+![diagram](../images/ruuwritebacktrick.png)
 
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue. I discovered this delay by examining ALU operand signals in GTKWave, where I observed instructions waiting unnecessarily. After implementing negative-edge writeback, the delay was eliminated and throughput increased.
 
 Below is what I observed before writing back at the negative edge of the clock: (all the sequential work was done in the positive edge)
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebackposedge.jpeg)
+![diagram](../images/writebackposedge.jpeg)
 
 Below is what I observed before writing back at the negative edge of the clock:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebacknegedge.jpeg)
+![diagram](../images/writebacknegedge.jpeg)
 
 
 ### 7.4 Pipelined Design
@@ -909,7 +909,7 @@ For comparison with a single-cycle arithmetic-only processor:
 
 The most critical part of the integration is determining where each source operand comes from and whether it's available. For each source register, I follow this decision process:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/decisiontree.jpg)
+![diagram](../images/decisiontree.jpg)
 
 1. **Check RAT**: Does this register have an in-flight producer?
 2. **If no producer**: Fetch from register file (operand valid)
@@ -956,7 +956,7 @@ If there's a dependency, I bypass the normal RAT/ROB lookup and use Instruction 
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Oooarith_1.jpg)
+![diagram](../images/Oooarith_1.jpg)
 
 
 ### Testing
@@ -997,7 +997,7 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 GTKWave analysis confirmed simultaneous execution: ALU1 processing one instruction while ALU2 concurrently handles an independent instruction that was fetched later but had no dependencies.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/averifyingshifts.jpg)
+![diagram](../images/averifyingshifts.jpg)
 
 We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
@@ -1115,7 +1115,7 @@ The tags propagate so the Memory stage knows which ROB entry to update when the 
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofull_2.png)
+![diagram](../images/ooofull_2.png)
 
 ### 8.4 Testing
 
@@ -1133,7 +1133,7 @@ I created 7 new tests specifically for load functionality, in addition to reusin
 
 All 17 tests pass.
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofverify.jpg)
+![diagram](../images/ooofverify.jpg)
 
 ---
 

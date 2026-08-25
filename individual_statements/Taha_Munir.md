@@ -37,7 +37,7 @@ For Lab 4, we spun a random wheel, and I was fortunate enough to be handed the r
 
 I made the following unit test benches:
 
-![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/units.png)
+![alt_text](../images/units.png)
 
 With each test bench thoroughly testing the full functionality of the block:
 
@@ -94,7 +94,7 @@ To make the testbenches, I used the 2 reference test benches we were given and s
 
 For the top-level integration, I used this schematic provided to use in the project brief as a reference:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/microarchitecture.jpg)
+![diagram](../images/microarchitecture.jpg)
 
 ---
 
@@ -104,7 +104,7 @@ I wrote the full documentation of this section. For more details, see the [GitHu
 
 For this section, my primary responsibility was to add the 6 additional instructions such that we were able to pass the 5 reference programs provided to us in the project brief:
 
-![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/asms.png)
+![alt_text](../images/asms.png)
 
 These were the instructions I added:
 
@@ -176,7 +176,7 @@ end
 
 I added the following cases in the signextender block for it to be able to understand the new instruction types we added in accordance with the table below:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/functions.png)
+![diagram](../images/functions.png)
 
 #### Data Memory:
 
@@ -295,7 +295,7 @@ Key Points:
 
 I also added Zba instructions while I was at it, as they seemed quite easy and helped simplify shift and add instructions into just 1 atomic instruction:
 
-![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zba_instructions.png)
+![diagram](../images/zba_instructions.png)
 
 ---
 

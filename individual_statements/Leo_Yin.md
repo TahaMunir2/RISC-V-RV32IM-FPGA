@@ -33,7 +33,7 @@ I also wrote the full documentation of the cache section, which goes into much m
 
 For Lab 4, we decided our roles using a random wheel. I was given the task of designing the part of the control path of the reduced RISC-V processor, including the instruction memory (which we decided to use a ROM block for), the control unit, and the sign extender. The components that I created are highlighted in green below:
 
-![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/reducedRV.png)
+![alt_text](../images/reducedRV.png)
 
 It is, however, important to note that I did not testbench this code and that multiple bug fixes had to be made to the components that I created. Also, since Lab 4 was only using addi and bne instructions, i only implemented the addi and bne instructions to the decoder, and not the full RISC-V instruction set.
 
@@ -70,7 +70,7 @@ typedef struct packed {
 
 I intended for the array to mirror the image below:
 
-![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cache_array.png)
+![alt text](../images/cache_array.png)
 
 I intended for the instruction cache array to be able to load data from L2 on command, supply data to the processor when requested, and update its valid and dirty bits as directed by the cache controller. The controller would have specified the set, block offset, transfer size, and whether a read or write is enabled.
 
@@ -102,7 +102,7 @@ After completing both the L1i and L1d cache, I was tasked with testing them. Thi
 
 I decided to include every test in the same test instance for the L1 caches. This is because it would take far too long to reinitialise every test case (i.e. setting valid bits high, inputting correct data) and previous test cases would be useful in providing a scenario in which another test case would happen. Also, I decided not to use loops in my test and instead opted for running the simulation 1 cycle at a time since I wanted to study how the outputs of the cache changed for every individual cycle. With this design philosophy, I created the l1d_cache_tb.cpp and l1i_cache_tb.cpp files.
 
-![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/L1c_tb.png)
+![alt text](../images/L1c_tb.png)
 
 Since the data cache included all the features that the instruction cache had, I decided to design the data cache testbench first, and simply remove the tests that tested the features that the instruction cache didn't have to create the instruction cache testbench.
 
@@ -325,11 +325,11 @@ end
 ```
 
 Early psuedocode schematic of the L2 cache :
-![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/l2ps_schem1.png)
+![alt text](../images/l2ps_schem1.png)
 
-![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/l2ps_schem2.png)
+![alt text](../images/l2ps_schem2.png)
 
-![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/l2ps_schem3.png)
+![alt text](../images/l2ps_schem3.png)
 
 This statement mainly talks about the timeline of events that led to the final design choices made. There is much more to be said about how the actual L2 cache works, but the [cache README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Hierarchical-cache/README.md) already goes into deeper detail about this.
 
