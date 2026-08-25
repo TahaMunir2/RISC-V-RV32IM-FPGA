@@ -372,7 +372,7 @@ The ROB performs three sequential operations: **Allocation**, **Writeback**, and
 
 When instructions are dispatched, they are allocated at the `tail` pointer. The `tail` advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-allocation.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/rob-allocation.png)
 
 In this diagram, we clearly observe how the tail pointer advances in the buffer at allocation.
 
@@ -380,7 +380,7 @@ In this diagram, we clearly observe how the tail pointer advances in the buffer 
 
 When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-writeback.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/rob-writeback.png)
 
 In this diagram, we clearly observe how the common data bus transmits the results of each execution which are allocated to specific tags in the Re-Order Buffer.
 We also note that since execution does not occur in order, the transmission of data in the Re-Order Buffer will not necessarly follow the program order.
@@ -615,7 +615,7 @@ end
 
 The writeback logic runs on the **negative edge** of the clock while dispatch, issue, and free run on the **positive edge**. This design choice enables **same-cycle wake-up**:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ruuwritebacktrick.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/ruuwritebacktrick.png)
 
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue.
 
@@ -623,11 +623,11 @@ This technique was not part of the first implementation of this circuit. However
 
 Below is what we observed before writing back at the negative edge of the clock: (all the work was done in the positive edge)
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebackposedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/writebackposedge.jpeg)
 
 Below is what we observed before writing back at the negative edge of the clock:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/writebacknegedge.jpeg)
 
 Indeed, this strategy of writing back at the negative edge eliminates the delay and increase the throughput.
 
@@ -643,7 +643,7 @@ To maximize throughput, we divide the processor into **5 pipeline stages**, each
 
 The following table (from Harris and Harris) shows typical propagation delays:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/component_delays.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/component_delays.png)
 
 ---
 
@@ -882,7 +882,7 @@ The most critical part of the integration is determining **where each source ope
 
 For each source register, we follow this decision process:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/decisiontree.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/decisiontree.jpg)
 
 ##### Implementation
 
@@ -1009,7 +1009,7 @@ mux mux_ALU1_immVSreg(
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/Oooarith_1.jpg)
 
 
 ---
@@ -1051,7 +1051,7 @@ We created a testbench ( `rat_tb.cpp ` , in ` tb/tests ` ) that verifies the RAT
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingrat.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/verifyingrat.jpg)
 
 ---
 
@@ -1099,7 +1099,7 @@ We created a testbench ( `rob_tb.cpp ` , in ` tb/tests ` ) that verifies the ROB
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingrob.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/verifyingrob.jpg)
 
 ---
 
@@ -1133,7 +1133,7 @@ We created a testbench ( `ruu_tb.cpp ` , in ` tb/tests ` ) that verifies the RUU
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingruu.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/verifyingruu.jpg)
 
 ---
 
@@ -1200,7 +1200,7 @@ GTKWave analysis confirms simultaneous execution:
 
 The waveform demonstrates both ALUs executing simultaneously, with ALU1 processing values 0x0A (10) and 0x1E (30) while ALU2 concurrently handles 0x14 (20) and 0x28 (40). This confirms the superscalar processor successfully exploits instruction-level parallelism by dispatching and executing independent instructions in parallel across both ALUs.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/writebacknegedge.jpeg)
 
 ---
 
@@ -1246,7 +1246,7 @@ This test verifies shift-immediate operations (slli, srli) with RAW dependencies
 
 This waveform provides evidence of the performance advantage of out-of-order execution. We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/averifyingshifts.jpg)
 
 **IPC Calculation:**
 
@@ -1314,7 +1314,7 @@ This test combines immediate shifts (slli, srli) with register-based shifts (sll
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/averify.jpg)
 
 
 > **Note:** The performance upgrade results and evidence are included in the [4.2 Assembly Test Programs](#42-assembly-test-programs) under the tests `Test 5 :parrallelism.s` `Test 8 :sup_shifts.s` using GTKWave cycle by cycle analysis.
