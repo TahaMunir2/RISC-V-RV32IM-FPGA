@@ -11,7 +11,7 @@ Lab 4 laid out the basic foundation of our RISC-V CPU, and helped us ease into u
 
 In this lab, we were able to create the basic components of the CPU and combine them all together in a top-level module, along with making test benches for each module and adding functionality for ADDI and BNE instructions, with the hierarchy specified in the image below:
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/microarchitecture.jpg)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/microarchitecture.jpg)
 
 # Design Implementation Setbacks
 There were a few problems that we ran into in this task:
