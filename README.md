@@ -96,7 +96,7 @@ assign pc = internal_pc;
 
 - Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/memory.jpg)
 
 ### Instruction Memory 
 
@@ -235,7 +235,7 @@ assign funct7 = instr [31:25];
 
 The 3 segments that the decoder uses are the OPcode, the funct3 (if available) and the funct7 (if available) to determine what type of instruction we are decoding. The OPcode is always mapped to the bottom 7 bits, and the locations of funct3 and funct7 don't change; however, whether they are available depends on the type of instruction, however. They simply aren't used if they don't exist for that OPcode.
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/functions.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/functions.png)
 
 #### Control Signals
 
@@ -432,7 +432,7 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 ## Schematic
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ## Testing
 
@@ -461,7 +461,7 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 For lab 4 (which covered the first 3 instructions), we made unit tests for every block:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/units.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/units.png)
 
 With each test bench containing many test cases:
 
@@ -516,11 +516,11 @@ TEST_F(SignextTestbench, SRC2Test2)
 
 For a single cycle, we used the testbenches provided in the project brief for our testing:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/asms.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/asms.png)
 
 And all the tests passed:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/singlecyclepass.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/singlecyclepass.png)
 
 ### F1 Lights
 
