@@ -42,7 +42,7 @@ We previously defined a CSR module and added some instructions to play around wi
 
 Let's start by talking about privilege levels. There are 3 privilege levels in the RV32I CPU: Machine Mode (highest privilege), Supervisor and User (lowest privilege). Depending on the privilege level that the CPU is currently in, certain CSRs might not be available, as they are only available to high privilege levels for security purposes; however, Machine mode can access all the CSRs. For this project, we can assume that we are always in Machine Mode and no other privilege level exists on our CPU; hence, the registers we define are exclusive to M-mode and would theoretically not be available in lower privilege levels. This also means we do not need to deal with complex ideas such as delegations. 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/privelege.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/privelege.png)
 
 Next, let's talk about the trap handler. The trap handler is a specific piece of code stored somewhere on the instruction memory, and it is only accessed when a "trap" is called. There are technically multiple different trap handlers corresponding to each privilege level; however, as we are only in M-mode, we only have 1. A trap can be either an interrupt (like external interrupts or timer interrupts) or an exception (like **`ecall`** or dividing by 0, etc), and the trap handler is called to deal with them. We will only be dealing with interrupts in this section; however, similar logic can be derived for exceptions.
 
@@ -52,7 +52,7 @@ Now we need to define how interrupts can happen in our CPU. We will define 2 typ
 
 To allow these interrupts to occur, we need to define 7 special registers that will aid us with these interrupts, although in proper RISC-V there are many more for a variety of reasons we do not need to consider:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/m.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/m.png)
 
 #### mtvec: 0x305
 This CSR simply stores the address of where the trap handler program is stored. Theoretically, there are also utvec and stvec for the trap handlers of different privilege levels. This needs to be written by the programmer using the CSR instructions we previously defined, or else we will not know where to jump to for the trap handler. 
@@ -81,7 +81,7 @@ Therefore, we need mstatus[3], mip[7] and mie[7] to all be high to enter the tra
 
 An FPGA (Field Programmable Gate Array) is a programmable integrated circuit which can form physical implementations of digital circuits described in HDLs. They are made of a matrix of configurable logic blocks (which can be further broken down into flip-flops, lookup tables and full adders) with configurable interconnects that allow FPGAs to create real digital circuits. The DE-10 lite FPGA that we were able to borrow from EEStore comes with 50,000 logic elements, 200 KB of BRAM, 6 7-segment displays and 10 individually addressable LEDs.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/de10.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/de10.jpeg)
 
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
@@ -435,7 +435,7 @@ We can then define these in the FPGA wrapper as follows, with each segment being
 
 Now is where everything gets particularly tricky. We need to convert real-world actions into digital signals, only using digital logic. For example, we need a trigger pulse from pressing the button; however, if we just keep the button as an input (which we will do using the TCL file), without processing it first, it will lead to 100,000s of cycles of interrupt requests, which could very well break our program. We need something called a "debouncer" to wait for the signal to stop "bouncing" (as shown below) between high and low and become stable, and then an edge detector to only take in 1 pulse, so our external interrupt works as it does in simulation.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/debounce.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/debounce.png)
 
 The debouncing logic relies on 2 stages, one stage which removes metastability and a second stage that implements a timer for 2^20 cycles (20 ms at 50 MHz) to wait for a non-bouncy signal
 
@@ -643,7 +643,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
 
 Quartus actually provides you with an RTL netlist diagram:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/FPGA_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/FPGA_schematic.png)
 
 
 ## 4 Testing
@@ -676,7 +676,7 @@ We first edited our simulated circuit to have synchronous memory and then made t
 
 This first test case shows a simple program where the address of the trap handler is first written into MTVEC, then global interrupts are enabled, and then external interrupts are enabled, then we turn on trigger in verify.cpp.cpp and that changes the value of a0 to CAFEBABE.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_interrupt.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/external_interrupt.png)
 
 This is done in verify.cpp via turning on a0 for a few cycles:
 
@@ -692,13 +692,13 @@ This is done in verify.cpp via turning on a0 for a few cycles:
 ```
 We can see on gtkwave that after the trigger goes high, we escape the loop and a0 is set to CAFEBABE.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_gtk.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/external_gtk.png)
 
 #### Timer Interrupts
 
 The next test was to set the clock; this once was a bit longer as I wanted to show how good programming practice would require saving the registers and then getting them back if using them in the trap handler (as they are not automatically saved by the hardware). 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_interrupt.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/timer_interrupt.png)
 
 - Lines 12-17 just enable global and timer interrupts to allow the trap handler to be entered.
 - Lines 18-20 set the bottom LED to turn on.
@@ -724,11 +724,11 @@ This is done in verify.cpp by doing:
 
 Looking at GTKwave, we can see the LEDs flip after the time hits 500 and then flip back when it hits it the second time:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk1.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/timer_gtk1.png)
 
 After another ~500 cycles
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/timer_gtk2.png)
 
 
 
@@ -736,7 +736,7 @@ After another ~500 cycles
 
 Our first successful port onto an FPGA showed us these statistics:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/fpga_stats.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/fpga_stats.png)
 
 Which matches up with the memory we expected. It is interesting to see that our design would need that many logic elements and registers.
 
@@ -760,7 +760,7 @@ END;
 - This program would first load an alternating pattern of 1's and 0's (Hex 255) into the address 8000200, which is the address we reserved for the LEDs's
 - Then it would store that same value into a0, so the 7-segment displays should show 255.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/leds_7.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/leds_7.jpeg)
 > That is exactly what we observed
 
 #### External Interrupt Test
@@ -862,7 +862,7 @@ Finally, we wanted to recreate the F1 lights reaction test on our FPGA, now usin
 
 First, I created this FSM model and defined 4 states for the implementation.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/F1FSM.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/F1FSM.png)
 
 - S0: We increment the amount of LEDs that are on 1 by 1 until they are all on.
 - S1: Once they are all on, we wait 1 second and turn them off.
