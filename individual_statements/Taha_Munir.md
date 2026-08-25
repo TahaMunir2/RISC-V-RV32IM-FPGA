@@ -37,7 +37,7 @@ For Lab 4, we spun a random wheel, and I was fortunate enough to be handed the r
 
 I made the following unit test benches:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/units.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/units.png)
 
 With each test bench thoroughly testing the full functionality of the block:
 
@@ -94,17 +94,17 @@ To make the testbenches, I used the 2 reference test benches we were given and s
 
 For the top-level integration, I used this schematic provided to use in the project brief as a reference:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/microarchitecture.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/microarchitecture.jpg)
 
 ---
 
 ### Single Cycle:
 
-I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/README.md).
+I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/single-cycle-cpu/README.md).
 
 For this section, my primary responsibility was to add the 6 additional instructions such that we were able to pass the 5 reference programs provided to us in the project brief:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/asms.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/asms.png)
 
 These were the instructions I added:
 
@@ -176,7 +176,7 @@ end
 
 I added the following cases in the signextender block for it to be able to understand the new instruction types we added in accordance with the table below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/functions.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/functions.png)
 
 #### Data Memory:
 
@@ -248,7 +248,7 @@ This was repeated for the rest of the pipeline registers.
 
 ### Z Extensions:
 
-I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
+I wrote the full documentation of this section. For more details, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Z-extensions/README.md).
 
 I noticed that CSR instructions were omitted on the project brief from the full RV32I implementation, so I did some research into them and found out they are sometimes referred to as the Zicsr extension and are used to implement interrupts by utilising a Control Status Register module.
 
@@ -295,7 +295,7 @@ Key Points:
 
 I also added Zba instructions while I was at it, as they seemed quite easy and helped simplify shift and add instructions into just 1 atomic instruction:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zba_instructions.png)
 
 ---
 
@@ -303,7 +303,7 @@ I also added Zba instructions while I was at it, as they seemed quite easy and h
 
 This was the hardest yet most rewarding thing I designed for this project. I was able to port our pipelined CPU with the Z extension onto an FPGA, as well as add a trap handler for 2 types of interrupts: timer and external (trigger) interrupts and design a 4-state FSM to run the F1 lights in assembly utilising the functionality of our interrupts. 
 
-Due to the extreme depth of the implementation, please refer to: [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
+Due to the extreme depth of the implementation, please refer to: [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Interrupts-and-FPGA/README.md).
 > This part is not easily summarisable as changes and additions were required in almost every part of the CPU, so please look at my thorough breakdown of the FPGA implementation for this section.
 
 #### Design Decisions:

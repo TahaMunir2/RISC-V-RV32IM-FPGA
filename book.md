@@ -122,7 +122,7 @@ assign pc = internal_pc;
 
 - Our ROM starts at the address BFC00000 due to the memory map we were provided in the project brief:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/memory.jpg)
 
 ### Instruction Memory 
 
@@ -261,7 +261,7 @@ assign funct7 = instr [31:25];
 
 The 3 segments that the decoder uses are the OPcode, the funct3 (if available) and the funct7 (if available) to determine what type of instruction we are decoding. The OPcode is always mapped to the bottom 7 bits, and the locations of funct3 and funct7 don't change; however, whether they are available depends on the type of instruction, however. They simply aren't used if they don't exist for that OPcode.
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/functions.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/functions.png)
 
 #### Control Signals
 
@@ -458,7 +458,7 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 ## Schematic
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ## Testing
 
@@ -487,7 +487,7 @@ We also have a MUX in our top-level schematic (below) for determining PC; howeve
 
 For lab 4 (which covered the first 3 instructions), we made unit tests for every block:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/units.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/units.png)
 
 With each test bench containing many test cases:
 
@@ -542,11 +542,11 @@ TEST_F(SignextTestbench, SRC2Test2)
 
 For a single cycle, we used the testbenches provided in the project brief for our testing:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/asms.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/asms.png)
 
 And all the tests passed:
 
-![alt_text](https://github.com/TahaMunir2/Team5/blob/main/images/singlecyclepass.png)
+![alt_text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/singlecyclepass.png)
 
 ### F1 Lights
 
@@ -949,7 +949,7 @@ Two new signals were added to support variable-width loads with sign/zero extens
 ---
 ## Final Circuit Schematic:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/schematic.png)
 
 
 ---
@@ -987,7 +987,7 @@ The initial `doit.sh` file is modified so we can run this test
 
 Here is what we obtain:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/control.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/control.jpg)
 
 #### ALU Verification ( `alu_tb.cpp` ):
 
@@ -1012,7 +1012,7 @@ The initial `doit.sh` file is modified so we can run this test.
    ```
 Here is what we obtain:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/alu.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/alu.jpg)
 
 
 ### Assembly Test Programs:
@@ -1243,7 +1243,7 @@ These files containing the additional assembly code are in the asm folder contai
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verify_full.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/verify_full.jpg)
 
 All test cases pass.
 
@@ -1346,7 +1346,7 @@ Where:
 
 The table (from Harris and Harris book) below shows typical propagation delays for processor components:
 
-![](https://github.com/TahaMunir2/Team5/blob/main/images/p_component_delays.png)
+![](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_component_delays.png)
 
 ##### Single-Cycle Processor Performance
 
@@ -1504,19 +1504,19 @@ When `Jump_e` is asserted:
 #### 1.	Why hazards occur in a pipeline? 
 In a pipelined CPU, multiple instructions are executed in parallel. Hazards arise due to this inherently parallel structure. 
 Data Hazards occur when one or more instructions depend on results that have not yet been written back into the register file. Specifically, this arises when the destination register of the previous instruction is one of the source registers of the latter instruction. This phenomenon is called a Read-After-Write hazard.
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image1.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image1.png)
 
 In the figure above, instructions that follow the `add s8, s4, s5` instruction use the s8 register as a source register in their arithmetic and logical operations. For instance, `sub s2, s8, s3` requires the contents of the register s8 in the 3rd clock cycle, the next instruction in the 4th, and the one after on the 5th. However, the initial add instruction is only able to write back to the register file by the end of the 5th clock cycle. Therefore, the instructions that follow read the previous value of s8 from the register, which is invalid in the logical sequence of execution and will most likely culminate in an erroneous result. To resolve this, forwarding logic is used, which in brief terms, is a shortcutting mechanism that writes back the result of an ALU operation back to the register file as soon as it becomes available if the subsequent instructions are dependent upon that register.
 
 A special case arises when the first instruction is a “Load” instruction.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image2.png)
  
 When the instruction immediately after an “lw” instruction has a source register that is meant to be written into by the `lw` instruction, the 2 stage difference between the decode and memory stages means that the result of the “lw” instruction only becomes available once the next instruction has already reached and completed its execution stage. This is shown by the topmost arrow pointing from the bus carrying the result of the data memory (the “lw” result) to the top input of the ALU. Since the data dependency involves a result that only becomes available in the same clock cycle as the execution of the dependent instruction, forwarding on its own is no longer sufficient. 
 
 Control Hazards are caused by branch instructions where the condition required for the branch is true, meaning the branch is taken. Once it is determined that the branch predicate is true, the program counter must branch to a different location, and the sequential order in which instructions are fetched from the instruction memory is broken. Depending on the offset of a branch instruction, an asserted branch invalidates the instructions fetched after the branch instruction and before the deduction of the branch condition’s validity. 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Untitled.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Untitled.png)
 
 It is only at the point where the red arrow is, which is 2 clock cycles after the `beq` instruction is fetched from instruction memory, that the branch condition predicate is determined in the `EXECUTE` stage:
 
@@ -1588,7 +1588,7 @@ To control operand multiplexers feeding the ALU, the Hazard Unit sets two 2-bit 
 
 So the circuit schematic for exclusively the hazard unit’s forwarding mechanism is identical to that detailed in the lecture slides as shown below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image3.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image3.png)
  
 What this diagram does not cover is how the hazard unit tackles load word data dependencies and control hazards, discussed later.
 Why forwarding ignores loads here
@@ -1604,7 +1604,7 @@ Forwarding entirely removes stalls that would otherwise be caused by data depend
 #### 4. Load word data dependency
 Forwarding cannot resolve a dependency when the preceding instruction is a load. In a load instruction, the data is only available after the Memory stage, meaning forwarding cannot provide a valid operand in the immediate next cycle.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image4.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image4.png)
  
 In this case, the Hazard Unit must stall the pipeline for exactly one cycle. It freezes the Program Counter and Fetch-to-Decode pipeline register and flushes the Decode-to-Execute pipeline register. The reason why Decode-to-Execute pipeline register is flushed is that if it were only stalled, the “lw” instruction would propagate through to the memory stage but also still remain in the Decode-to-Execute pipeline register, essentially duplicating the lw instruction. Thus, flushing this stage of the pipeline both achieves the stall required for synchronization (since the next register is not able to propagate into the execute stage) and prevents the duplication that would cause 2 back to back “lw” instructions.
 
@@ -1651,7 +1651,7 @@ How a bubble/NOP is implemented is discussed elsewhere, but in essence, all of t
 
 #### 5. Control hazard detection and Flush logic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/image5.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/image5.png)
  
 In the image, the first instruction in the sequence is “beq s1, s2, L1”. In the first clock cycle, the instruction is fetched from instruction memory and fed to the pipeline register connecting the fetch stage to the decode stage. In the second clock cycle, the branch instruction is decoded and the relevant registers read from the register file. Meanwhile, the next instruction – “sub s8, t1, s3” – is fetched from instruction memory. Only by the third clock cycle, does the ALU determine that s1 and s2 are equal. However, two new instructions have been fetched already from instruction memory under the speculative assumption that the branch will not be taken. The solution is to “flush” the fetch and decode stages. To do this, the hazard unit outputs a control signal to the Fetch-to-Decode and Decode-to-Execute pipeline registers. Our pipeline registers have internal logic that synchronously sets the contents of the pipeline registers to 0 once the one-bit control signal from the hazard unit triggers flushing. Since the PC is updated to the branch target, the pipeline then continues with correct instructions.
 
@@ -1668,7 +1668,7 @@ PC source is sufficient for determining a branch/jump instruction.
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_pipelining.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_pipelining.png)
 
 ---
 
@@ -1890,7 +1890,7 @@ main:
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_parrallelism.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_parrallelism.jpg)
 
 ---
 
@@ -1928,7 +1928,7 @@ This allows the add instruction to execute correctly without stalling, demonstra
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifyforwarding.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_verifyforwarding.jpg)
 
 ---
 
@@ -1954,14 +1954,14 @@ The signals causing the stall are also shown in the waveform.
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifyload.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_verifyload.jpg)
 
 
 
 ---
 
 #### 4) Control Hazards: Branch Misprediction
-Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/Team5/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
+Branches are predicted as not taken by default (see [Branch Prediction Enhancement]([https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/branchprediction]) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
 
 We will use the assembly code `6_beq` with a small modification consisting of adding 2 instructions after the branch to illustrate how a flush occurs to discard the incorrectly fetched instructions.
 ```
@@ -1989,7 +1989,7 @@ At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifybranches.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_verifybranches.jpg)
 
 
 #### Running the code
@@ -2014,7 +2014,7 @@ At the next cycle the value of PCF is: **0xBFC00008** ( ` PCE - 4 ` )
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/p_verifypipelining.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/p_verifypipelining.jpg)
 
 
 All test cases pass.
@@ -2069,7 +2069,7 @@ We maintain a table indexed by the branch PC containing:
 - The **2-bit prediction state**
 - The **target address** for fast redirection when predicting "taken"
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/branchp.png)
 
 Finite State Machine diagram taken from Harris and Harris book
 
@@ -2453,7 +2453,7 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchpredictio.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/branchpredictio.png)
 
 
 ---
@@ -2491,7 +2491,7 @@ We created a c++ testbench ( `predictor_tb.cpp ` ) that isolates the branch pred
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingpredictor.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/bverifyingpredictor.jpg)
 
 ---
 
@@ -2538,7 +2538,7 @@ Note that:
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingcorrectpred.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/bverifyingcorrectpred.jpg)
 
 
 #### Running the code
@@ -2563,7 +2563,7 @@ Note that:
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/bverify.jpg)
 
 All test cases pass
 
@@ -2595,7 +2595,7 @@ All test cases pass
 
 Caches are relatively small and fast memory components that are used to improve processer performance by decreasing the time taken per fetch and writeback (on average). Caches provide quick and efficient access to a small portion of the main memory, and are also able to be written to and write back to main memory if need be. However, caches are significantly more expensive than main memory and cannot occupy too much area, which is why they are designed to be only a fraction of main memory’s size.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/cache_speed.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cache_speed.png)
 
 Caches exploit spatial and temporal locality in order to improve fetch and writeback speed. Spatial locality is the principle that accessing one memory location increases the likelihood that adjacent memory locations (in the virtual memory space) will be accessed shortly afterward. On the other hand, the concept of temporal locality is that recently accessed data is also highly likely to be re-accessed due to the inherently cyclic nature of programming.
 
@@ -2609,7 +2609,7 @@ In our design, we have implemented a 2-way associative L1 instruction cache and 
 
 The overall memory hierarchy is as such:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_hierarchy.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/overall_hierarchy.png)
 
 As shown in the diagram above, the processor reads and writes from the L1 caches, which read from and write to the L2 cache, which reads from and writes to main memory.
 
@@ -2674,7 +2674,7 @@ However, if the read request is a miss, the instruction cache stalls the rest of
 #### Load from L2
 On a miss the instruction cache needs to decide which way to store the fetched data into. For cold misses, our cache defaults to replacing block 0 if both bits are invalid, or block 1 if block0.valid = 1. However, for capacity misses, our cache uses an LRU replacement policy.
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cimage.png)
 
 Cold miss eviction:
 - `!cache[set].block0.valid && !cache[set].block1.valid` → both blocks are invalid → replace block 0
@@ -3223,24 +3223,24 @@ In our cycle-by-cycle simulation, the cache does not appear to improve performan
 
 ---
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/mdiagram.png)
 
 
 ### 3.2 Overall Hierarchy Schematic
 
 ---
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/overall_schematic_c.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/overall_schematic_c.png)
 
 ### 3.3 A Closer Look at L1 and L2
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L1L2_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/L1L2_schematic.png)
 
 ---
 
 ### 3.4 A Closer Look at L2 and Main Memory
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/L2main_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/L2main_schematic.png)
 
 ---
 
@@ -3324,11 +3324,11 @@ We also created a c++ testbench (l2_cache_tb.cpp) to isolate the data cache modu
 Here are the results:
 
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-1.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cimage-1.png)
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-2.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cimage-2.png)
 
-![alt text](https://github.com/TahaMunir2/Team5/blob/main/images/cimage-3.png)
+![alt text](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/cimage-3.png)
 
 
 ---
@@ -3724,11 +3724,11 @@ The control shift register is a register of a fixed size, much larger than the r
 
 The Zicsr instructions are implemented with the CSR to read from it and write to it. All Zicsr instructions are atomic read-modify-write instructions, as in they read the old value of the control status register into rd and modify rd all in 1 instruction. In contrast, if we wanted to do this with our normal registers, it would require 2 instructions, one to copy and one to write. There are 6 Zicsr instructions csrrw, csrrs, csrrc, csrrwi, csrrsi and csrrci, with the latter 3 being immediate (instead of register) versions of the first 3. Each instruction has a CSR register (that will be both the source and the destination), a destination register that will get the old value of that CSR, and either a source register or a 5-bit unsigned immediate that will be used for determining the new value of that CSR, as shown below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ZICSR.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ZICSR.jpg)
 
 The Zba instructions are also atomic in the sense that they reduce shifting and adding into 1 instruction. They are called sh1add, sh2add and sh3add, which are shortened versions of shift and add. They operate on the normal registers and not on the CSR registers, and are just a simple way to make programs more efficient.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zba_instructions.png)
 
 ## 2. Implementation
 
@@ -3781,7 +3781,7 @@ always_comb begin
 - **`2'b10: temp = temp | wd`**: **CSRRS stands for Control Status Register Read and Set**, and you do the same **read** as before but for writing, you go through all the bits in wd and if they are high than the corresponding bit in temp will also be **set** (the rest of the bits are untouched), this can be simplified into an OR operation.
 - **`2'b11: temp = temp & (~wd)`**: CSRRC stands for **Control Status Register Read and Clear**, and you do the same **read** as always, but now you go through the bits of wd and if a bit is high, then you **clear** the corresponding bit in the CSR this is the same as an & operation but with **`wd`** inverted.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/csr.png)
 
 #### Decoder
 
@@ -3911,7 +3911,7 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ## 3 Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zschem.svg)
 
 ## 4 Testing and Verification
 
@@ -3944,7 +3944,7 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 ### Zicsr Testbench
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/csr_tb.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/csr_tb.png)
 
 - Line 6: We set x1 to 12345678 and csr[340] to 12345678 with t1 by running csr read and write
 - Line 8: We use csr read and set with t2, which is 0000FFFF to set the bottom 2 bytes to 1, so csr[340] = 1234FFFF
@@ -3953,16 +3953,16 @@ Beyond this, we only needed to add a few lines to the Hazard unit for the CSR ad
 
 Each time we are saving csr[340] into x1, so we can trace the waveforms to check it's actually changing correctly (note: t1 = reg[6], t2 = reg[7], t3 = reg[28]) as shown below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/gtkwave.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/gtkwave.png)
 
 ### Zba Testbench
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/shadd_tb.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/shadd_tb.png)
 
 
 We ran the following assembly code to test out the Zba functionality. Notably, we had to add a line at the top of the file to allow the compiler to accept the Zba instructions **`.option arch, +zba`**.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_gtkwave.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zba_gtkwave.png)
 
 
 As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each operation takes 1 clock cycle, whereas without these instructions it would be spread out over 2 cycles.
@@ -4013,7 +4013,7 @@ We previously defined a CSR module and added some instructions to play around wi
 
 Let's start by talking about privilege levels. There are 3 privilege levels in the RV32I CPU: Machine Mode (highest privilege), Supervisor and User (lowest privilege). Depending on the privilege level that the CPU is currently in, certain CSRs might not be available, as they are only available to high privilege levels for security purposes; however, Machine mode can access all the CSRs. For this project, we can assume that we are always in Machine Mode and no other privilege level exists on our CPU; hence, the registers we define are exclusive to M-mode and would theoretically not be available in lower privilege levels. This also means we do not need to deal with complex ideas such as delegations. 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/privelege.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/privelege.png)
 
 Next, let's talk about the trap handler. The trap handler is a specific piece of code stored somewhere on the instruction memory, and it is only accessed when a "trap" is called. There are technically multiple different trap handlers corresponding to each privilege level; however, as we are only in M-mode, we only have 1. A trap can be either an interrupt (like external interrupts or timer interrupts) or an exception (like **`ecall`** or dividing by 0, etc), and the trap handler is called to deal with them. We will only be dealing with interrupts in this section; however, similar logic can be derived for exceptions.
 
@@ -4023,7 +4023,7 @@ Now we need to define how interrupts can happen in our CPU. We will define 2 typ
 
 To allow these interrupts to occur, we need to define 7 special registers that will aid us with these interrupts, although in proper RISC-V there are many more for a variety of reasons we do not need to consider:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/m.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/m.png)
 
 #### mtvec: 0x305
 This CSR simply stores the address of where the trap handler program is stored. Theoretically, there are also utvec and stvec for the trap handlers of different privilege levels. This needs to be written by the programmer using the CSR instructions we previously defined, or else we will not know where to jump to for the trap handler. 
@@ -4052,7 +4052,7 @@ Therefore, we need mstatus[3], mip[7] and mie[7] to all be high to enter the tra
 
 An FPGA (Field Programmable Gate Array) is a programmable integrated circuit which can form physical implementations of digital circuits described in HDLs. They are made of a matrix of configurable logic blocks (which can be further broken down into flip-flops, lookup tables and full adders) with configurable interconnects that allow FPGAs to create real digital circuits. The DE-10 lite FPGA that we were able to borrow from EEStore comes with 50,000 logic elements, 200 KB of BRAM, 6 7-segment displays and 10 individually addressable LEDs.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/de10.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/de10.jpeg)
 
 We knew we had to use the BRAM to define the memory, or else the FPGA would use logic elements instead for each register, which would be terribly inefficient and slow and might not work at all. The BRAM on an FPGA are broken into ~1KB blocks called M9k BRAM blocks, which are synchronous are extremely fast and are similar to RAM used in PC's. However, to implement these, we would need to change our ROM and RAM to be read synchronously.
 
@@ -4406,7 +4406,7 @@ We can then define these in the FPGA wrapper as follows, with each segment being
 
 Now is where everything gets particularly tricky. We need to convert real-world actions into digital signals, only using digital logic. For example, we need a trigger pulse from pressing the button; however, if we just keep the button as an input (which we will do using the TCL file), without processing it first, it will lead to 100,000s of cycles of interrupt requests, which could very well break our program. We need something called a "debouncer" to wait for the signal to stop "bouncing" (as shown below) between high and low and become stable, and then an edge detector to only take in 1 pulse, so our external interrupt works as it does in simulation.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/debounce.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/debounce.png)
 
 The debouncing logic relies on 2 stages, one stage which removes metastability and a second stage that implements a timer for 2^20 cycles (20 ms at 50 MHz) to wait for a non-bouncy signal
 
@@ -4614,7 +4614,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SEGMENT5[*]
 
 Quartus actually provides you with an RTL netlist diagram:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/FPGA_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/FPGA_schematic.png)
 
 
 ## 4 Testing
@@ -4647,7 +4647,7 @@ We first edited our simulated circuit to have synchronous memory and then made t
 
 This first test case shows a simple program where the address of the trap handler is first written into MTVEC, then global interrupts are enabled, and then external interrupts are enabled, then we turn on trigger in verify.cpp.cpp and that changes the value of a0 to CAFEBABE.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_interrupt.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/external_interrupt.png)
 
 This is done in verify.cpp via turning on a0 for a few cycles:
 
@@ -4663,13 +4663,13 @@ This is done in verify.cpp via turning on a0 for a few cycles:
 ```
 We can see on gtkwave that after the trigger goes high, we escape the loop and a0 is set to CAFEBABE.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/external_gtk.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/external_gtk.png)
 
 #### Timer Interrupts
 
 The next test was to set the clock; this once was a bit longer as I wanted to show how good programming practice would require saving the registers and then getting them back if using them in the trap handler (as they are not automatically saved by the hardware). 
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_interrupt.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/timer_interrupt.png)
 
 - Lines 12-17 just enable global and timer interrupts to allow the trap handler to be entered.
 - Lines 18-20 set the bottom LED to turn on.
@@ -4695,11 +4695,11 @@ This is done in verify.cpp by doing:
 
 Looking at GTKwave, we can see the LEDs flip after the time hits 500 and then flip back when it hits it the second time:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk1.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/timer_gtk1.png)
 
 After another ~500 cycles
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/timer_gtk2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/timer_gtk2.png)
 
 
 
@@ -4707,7 +4707,7 @@ After another ~500 cycles
 
 Our first successful port onto an FPGA showed us these statistics:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/fpga_stats.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/fpga_stats.png)
 
 Which matches up with the memory we expected. It is interesting to see that our design would need that many logic elements and registers.
 
@@ -4731,7 +4731,7 @@ END;
 - This program would first load an alternating pattern of 1's and 0's (Hex 255) into the address 8000200, which is the address we reserved for the LEDs's
 - Then it would store that same value into a0, so the 7-segment displays should show 255.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/leds_7.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/leds_7.jpeg)
 > That is exactly what we observed
 
 #### External Interrupt Test
@@ -4833,7 +4833,7 @@ Finally, we wanted to recreate the F1 lights reaction test on our FPGA, now usin
 
 First, I created this FSM model and defined 4 states for the implementation.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/F1FSM.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/F1FSM.png)
 
 - S0: We increment the amount of LEDs that are on 1 by 1 until they are all on.
 - S1: Once they are all on, we wait 1 second and turn them off.
@@ -5319,7 +5319,7 @@ The ROB performs three sequential operations: **Allocation**, **Writeback**, and
 
 When instructions are dispatched, they are allocated at the `tail` pointer. The `tail` advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-allocation.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-allocation.png)
 
 In this diagram, we clearly observe how the tail pointer advances in the buffer at allocation.
 
@@ -5327,7 +5327,7 @@ In this diagram, we clearly observe how the tail pointer advances in the buffer 
 
 When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-writeback.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-writeback.png)
 
 In this diagram, we clearly observe how the common data bus transmits the results of each execution which are allocated to specific tags in the Re-Order Buffer.
 We also note that since execution does not occur in order, the transmission of data in the Re-Order Buffer will not necessarly follow the program order.
@@ -5562,7 +5562,7 @@ end
 
 The writeback logic runs on the **negative edge** of the clock while dispatch, issue, and free run on the **positive edge**. This design choice enables **same-cycle wake-up**:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ruuwritebacktrick.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ruuwritebacktrick.png)
 
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue.
 
@@ -5570,11 +5570,11 @@ This technique was not part of the first implementation of this circuit. However
 
 Below is what we observed before writing back at the negative edge of the clock: (all the work was done in the positive edge)
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebackposedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebackposedge.jpeg)
 
 Below is what we observed before writing back at the negative edge of the clock:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebacknegedge.jpeg)
 
 Indeed, this strategy of writing back at the negative edge eliminates the delay and increase the throughput.
 
@@ -5590,7 +5590,7 @@ To maximize throughput, we divide the processor into **5 pipeline stages**, each
 
 The following table (from Harris and Harris) shows typical propagation delays:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/component_delays.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/component_delays.png)
 
 ---
 
@@ -5829,7 +5829,7 @@ The most critical part of the integration is determining **where each source ope
 
 For each source register, we follow this decision process:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/decisiontree.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/decisiontree.jpg)
 
 ##### Implementation
 
@@ -5956,7 +5956,7 @@ mux mux_ALU1_immVSreg(
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Oooarith_1.jpg)
 
 
 ---
@@ -5998,7 +5998,7 @@ We created a testbench ( `rat_tb.cpp ` , in ` tb/tests ` ) that verifies the RAT
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingrat.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/verifyingrat.jpg)
 
 ---
 
@@ -6046,7 +6046,7 @@ We created a testbench ( `rob_tb.cpp ` , in ` tb/tests ` ) that verifies the ROB
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingrob.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/verifyingrob.jpg)
 
 ---
 
@@ -6080,7 +6080,7 @@ We created a testbench ( `ruu_tb.cpp ` , in ` tb/tests ` ) that verifies the RUU
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/verifyingruu.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/verifyingruu.jpg)
 
 ---
 
@@ -6147,7 +6147,7 @@ GTKWave analysis confirms simultaneous execution:
 
 The waveform demonstrates both ALUs executing simultaneously, with ALU1 processing values 0x0A (10) and 0x1E (30) while ALU2 concurrently handles 0x14 (20) and 0x28 (40). This confirms the superscalar processor successfully exploits instruction-level parallelism by dispatching and executing independent instructions in parallel across both ALUs.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebacknegedge.jpeg)
 
 ---
 
@@ -6193,7 +6193,7 @@ This test verifies shift-immediate operations (slli, srli) with RAW dependencies
 
 This waveform provides evidence of the performance advantage of out-of-order execution. We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/averifyingshifts.jpg)
 
 **IPC Calculation:**
 
@@ -6261,7 +6261,7 @@ This test combines immediate shifts (slli, srli) with register-based shifts (sll
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/averify.jpg)
 
 
 > **Note:** The performance upgrade results and evidence are included in the [4.2 Assembly Test Programs](#42-assembly-test-programs) under the tests `Test 5 :parrallelism.s` `Test 8 :sup_shifts.s` using GTKWave cycle by cycle analysis.
@@ -6912,7 +6912,7 @@ The tags are propagated so the Memory stage knows which ROB entry to update.
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofull_2.png)
 
 ---
 
@@ -7112,6 +7112,6 @@ main:
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofverify.jpg)
 
 ---

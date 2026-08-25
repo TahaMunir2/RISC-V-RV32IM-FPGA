@@ -110,7 +110,7 @@ I also created an ALU testbench during this phase, which I later improved when e
 
 ## 3. Full 37-Instruction Implementation
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/FULL-RV32I/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/FULL-RV32I/README.md).
 
 Extending from 9 to 37 instructions required changes to both the datapath and control path. The goal was to keep the same overall structure while making it general enough to handle all RV32I instructions.
 
@@ -185,7 +185,7 @@ I first verified individual blocks, such as the control unit and ALU, writing c+
 
 Once confident in the core modules, I proceeded to evaluate the full integration using the five reference tests originally provided with the reduced RV32I version. I additionally wrote custom assembly programs that tested the new behaviors introduced in the full 37-instruction implementation each targeting specific instruction groups
 
-The 10 assembly programs tested are listed below and an explanation for each one of them can be found on [GitHub README](https://github.com/TahaMunir2/Team5/blob/FULL-RV32I/README.md) :
+The 10 assembly programs tested are listed below and an explanation for each one of them can be found on [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/FULL-RV32I/README.md) :
 
 1. **Basic arithmetic** (`ADDI`, `ADD`, `SUB`)
 2. **Logical operations** (`AND`, `OR`, `XOR`, `ANDI`, `ORI`, `XORI`)
@@ -210,7 +210,7 @@ All 37 instructions pass verification.
 
 ## 4. Pipelined Processor
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/PIPELINING/README.md#2-implementation).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/PIPELINING/README.md#2-implementation).
 
 Pipelining lets different parts of multiple instructions run at the same time. Instead of finishing one instruction before starting the next, we divide the processor into 5 stages (Fetch, Decode, Execute, Memory, Writeback) with registers between them. This increases throughput significantly.
 
@@ -333,7 +333,7 @@ The signals causing the stall are also shown in the waveform.
 ---
 
 #### 4) Control Hazards: Branch Misprediction
-Branches are predicted as not taken by default (see [Branch Prediction Enhancement](https://github.com/TahaMunir2/Team5/tree/branchprediction) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
+Branches are predicted as not taken by default (see [Branch Prediction Enhancement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/branchprediction) for improved prediction). When a branch reaches the execute stage and is determined to be taken, a flush occurs to discard the incorrectly fetched instructions.
 I used the assembly code `6_beq` with a small modification consisting of adding 2 instructions after the branch to illustrate how a flush occurs to discard the incorrectly fetched instructions.
 ```
 .text
@@ -391,7 +391,7 @@ This demonstrates the fundamental advantage of pipelining: higher throughput thr
 
 ## 5. Branch Prediction
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/branchprediction/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/branchprediction/README.md).
 
 In the pipelined processor, instructions are fetched assuming `PC + 4`. Branch decisions are only resolved in the Execute stage, meaning incorrect instructions may already be in the pipeline. This causes control hazards that require flushes, wasting cycles.
 
@@ -639,7 +639,7 @@ All test cases pass.
 
 ## 6. Cache Implementation
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Hierarchical-cache/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Hierarchical-cache/README.md).
 
 We implemented a full memory hierarchy: 2-way associative L1 instruction and data caches, and a 4-way associative L2 cache with write-back policy and dirty bit tracking.
 
@@ -686,7 +686,7 @@ The fix was simple once I understood the problem: I had forgotten to include the
 
 ## 7. Out-of-Order Superscalar (Arithmetic Instructions)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_arithmetic/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/out_of_order_superscalar_arithmetic/README.md).
 
 This section represents the most substantial part of my contribution to the project. The concepts implemented here extend beyond the scope of the lecture material, requiring extensive independent research into advanced computer architecture techniques pioneered in the 1960s and refined through decades of processor development.
 
@@ -775,11 +775,11 @@ The ROB performs three operations: Allocation, Writeback, and Commit.
 
 **Allocation:** When instructions are dispatched, they are allocated at the `tail` pointer. The tail advances by 1 or 2 depending on how many instructions are allocated.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-allocation.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-allocation.png)
 
 **Writeback:** When an ALU finishes execution, it broadcasts the result on the CDB. The ROB captures the value and sets `ready=1`. Since execution does not occur in order, results arrive at the ROB out of program order.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/rob-writeback.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/rob-writeback.png)
 
 
 **Commit:** Instructions commit from the `head` in program order. Only entries with `ready=1` that haven't been committed yet can retire. The ROB commits up to 2 instructions per cycle:
@@ -851,17 +851,17 @@ The writeback logic runs on the negative edge of the clock while dispatch, issue
 
 When an ALU produces a result, dependent instructions can wake up and potentially issue in the same cycle.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ruuwritebacktrick.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ruuwritebacktrick.png)
 
 Without this, an instruction would have to wait an extra cycle after its producer completes before it could issue. I discovered this delay by examining ALU operand signals in GTKWave, where I observed instructions waiting unnecessarily. After implementing negative-edge writeback, the delay was eliminated and throughput increased.
 
 Below is what I observed before writing back at the negative edge of the clock: (all the sequential work was done in the positive edge)
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebackposedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebackposedge.jpeg)
 
 Below is what I observed before writing back at the negative edge of the clock:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/writebacknegedge.jpeg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/writebacknegedge.jpeg)
 
 
 ### 7.4 Pipelined Design
@@ -909,7 +909,7 @@ For comparison with a single-cycle arithmetic-only processor:
 
 The most critical part of the integration is determining where each source operand comes from and whether it's available. For each source register, I follow this decision process:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/decisiontree.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/decisiontree.jpg)
 
 1. **Check RAT**: Does this register have an in-flight producer?
 2. **If no producer**: Fetch from register file (operand valid)
@@ -956,7 +956,7 @@ If there's a dependency, I bypass the normal RAT/ROB lookup and use Instruction 
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Oooarith_1.jpg)
 
 
 ### Testing
@@ -997,7 +997,7 @@ This represents a **60% improvement** over the baseline IPC of 1.
 
 GTKWave analysis confirmed simultaneous execution: ALU1 processing one instruction while ALU2 concurrently handles an independent instruction that was fetched later but had no dependencies.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/averifyingshifts.jpg)
 
 We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
@@ -1007,7 +1007,7 @@ All test cases pass.
 
 ## 8. Out-of-Order Superscalar (Full Version with Loads)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_full_version/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/out_of_order_superscalar_full_version/README.md).
 
 Building on the arithmetic out-of-order processor, I extended the design to support load instructions (`LW`, `LH`, `LB`, `LHU`, `LBU`). The core Tomasulo infrastructure (RAT, ROB, RUU, CDB) remained unchanged, my goal was to integrate loads with minimal disruption to the existing architecture.
 
@@ -1115,7 +1115,7 @@ The tags propagate so the Memory stage knows which ROB entry to update when the 
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofull_2.png)
 
 ### 8.4 Testing
 
@@ -1133,7 +1133,7 @@ I created 7 new tests specifically for load functionality, in addition to reusin
 
 All 17 tests pass.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/ooofverify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofverify.jpg)
 
 ---
 

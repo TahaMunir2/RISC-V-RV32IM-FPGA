@@ -12,20 +12,20 @@ On this page, you can find links to the:
 
 ## Team Statement:
 
-### [Statement](https://github.com/TahaMunir2/Team5/blob/main/teamstatement.md)
+### [Statement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/teamstatement.md)
 
 ## Individual Statements:
 
 | CID | Name | Individual Statement |
 |------|-----|----------------------|
-| 02574254 | Leo Yin | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Leo_Yin.md) |
-| 02591789 | Yusuf Kerem Teker | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Kerem_Teker.md) |
-| 02609612 | Cyril Abdelnour | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Cyril_AbdelNour.md) |
-| 02562044 | Taha Munir | [Statement](https://github.com/TahaMunir2/Team5/blob/main/individual_statements/Taha_Munir.md) |
+| 02574254 | Leo Yin | [Statement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/individual_statements/Leo_Yin.md) |
+| 02591789 | Yusuf Kerem Teker | [Statement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/individual_statements/Kerem_Teker.md) |
+| 02609612 | Cyril Abdelnour | [Statement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/individual_statements/Cyril_AbdelNour.md) |
+| 02562044 | Taha Munir | [Statement](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/individual_statements/Taha_Munir.md) |
 
 ## Compilation of READMEs
 
-## [Master Book](https://github.com/TahaMunir2/Team5/blob/main/book.md)
+## [Master Book](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/book.md)
 
 
 ## Contributions table
@@ -36,49 +36,49 @@ On this page, you can find links to the:
 | ------------  | ----------------------------- | ------------------------- | --------------------- | ----------------- | --------------------- |
 | General       | Shell Script        |                           |                    |      **           |                       |
 |               | F1 Assembly     |                        |                    |       **            |                       |
-| [Single Cycle](https://github.com/TahaMunir2/Team5/tree/single-cycle-cpu)  | Program Counter       |        *                 |                       |        **          |                       |
+| [Single Cycle](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/single-cycle-cpu)  | Program Counter       |        *                 |                       |        **          |                       |
 |               | Control Unit            |        *                   |                       |                  |        **             |
 |               | Data Path        |           *                |            **           |        *         |                       |
 |               | Sign Extension        |              *             |                       |                   |        **             |
 |               | Top Level Integration     |                  **       |                       |                   |                     |
 |               | Testing                    |             **           |                    |        *       |               |
-| [Full 37 Instructions implementation](https://github.com/TahaMunir2/Team5/tree/FULL-RV32I)      | Control Unit             |                   |     **                  |                   |                       |
+| [Full 37 Instructions implementation](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/FULL-RV32I)      | Control Unit             |                   |     **                  |                   |                       |
 |          | Data Path             |                       |                 **      |                  |                       |
 |        | Program Counter Block             |                       |                 **      |                   |                       |
 |      | Integration             |                       |                  **     |                   |                       |
 |      | Testing and Verification          |                       |            **           |                   |                       |
-| [Pipelining](https://github.com/TahaMunir2/Team5/tree/PIPELINING)      | Pipeline Register             | **                         |                       |                   |                       |
+| [Pipelining](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/PIPELINING)      | Pipeline Register             | **                         |                       |                   |                       |
 |               | Hazard unit              |                           |                       | **                 |                       |
 |               | Forwarding Logic            |                          |        **               |                   |                       |
 |               | Top File           | *                         |    *                   |      *             |                       |
 |               | Testing                     |                          |             *          | **                |                       |
-|       [ Branch prediction](https://github.com/TahaMunir2/Team5/tree/branchprediction)        |          2-bit Branch Predictor Design                 |                          |           **          |                   |                     |
+|       [ Branch prediction](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/branchprediction)        |          2-bit Branch Predictor Design                 |                          |           **          |                   |                     |
 |            |             Program Counter Logic Redefined         |                          |           **          |                   |                     |
 |            |       Top Level Integration                |                          |           **          |                   |                     |
 |            |     Testing and Verification                |                          |           **          |                   |                     |
-| [Hierarchical Cache](https://github.com/TahaMunir2/Team5/tree/Hierarchical-cache)         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
+| [Hierarchical Cache](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/Hierarchical-cache)         | 2-way L1d and L1i cache  |            *          |         *           |                   | **                 |
 |               | 4-way L2  cache  |                           |                   |                   | **                 |
 |               | Top Level Integration |                 *          |        *            |                   |                  |
 |               | Unit Testing   |                        |                   |                 |    **                |
-| [M-extension](https://github.com/TahaMunir2/Team5/tree/M-Extension)              |              Control Path          |                           |                      |   **              |                      |
+| [M-extension](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/M-Extension)              |              Control Path          |                           |                      |   **              |                      |
 |               |             ALU         |                           |                      |        **          |                      |
 |               |              Testing          |                           |                      |          **        |                      |
-| [Z-extension*](https://github.com/TahaMunir2/Team5/tree/Z-extensions)              |          Zicsr            |          **                |                      |                   |                      |
+| [Z-extension*](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/Z-extensions)              |          Zicsr            |          **                |                      |                   |                      |
 |                           |         Zba              |            **              |                      |                   |                      |
 |                           |         Testing               |         **                 |                      |                   |                      |
-| [Interrupts & FPGA*](https://github.com/TahaMunir2/Team5/tree/Interrupts-and-FPGA)       |              Interrupts           |       **                   |                      |                   |                      |
+| [Interrupts & FPGA*](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/Interrupts-and-FPGA)       |              Interrupts           |       **                   |                      |                   |                      |
 |                           |            Timer            |             **             |                      |                   |                      |
 |                           |             Memory           |                          |                      |    **               |                      |
 |                           |          MMIO        |              **            |                      |                   |                      |
 |                           |          Top Level Integration              |        **                  |                      |                   |                      |
 |                           |              FPGA Wrapper         |              **            |                      |                   |                      |
 |                           |          Testing             |                **          |                      |                   |                      |
-| [Out of Order Superscalar arithmetic](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_arithmetic)            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
+| [Out of Order Superscalar arithmetic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/out_of_order_superscalar_arithmetic)            |     Register-Aliasing Table                   |                           |        **              |                   |                      |
 |             |     Register-Update Unit                   |                           |             **         |                  |                      |
 |             |     Re-Order Buffer                   |                           |           **           |                  |                      |
 |             |     Integration and Pipeline Division                   |                           |             **         |                   |                      |
 |             |     Testing and Verification                   |                           |                  **    |                   |                      |
-| [Out of Order Superscalar full version*](https://github.com/TahaMunir2/Team5/tree/out_of_order_superscalar_full_version)           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
+| [Out of Order Superscalar full version*](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/tree/out_of_order_superscalar_full_version)           |     Data Memory Adaptation                  |                           |   **                   |                   |                      |
 |             |     Common Data Bus Adaptation                   |                           |          **            |                   |                      |
 |             |     Load Instruction Integratioon                  |                           |       **               |                   |                      |
 |             |     Testing and Verification                   |                           |         **             |                   |                      |

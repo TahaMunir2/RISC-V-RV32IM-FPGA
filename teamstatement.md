@@ -46,7 +46,7 @@ For this project, in accordance with the guidance provided in the Project Brief,
 
 We then further complemented our design by implementing a 2-bit branch predictor, the RISCV M, Zicsr and Zba extensions, and an out-of-order Superscalar architecture for arithmetic and load instructions. Finally, we added external and timer interrupts and specific control status registers for trap handling, which we then used to port our CPU onto a DE-10 Lite FPGA board with external inputs, an internal timer and external outputs.
 
-For a complete breakdown of every design decision, please look at the [book](https://github.com/TahaMunir2/Team5/blob/main/book.md).
+For a complete breakdown of every design decision, please look at the [book](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/book.md).
 
 Our final design is split amongst 3 different models:
 - **5-stage pipelined, with hierarchical cache and a 2-bit branch predictor RV32IM_Zicsr_Zba Processor**
@@ -66,7 +66,7 @@ We decided to implement both CPU testing and unit testing each time we added a n
 ### Shift in Design Approach
 We initially approached each branch by breaking it into sections as suggested by the project brief (i.e. 1 person does testing, 1 does data path, etc.), and we continued this approach until everyone had testbenched 1 branch each to make sure everyone was comfortable with both hardware and software. However, after that we realised integrating code between different people can be tricky so we decided to focus on the theoretical implementation to each branch as a group but assigning the actual coding to 1 person, this is reflected in our contribution table where initially each section is split up evenly between each person and then later on 1 person does the whole section, although everyone was still involved in the theoretical appraoch. Due to this, and also for complexity and time issues, we forked our implementation at branch prediction and ended up with 3 different CPU's as our final implementations, as they were developed in parallel, as shown in the diagram below:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/finalwork.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/finalwork.png)
 
 ---
 
@@ -74,7 +74,7 @@ We initially approached each branch by breaking it into sections as suggested by
 
 ### Single-Cycle Reduced RV32I CPU
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/single-cycle-cpu/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/single-cycle-cpu/README.md).
 
 This section covers the baseline foundation of our RV32I CPU from Lab 4. The single-cycle design gave our team an introduction to working together and designing a CPU using SystemVerilog.
 
@@ -96,7 +96,7 @@ This section covers the baseline foundation of our RV32I CPU from Lab 4. The sin
 
 **Memory Map Compliance:** Our ROM starts at address `0xBFC00000` and spans 4KB, while RAM occupies 128KB starting at `0x00000000`, following the project specification.
 
-![Memory Map](https://github.com/TahaMunir2/Team5/blob/main/images/memory.jpg)
+![Memory Map](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/memory.jpg)
 
 **Little-Endian Byte Ordering:** All memory accesses use little-endian format, with the least significant byte at the lowest address.
 
@@ -119,13 +119,13 @@ This section covers the baseline foundation of our RV32I CPU from Lab 4. The sin
 
 #### Schematic
 
-![Single Cycle CPU Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
+![Single Cycle CPU Schematic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Modified%2520Single%2520Cycle%2520CPU%2520diagram.jpg)
 
 ---
 
 ### Full RV32I (37-Instruction)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/FULL-RV32I/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/FULL-RV32I/README.md).
 
 This section extends the reduced RV32I core from 9 instructions to the complete 37-instruction base integer ISA. The key idea is to move from a special-case control unit to a fully decoded, opcode-driven controller while keeping the same overall datapath structure.
 
@@ -201,13 +201,13 @@ Instead of nested `if`/`else` blocks, the new controller uses a `case(op)` struc
 
 #### Schematic
 
-![Full RV32I Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/schematicfullriscv.png)
+![Full RV32I Schematic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/schematicfullriscv.png)
 
 ---
 
 ### Pipelined Processor 
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Pipelining/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Pipelining/README.md).
 
 Pipelining improves processor performance by letting different parts of multiple instructions run simultaneously. We extended the single-cycle design into a 5-stage pipeline with forwarding, stalling, and flushing mechanisms to handle hazards.
 
@@ -273,14 +273,14 @@ In the pipelined design, branch resolution requires a dedicated module in the Ex
 
 #### Schematic
 
-![Pipelined Processor Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/schematicpipelining.png)
+![Pipelined Processor Schematic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/schematicpipelining.png)
 
 
 ---
 
 ### Branch Prediction
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/branchprediction/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/branchprediction/README.md).
 
 In our pipelined processor, branches are only resolved in the Execute stage, meaning incorrect instructions may already be in the pipeline. The baseline approach predicts all branches as not taken, but this performs poorly for loops where backward branches are typically taken repeatedly.
 
@@ -298,7 +298,7 @@ The key insight is that after exiting a loop, the two-bit predictor stays in `WE
 
 The two-bit predictor uses a four-state finite state machines:
 
-![FSM Diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
+![FSM Diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/branchp.png)
 
 #### State Encoding
 
@@ -351,14 +351,14 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 #### Schematic
 
-![Branch Prediction Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/branchpredictio.png)
+![Branch Prediction Schematic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/branchpredictio.png)
 
 
 ---
 
 ### Hierarchical Cache
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/hierarchical-cache/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/hierarchical-cache/README.md).
 
 Caches exploit spatial and temporal locality to improve processor performance. We implemented a two-level cache hierarchy: separate 2-way associative set L1 instruction and data caches, and a unified 4-way associative L2 cache.
 
@@ -411,13 +411,13 @@ In our cycle-by-cycle simulation, the cache does not appear faster—a hit still
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/mdiagram.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/mdiagram.png)
 
 ---
 
 ### M-Type Instructions (RV32M Extension)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/m-extension/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/m-extension/README.md).
 
 We implemented the full RV32M integer multiply/divide extension, adding eight instructions to our processor. From the pipeline's perspective, M instructions behave like ordinary R-type ALU operations, only the ALU and control unit required changes.
 
@@ -473,7 +473,7 @@ Our implementation is purely combinational (single-cycle). Combinational impleme
 
 ### Z-type Extensions (Zicsr and Zba)
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Z-extensions/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Z-extensions/README.md).
 
 We decided to implement 2 new extensions, the Zicsr extension, which entailed adding a Control Shift Register module and 6 new instructions, as well as the Zba extension, which introduced 3 new instructions used for Bit-Manipulation.
 
@@ -490,7 +490,7 @@ For our CSR module, which we implemented in the execute stage, we first initiali
 
 For Zba, we had to implement these instructions by modifying the ALU and Control modules, where the number indicates how many times we shift before we add:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zba_instructions.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zba_instructions.png)
 
 #### Key Design Decisions
 
@@ -500,12 +500,12 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 
 #### Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/zschem.svg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/zschem.svg)
 
 ---
 ### FPGA and Interrupts
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/Interrupts-and-FPGA/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Interrupts-and-FPGA/README.md).
 
 We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#FPGA-with-Trap-Handler-Routine).
 
@@ -542,14 +542,14 @@ Our FPGA was able to run at the full 50 MHz and was composed of 4249 logic eleme
 
 ### Schematic:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/FPGA_schematic.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/FPGA_schematic.png)
 > RTL netlist top.sv diagram generated by Quartus
 
 ---
 
 ### Out-of-Order Superscalar Processor
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_arithmetic/README.md).
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/out_of_order_superscalar_arithmetic/README.md).
 
 A conventional pipelined processor achieves CPI ≥ 1. Our 2-way superscalar processor breaks this barrier by fetching 2 instructions per cycle and executing them on dual ALUs. **Out-of-order execution** allows independent instructions to bypass stalled ones, maximizing ALU utilization.
 
@@ -598,14 +598,14 @@ This represents a **60% improvement** over baseline. GTKWave confirmed simultane
 
 
 #### Schematic
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/Oooarith_1.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/Oooarith_1.jpg)
 
 
 ---
 
 ### Out-of-Order Superscalar with Load Instructions
 
-For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/Team5/blob/out_of_order_superscalar_full_version/README.md). 
+For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/out_of_order_superscalar_full_version/README.md). 
 
 This branch extends the out-of-order superscalar processor to support load instructions (`LW`, `LH`, `LB`, `LHU`, `LBU`). The core Tomasulo infrastructure (RAT, ROB, RUU, CDB) remains unchanged.
 
@@ -629,7 +629,7 @@ This branch extends the out-of-order superscalar processor to support load instr
 
 #### Schematic
 
-![OOO Full Schematic](https://github.com/TahaMunir2/Team5/blob/main/images/ooofull_2.png)
+![OOO Full Schematic](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/ooofull_2.png)
 
 ---
 
@@ -678,7 +678,7 @@ This test verifies shift-immediate operations (slli, srli) with RAW dependencies
 
 This waveform provides evidence of the performance advantage of out-of-order execution. We observe ALU1 executing tag 02 (the `slli t1, t0, 4` instruction producing 0x10 = 16) while simultaneously ALU2 executes tag 04 (the independent `addi t3, zero, 256` producing 0x100 = 256). The out-of-order scheduler ( the Register-Update Unit) identified that instruction 4 has no dependencies on instructions 2 or 3 and issued it immediately to the second ALU.
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/averifyingshifts.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/main/images/averifyingshifts.jpg)
 
 **IPC Calculation:**
 
