@@ -5,7 +5,7 @@
 - [Overview](#overview)
 - [Implementation](#implementation)
   - [Lab 4](#lab-4)
-  - [Designing the L1d and L1i cache](#designing-the-d1d-and-d1i-cache)
+  - [Designing the L1d and L1i cache](#designing-the-l1d-and-l1i-cache)
   - [L1i and L1d cache testbenching](#l1i-and-l1d-cache-testbenching)
   - [Designing the L2 cache ](#designing-the-l2-cache)
   - [L2 cache testbenching](#l2-cache-testbenching)

@@ -2,25 +2,25 @@
 
 ## Table of READMEs
 
-[1. Single Cycle Reduced RV32I CPU](#Single-cycle-Reduced-RV32I-CPU)
+[1. Single Cycle Reduced RV32I CPU](#single-cycle-reduced-rv32i-cpu)
   
-[2. Full RV32I (37-Instruction)](#Full-RV32I)
+[2. Full RV32I (37-Instruction)](#full-rv32i)
 
-[3. Pipelined RISC-V Processor](#Pipelined-RISC-V-Processor)
+[3. Pipelined RISC-V Processor](#pipelined-risc-v-processor)
 
-[4. Branch Prediction](#Branch-Prediction)
+[4. Branch Prediction](#branch-prediction)
 
-[5. Hierarchical Cache](#Hierarchical-Cache)
+[5. Hierarchical Cache](#hierarchical-cache)
 
-[6. M-type Instructions](#M-type-Instructions)
+[6. M-type Instructions](#m-type-instructions)
 
-[7. Zicsr and Zba Extensions](#Zicsr-and-Zba-Extensions)
+[7. Zicsr and Zba Extensions](#zicsr-and-zba-extensions)
 
-[8. Interrupts and FPGA](#Interrupts-and-FPGA)
+[8. Interrupts and FPGA](#interrupts-and-fpga)
 
-[9. Out-of-Order Superscalar Processor](#Out-of-Order-Superscalar-Processor)
+[9. Out-of-Order Superscalar Processor](#out-of-order-superscalar-processor)
 
-[10. Out-of-Order Superscalar Processor with Load Instructions](#Out-of-Order-Superscalar-Processor-with-Load-Instructions)
+[10. Out-of-Order Superscalar Processor with Load Instructions](#out-of-order-superscalar-processor-with-load-instructions)
 
 ---
 
@@ -714,8 +714,8 @@ https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
 # Full RV32I:
 
 ## Table of Contents
-- [1. Overview](#overview)
-- [2. Implementation](#implementation)
+- [1. Overview](#overview-1)
+- [2. Implementation](#implementation-1)
   - [2.1 Instruction Set Coverage](#instruction-set-coverage)
   - [2.2 Control Unit Evolution: From 9 to 37 Instructions](#control-unit-evolution-from-9-to-37-instructions)
   - [2.3 New Multiplexer: PC vs Register](#new-multiplexer-pc-vs-register-mux_pcvsreg)
@@ -723,7 +723,7 @@ https://github.com/user-attachments/assets/ee6f12fb-fede-4ab4-96b9-0ce7068977f9
   - [2.5 Extended Branch Comparison Signals](#extended-branch-comparison-signals)
   - [2.6 Memory Interface Extensions](#memory-interface-extensions)
 - [3. Final Circuit Schematic](#final-circuit-schematic)
-- [4. Testing](#testing)
+- [4. Testing](#testing-1)
   - [4.1 Unit Testbenching](#unit-testbenching)
   - [4.2 Additional testing added to demonstrate the new features](#assembly-test-programs)
   - [4.3 Results](#results)
@@ -1253,8 +1253,8 @@ All test cases pass.
 ## Table of Contents
 - [1. Overview](#1-overview)
 - [2. Implementation](#2-implementation)
-  - [2.1 Pipeline Architecture](#21-pipeline-architecture)
-  - [2.2 Performance Analysis](#performance_analysis)
+  - [2.1 Pipeline Architecture](#pipeline-architecture)
+  - [2.2 Performance Analysis](#performance-analysis)
   - [2.3 Forwarding Multiplexers](#forwarding-multiplexers)
   - [2.4 PCSrc_assertion logic explained](#pcsrc_assertion-labeled-as-pcsource-in-the-diagram-below-logic-explained)
   - [2.5 Hazard Unit](#22-hazard-unit)
@@ -2024,13 +2024,13 @@ All test cases pass.
 # Branch Prediction
 
 ## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Implementation](#2-implementation)
+- [1. Overview](#1-overview-1)
+- [2. Implementation](#2-implementation-1)
   - [2.1 Branch Predictor](#21-branch-predictor)
   - [2.2 PCSrcF Assertion](#22-pcsrcf-assertion)
   - [2.3 Overall Integration](#23-overall-integration)
-- [3. Schematic](#3-schematic)
-- [4. Testing & Verification](#4-testing--verification)
+- [3. Schematic](#3-schematic-1)
+- [4. Testing & Verification](#4-testing--verification-1)
   - [4.1 Branch Predictor Testing](#41-branch-predictor-testing)
   - [4.2 Full Circuit Testing](#42-full-circuit-testing)
 
@@ -2574,18 +2574,18 @@ All test cases pass
 # Hierarchical Cache
 
 ## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Implementation](#2-implementation)
+- [1. Overview](#1-overview-2)
+- [2. Implementation](#2-implementation-2)
   - [2.1 Overall Hierarchy](#21-overall-hierarchy)
   - [2.2 L1 Instruction Cache](#22-l1-instruction-cache)
   - [2.3 L1 Data Cache](#23-l1-data-cache)
-  - [2.4 L2 Cache](#24-l2_cache)
-- [3. Schematic](#3-schematic)
-  - [3.1 Overall CPU Schematic](#31-Overall-CPU-Schematic)
+  - [2.4 L2 Cache](#24-l2-cache)
+- [3. Schematic](#3-schematic-2)
+  - [3.1 Overall CPU Schematic](#31-overall-cpu-schematic)
   - [3.2 Overall Hierarchy Schematic](#32-overall-hierarchy-schematic)
   - [3.3 A Closer Look at L1 and L2](#33-a-closer-look-at-l1-and-l2)
   - [3.4 A Closer Look at L2 and Main Memory](#34-a-closer-look-at-l2-and-main-memory)
-- [4. Testing & Verification](#4-testing--verification)
+- [4. Testing & Verification](#4-testing--verification-2)
   - [4.1 L1 Instruction Cache Testing](#41-l1-instruction-cache-testing)
   - [4.2 L1 Data Cache Testing](#42-l1-data-cache-testing)
   - [4.3 L2 Cache Testing](#43-l2-cache-testing)
@@ -3697,19 +3697,19 @@ What It Tests
 # Zicsr and Zba Extensions
 
 ## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Implementation](#2-implementation)
+- [1. Overview](#1-overview-3)
+- [2. Implementation](#2-implementation-3)
     - [2.1 Zicsr](#21-zicsr)
         - [2.1.1 Control Status Register](#control-status-register)
-        - [2.1.2 Decoder](#decoder)
+        - [2.1.2 Decoder](#decoder-1)
         - [2.1.3 Immediate MUX](#immediate-mux)
         - [2.1.4 Sign Extension](#sign-extension)
         - [2.1.5 Hazard Unit](#hazard-unit)
     - [2.2 Zba](#22-zba)
         - [2.2.1 Decoder](#decoder-1)
-        - [2.2.2 ALU](#alu)
+        - [2.2.2 ALU](#alu-1)
     - [2.3 Top-Level Integration](#23-top-level-integration)
-- [3. Schematic](#3-schematic)
+- [3. Schematic](#3-schematic-3)
 - [4. Testing and Verification](#4-testing-and-verification)
     - [4.1 Zicsr Testbench](#zicsr-testbench)
     - [4.2 Zba Testbench](#zba-testbench)
@@ -3972,25 +3972,25 @@ As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each o
 # Interrupts and FPGA
 
 ## Table of Contents
-- [1. Overview](#overview)
+- [1. Overview](#overview-2)
     - [1.1 Interrupts](#interrupts)
     - [1.2 FPGA](#fpga)
-- [2. Implementation](#implementation)
+- [2. Implementation](#implementation-3)
     - [2.1 Interrupts](#interrupts-1)
         - [2.1.1 CSR](#csr)
-        - [2.1.2 Hazard Unit](#hazard-unit)
+        - [2.1.2 Hazard Unit](#hazard-unit-1)
         - [2.1.3 PC Block](#pc-block)
         - [2.1.4 Timer](#timer)
         - [2.1.5 Top Level Integration](#top-level-integration)
     - [2.2 FPGA](#fpga-1)
         - [2.2.1 Memory](#memory)
-        - [2.2.2 Top](#top)
+        - [2.2.2 Top](#top-1)
         - [2.2.3 GPIO](#gpio)
         - [2.2.4 7-Segment Display](#7-segment-display)
         - [2.2.5 Debouncer](#debouncer)
         - [2.2.6 FPGA Wrapper](#fpga-wrapper)
         - [2.2.7 Pins](#pins)
-- [3. Schematic](#3-schematic)
+- [3. Schematic](#3-schematic-4)
 - [4. Testing](#4-testing)
     - [4.1 Interrupts and Simulation](#interrupts-and-simulation)
         - [4.1.1 External Interrupts](#external-interupts)
@@ -3999,13 +3999,13 @@ As we can see, a0 goes from 135 (0x87) to 263 (0x107) to 519 (0x207), and each o
         - [4.2.1 LEDs and 7-Segment Displays Test](#leds-and-7-segment-displays-test)
         - [4.2.2 External Interrupt Test](#external-interrupt-test)
         - [4.2.3 Timer Interrupt Test](#timer-interrupt-test)
-        - [4.2.4 F1 Lights](#f1-lights)
+        - [4.2.4 F1 Lights](#f1-lights-1)
 
 ## Overview
 
 ### Intro to Branch
 
-This branch contains both the code for making external and timer interrupts work in simulation and on an FPGA. You can skip ahead to see the video of F1 Lights working on an FPGA with external interrupts and a trap handler [here](#f1-lights). There are 3 files, 1 for the tb and rtl for simulation, 1 for the FPGA hardware files and 1 for the FPGA .mif files to initialise the ROM.
+This branch contains both the code for making external and timer interrupts work in simulation and on an FPGA. You can skip ahead to see the video of F1 Lights working on an FPGA with external interrupts and a trap handler [here](#f1-lights-1). There are 3 files, 1 for the tb and rtl for simulation, 1 for the FPGA hardware files and 1 for the FPGA .mif files to initialise the ROM.
 
 ### Interrupts
 
@@ -4948,15 +4948,15 @@ Here, the reaction time would be 363 (0x16b) * 0.01 = 3.63s.
 # Out-of-Order Superscalar Processor
 
 ## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Implementation](#2-implementation)
+- [1. Overview](#1-overview-4)
+- [2. Implementation](#2-implementation-4)
   - [2.1 Register Alias Table (RAT)](#21-register-alias-table-rat)
   - [2.2 Re-Order Buffer (ROB)](#22-re-order-buffer-rob)
   - [2.3 Register Update Unit (RUU)](#23-register-update-unit-ruu)
   - [2.4 Pipelined Design](#24-pipelined-design)
   - [2.5 Overall Integration](#25-overall-integration)
-- [3. Schematic](#3-schematic)
-- [4. Testing & Verification](#4-testing--verification)
+- [3. Schematic](#3-schematic-5)
+- [4. Testing & Verification](#4-testing--verification-3)
   - [4.1 Unit Testing](#41-unit-testing)
     - [4.1.1 RAT Testing](#411-rat-testing)
     - [4.1.2 ROB Testing](#412-rob-testing)
@@ -6283,13 +6283,13 @@ The concepts implemented in this out-of-order superscalar processor extend beyon
 # Out-of-Order Superscalar Processor with Load Instructions
 
 ## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Implementation](#2-implementation)
+- [1. Overview](#1-overview-5)
+- [2. Implementation](#2-implementation-5)
   - [2.1 Adapting Data Memory in the Out of Order Superscalar circuit](#21-adapting-data-memory-for-superscalar)
   - [2.2 Doubling the Common Data Bus Width](#22-doubling-the-common-data-bus-width)
   - [2.3 Load Instruction Integration](#23-load-instruction-integration)
-- [3. Schematic](#3-schematic)
-- [4. Testing & Verification](#4-testing--verification)
+- [3. Schematic](#3-schematic-6)
+- [4. Testing & Verification](#4-testing--verification-4)
 
 ---
 

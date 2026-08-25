@@ -507,7 +507,7 @@ For Zba, we had to implement these instructions by modifying the ALU and Control
 
 For the full documentation of this section, see the [GitHub README](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/blob/Interrupts-and-FPGA/README.md).
 
-We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#FPGA-with-Trap-Handler-Routine).
+We decided to port our CPU onto an FPGA (the DE-10 Lite). Additionally, we wanted to add MMIO to make the FPGA design more functional, as well as modify our CSR to have 7 special M-mode registers for external and timer interrupts and a trap handler routine to make our CPU operation more realistic. We were then able to make our own FSM in assembly code using the MMIO to recreate the F1 lights demo for VBuddy, but now on our FPGA as shown in [testing](#fpga-with-trap-handler-routine).
 
 We added the following CSRs with combinational logic to handle both of our interrupt types:
 
