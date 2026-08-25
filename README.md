@@ -46,7 +46,7 @@ We maintain a table indexed by the branch PC containing:
 - The **2-bit prediction state**
 - The **target address** for fast redirection when predicting "taken"
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchp.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/branchp.png)
 
 Finite State Machine diagram taken from Harris and Harris book
 
@@ -430,7 +430,7 @@ This reduces unnecessary flushes when the branch predictor guesses correctly, im
 
 ## 3. Schematic
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/branchpredictio.png)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/branchpredictio.png)
 
 
 ---
@@ -468,7 +468,7 @@ We created a c++ testbench ( `predictor_tb.cpp ` ) that isolates the branch pred
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingpredictor.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/bverifyingpredictor.jpg)
 
 ---
 
@@ -515,7 +515,7 @@ Note that:
 
 **Waveform:**
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverifyingcorrectpred.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/bverifyingcorrectpred.jpg)
 
 
 #### Running the code
@@ -540,7 +540,7 @@ Note that:
 
 Here are the results:
 
-![diagram](https://github.com/TahaMunir2/Team5/blob/main/images/bverify.jpg)
+![diagram](https://github.com/TahaMunir2/RISC-V-RV32IM-FPGA/raw/main/images/bverify.jpg)
 
 All test cases pass
 
